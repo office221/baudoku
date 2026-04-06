@@ -1533,7 +1533,7 @@ async function saveProjekt(){
   const nm=document.getElementById('p-nm').value.trim();
   if(!nr||!nm){toast('Projektnummer und Name sind Pflichtfelder.',false);return;}
   const{error}=await sb.from('projekte').insert({
-    user_id:(await sb.auth.getUser()).data.user.id,
+    user_id:CU.id,
     nummer:nr,
     name:nm,
     beschreibung:document.getElementById('p-desc').value.trim(),
