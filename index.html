@@ -2326,7 +2326,7 @@ function rGantt(){
   let tbl='<table><thead><tr>';
   tbl+='<th style="min-width:50px;">Nr</th><th style="min-width:140px;">Name</th><th style="min-width:55px;">Status</th>';
   tbl+='<th style="min-width:80px;">Gewerk</th><th style="min-width:78px;">Start</th><th style="min-width:78px;">Ende</th>';
-  tbl+='<th style="min-width:40px;">Tage</th><th style="width:30px;"></th>';
+  tbl+='<th style="min-width:40px;">Tage</th><th style="width:70px;text-align:center;">+</th>';
   tbl+='</tr></thead><tbody>';
 
   tree.forEach(b=>{
@@ -2344,9 +2344,11 @@ function rGantt(){
     tbl+=`<td class="gz-dt">${fmtDt(b.start_datum)}</td>`;
     tbl+=`<td class="gz-dt">${fmtDt(b.ende_datum)}</td>`;
     tbl+=`<td class="gz-dur">${dur}</td>`;
-    tbl+=`<td><span class="gz-acts"><button class="gz-act" onclick="editBP('${b.id}')" title="Bearbeiten">✏️</button><button class="gz-act" onclick="delBP('${b.id}')" title="Löschen">🗑</button></span></td>`;
+    const addParent=b.typ==='phase'?b.id:(b.parent_id||'');
+    tbl+=`<td style="white-space:nowrap;"><button class="gz-act" onclick="openBPModal('${addParent}')" title="Neu hinzufügen" style="opacity:.4;font-size:14px;">+</button><span class="gz-acts"><button class="gz-act" onclick="editBP('${b.id}')" title="Bearbeiten">✏️</button><button class="gz-act" onclick="delBP('${b.id}')" title="Löschen">🗑</button></span></td>`;
     tbl+='</tr>';
   });
+  tbl+=`<tr><td colspan="7" style="padding:8px 10px;"><button onclick="openBPModal()" style="background:none;border:1px dashed var(--brd2);border-radius:var(--r);padding:4px 12px;cursor:pointer;color:var(--tx3);font-size:12px;font-family:var(--fn);transition:all .15s;" onmouseover="this.style.borderColor='var(--ac)';this.style.color='var(--ac)'" onmouseout="this.style.borderColor='var(--brd2)';this.style.color='var(--tx3)'">+ Neuer Eintrag</button></td><td></td></tr>`;
   tbl+='</tbody></table>';
 
   // CHART (right side)
