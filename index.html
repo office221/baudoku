@@ -81,6 +81,8 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
 #pg-projekte.act{display:flex;}
 #pg-besprechungen{padding:0;overflow:hidden;display:none;flex-direction:row;}
 #pg-besprechungen.act{display:flex;}
+#pg-bauzeitplan{padding:0;overflow:hidden;display:none;flex-direction:column;}
+#pg-bauzeitplan.act{display:flex;}
 @keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 /* AUTH */
 #as{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:200;}
@@ -205,12 +207,41 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
 .matr:last-child{border-bottom:none;}
 .math{background:var(--bg3);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);}
 /* GANTT */
-.gr{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--brd);}
-.gr:last-child{border-bottom:none;}
-.gla{width:140px;flex-shrink:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.gtr{flex:1;height:18px;background:var(--bg4);border-radius:99px;position:relative;overflow:hidden;}
-.gba{height:100%;border-radius:99px;position:absolute;display:flex;align-items:center;padding:0 6px;}
-.gba span{font-size:10px;color:#fff;font-weight:500;white-space:nowrap;}
+.gz-wrap{display:flex;height:100%;overflow:hidden;}
+.gz-table{flex-shrink:0;overflow-y:auto;overflow-x:auto;border-right:2px solid var(--brd2);}
+.gz-chart{flex:1;overflow:auto;}
+.gz-table table{border-collapse:collapse;font-size:12px;white-space:nowrap;}
+.gz-table th{position:sticky;top:0;z-index:2;background:var(--bg2);padding:6px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:2px solid var(--brd);}
+.gz-table td{padding:5px 10px;border-bottom:1px solid var(--brd);font-size:12px;}
+.gz-table tr:hover{background:var(--bg3);}
+.gz-table tr.gz-phase td{font-weight:600;}
+.gz-table .gz-nm{max-width:160px;overflow:hidden;text-overflow:ellipsis;}
+.gz-table .gz-nr{color:var(--tx3);font-family:var(--mo);font-size:11px;min-width:50px;}
+.gz-table .gz-dt{font-family:var(--mo);font-size:11px;color:var(--tx2);}
+.gz-table .gz-dur{font-family:var(--mo);font-size:11px;text-align:center;}
+.gz-badge{font-size:10px;padding:2px 6px;border-radius:12px;font-weight:500;}
+.gz-badge-o{background:var(--bldm);color:var(--bl);}
+.gz-badge-e{background:var(--gndm);color:var(--gn);}
+.gz-badge-b{background:var(--adm);color:var(--ac);}
+.gz-toggle{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:4px;}
+.gz-indent{display:inline-block;}
+.gz-acts{opacity:0;transition:opacity .15s;}
+.gz-table tr:hover .gz-acts{opacity:1;}
+.gz-act{background:none;border:none;cursor:pointer;padding:2px;font-size:12px;color:var(--tx3);}
+.gz-act:hover{color:var(--tx);}
+.gz-chart-inner{position:relative;}
+.gz-mhdr{display:flex;position:sticky;top:0;z-index:2;background:var(--bg2);border-bottom:2px solid var(--brd);}
+.gz-mhdr-q{text-align:center;font-size:10px;font-weight:600;color:var(--tx3);border-bottom:1px solid var(--brd);padding:2px 0;}
+.gz-mhdr-m{text-align:center;font-size:10px;font-weight:500;color:var(--tx3);padding:4px 0;border-right:1px solid var(--brd);}
+.gz-row{display:flex;align-items:center;height:30px;border-bottom:1px solid var(--brd);position:relative;}
+.gz-bar{position:absolute;height:14px;border-radius:3px;top:8px;display:flex;align-items:center;overflow:visible;white-space:nowrap;}
+.gz-bar-lbl{font-size:9.5px;color:var(--tx);margin-left:4px;font-weight:500;white-space:nowrap;}
+.gz-bar-date{font-size:9px;color:var(--tx3);position:absolute;right:calc(100% + 4px);white-space:nowrap;}
+.gz-bar.gz-parent{height:6px;top:12px;border-radius:2px;background:var(--tx4);}
+.gz-bar.gz-mile{width:10px!important;height:10px!important;top:10px;border-radius:2px;transform:rotate(45deg);}
+.gz-today{position:absolute;top:0;bottom:0;width:1.5px;background:var(--rd);z-index:1;pointer-events:none;}
+.gz-today::before{content:'Heute';position:absolute;top:-14px;left:2px;font-size:8px;color:var(--rd);font-weight:600;}
+.gz-col{border-right:1px solid var(--brd);height:100%;}
 /* BESPRECHUNG */
 .besr{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background var(--tr);}
 .besr:hover{background:var(--bg3);}
@@ -475,13 +506,9 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
 
     <!-- BAUZEITPLAN -->
     <div class="pg" id="pg-bauzeitplan">
-      <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap;">
-        <button class="btn bp" onclick="om('m-bp')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:13px;height:13px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Phase hinzufügen</button>
+      <div style="display:flex;gap:8px;padding:12px 16px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--brd);flex-shrink:0;">
+        <button class="btn bp" onclick="openBPModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:13px;height:13px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Neu</button>
         <div class="sp"></div>
-        <select class="fs" id="gantt-zoom" onchange="rGantt()" style="width:auto;padding:5px 10px;">
-          <option value="week">Wochen</option>
-          <option value="month" selected>Monate</option>
-        </select>
         <select class="fs" id="pdf-size" style="width:auto;padding:5px 10px;">
           <option value="a4">A4</option>
           <option value="a3">A3</option>
@@ -489,25 +516,37 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
           <option value="a1">A1</option>
           <option value="a0">A0</option>
         </select>
-        <button class="btn bg" onclick="exportGanttPDF()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF Export</button>
+        <button class="btn bg" onclick="exportGanttPDF()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button>
       </div>
-      <div class="tw" style="padding:0;overflow-x:auto;"><div id="gnt" style="min-width:600px;"></div></div>
+      <div style="flex:1;overflow:hidden;" id="gz-container">
+        <div class="gz-wrap" id="gnt"></div>
+      </div>
     </div>
 
     <!-- MODAL BAUPHASE -->
     <div class="mo" id="m-bp"><div class="md">
-      <div class="mh"><div class="mht" id="bp-mtit">Neue Bauphase</div><button class="mc" onclick="cm('m-bp')">✕</button></div>
+      <div class="mh"><div class="mht" id="bp-mtit">Bauphase</div><button class="mc" onclick="cm('m-bp')">✕</button></div>
       <div class="mb">
-        <div class="fr fr1"><div class="fg"><label class="fl">Bezeichnung *</label><input type="text" class="fi" id="bp-bez" placeholder="z.B. Rohbau, Elektro, Innenausbau"></div></div>
+        <div class="fr fr1"><div class="fg"><label class="fl">Name</label><input type="text" class="fi" id="bp-bez" placeholder="z.B. Rohbauphase"></div></div>
+        <div class="fr fr1"><div class="fg"><label class="fl">Status</label><select class="fs" id="bp-stat"><option value="offen">Offen</option><option value="bearbeitung">In Bearbeitung</option><option value="erledigt">Erledigt</option></select></div></div>
         <div class="fr fr2">
-          <div class="fg"><label class="fl">Starttag (ab Projektbeginn)</label><input type="number" class="fi" id="bp-start" min="1" value="1" placeholder="Tag 1"></div>
-          <div class="fg"><label class="fl">Dauer (Tage)</label><input type="number" class="fi" id="bp-dauer" min="1" value="14" placeholder="14"></div>
+          <div class="fg"><label class="fl">Typ</label><select class="fs" id="bp-typ" onchange="bpTypChanged()"><option value="phase">Bauphase</option><option value="vorgang">Vorgang</option><option value="meilenstein">Meilenstein</option></select></div>
+          <div class="fg"><label class="fl">Gewerk</label>
+            <div style="position:relative;" id="bp-gew-wrap">
+              <input type="text" class="fi" id="bp-gew" placeholder="Suchen & Anlegen" onfocus="showGewerke()" oninput="filterGewerke()">
+              <div id="bp-gew-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--brd2);border-radius:var(--r);max-height:200px;overflow-y:auto;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,.3);"></div>
+            </div>
+          </div>
         </div>
         <div class="fr fr2">
-          <div class="fg"><label class="fl">Farbe</label><input type="color" id="bp-farbe" value="#f5a623" style="width:100%;height:36px;border:1px solid var(--brd);border-radius:var(--r);background:var(--bg3);cursor:pointer;"></div>
-          <div class="fg"><label class="fl">Reihenfolge</label><input type="number" class="fi" id="bp-reihe" min="0" value="0"></div>
+          <div class="fg"><label class="fl">Datum</label><input type="date" class="fi" id="bp-sd"></div>
+          <div class="fg"><label class="fl">&nbsp;</label><input type="date" class="fi" id="bp-ed"></div>
         </div>
-        <div style="margin-top:8px;">
+        <div class="fr fr2">
+          <div class="fg"><label class="fl">Übergeordnete Phase</label><select class="fs" id="bp-parent"><option value="">— Keine (Hauptphase) —</option></select></div>
+          <div class="fg"><label class="fl">Farbe</label><input type="color" id="bp-farbe" value="#3b82f6" style="width:100%;height:36px;border:1px solid var(--brd);border-radius:var(--r);background:var(--bg3);cursor:pointer;"></div>
+        </div>
+        <div style="margin-top:4px;">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--tx2);">
             <input type="checkbox" id="bp-fix"> Fixiert (abgeschlossen)
           </label>
@@ -515,7 +554,7 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
       </div>
       <div class="mf">
         <button class="btn bg" onclick="cm('m-bp')">Abbrechen</button>
-        <button class="btn bp" onclick="saveBauphase()">Speichern</button>
+        <button class="btn bp" onclick="saveBauphase()">Anlegen</button>
       </div>
     </div></div>
 
@@ -2105,143 +2144,290 @@ async function oeffneProtokoll(id){
 
 // ── BAUZEITPLAN / GANTT ──────────────────────────────────────────────────
 let _editBP=null;
+const GEWERKE=['Abbruch','Abdichtungsarbeiten','Alarmanlage','Allgemein','Alu-Portale','Anrainer','Architektur','Asphaltierung',
+'Aufzug','Baumeister','Bauphysik','Baureinigung','Bewehrung','Blitzschutz','Bodenleger','Dachdecker','Elektriker',
+'Estrich','Fassade','Fenster','Fliesen','Garten','Gas/Wasser','Geometer','Gerüstbau','Glaserei','Hafner','Heizung',
+'Holzbau','Installateur','Innenausbau','Kamin','Klempner','Klimatechnik','Lüftung','Maler','Maurer','Metallbau',
+'Naturstein','Planung','Putz','Sanitär','Schlosser','Spengler','Statik','Stuckateur','Tiefbau','Tischler',
+'Trockenbau','Zimmerer','Zimmermeister und Spengler'];
 
-function rGantt(){
-  const g=document.getElementById('gnt');
-  if(!g)return;
-  const proj=PR.find(p=>p.id===CPId);
-  if(!proj||!proj.beginn){g.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;opacity:.3;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg><div style="font-size:13px;color:var(--tx3);">Bitte Projektbeginn festlegen</div></div>';return;}
-  if(!BP.length){g.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;opacity:.3;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg><div style="font-size:13px;color:var(--tx3);">Keine Bauphasen vorhanden</div></div>';return;}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function fmtDt(s){if(!s)return'–';const d=new Date(s);return d.toLocaleDateString('de-DE');}
+function daysBetween(a,b){if(!a||!b)return 0;return Math.round((new Date(b)-new Date(a))/86400000);}
 
-  const zoom=document.getElementById('gantt-zoom').value;
-  const projStart=new Date(proj.beginn);
-  const maxDay=Math.max(...BP.map(b=>b.start_tag+b.dauer_tage));
-  const totalDays=Math.max(maxDay+7,30);
+function showGewerke(){document.getElementById('bp-gew-dd').style.display='block';filterGewerke();}
+function filterGewerke(){
+  const q=(document.getElementById('bp-gew').value||'').toLowerCase();
+  const dd=document.getElementById('bp-gew-dd');
+  const filtered=q?GEWERKE.filter(g=>g.toLowerCase().includes(q)):GEWERKE;
+  dd.innerHTML=filtered.map(g=>`<div style="padding:8px 12px;cursor:pointer;font-size:13px;transition:background .1s;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''" onclick="pickGewerk('${g}')">${esc(g)}</div>`).join('');
+  if(!filtered.length&&q)dd.innerHTML=`<div style="padding:8px 12px;cursor:pointer;font-size:13px;color:var(--ac);" onclick="pickGewerk('${esc(q)}')">+ "${esc(q)}" anlegen</div>`;
+}
+function pickGewerk(g){document.getElementById('bp-gew').value=g;document.getElementById('bp-gew-dd').style.display='none';}
+document.addEventListener('click',e=>{if(!e.target.closest('#bp-gew-wrap'))document.getElementById('bp-gew-dd')&&(document.getElementById('bp-gew-dd').style.display='none');});
 
-  // Build time columns
-  const cols=[];
-  if(zoom==='week'){
-    for(let d=0;d<totalDays;d+=7){
-      const dt=new Date(projStart);dt.setDate(dt.getDate()+d);
-      cols.push({start:d,end:d+7,label:'KW'+getWeek(dt)});
-    }
-  } else {
-    let d=0;
-    while(d<totalDays){
-      const dt=new Date(projStart);dt.setDate(dt.getDate()+d);
-      const moEnd=new Date(dt.getFullYear(),dt.getMonth()+1,0);
-      const daysLeft=Math.ceil((moEnd-dt)/(86400000))+1;
-      const span=Math.min(daysLeft,totalDays-d);
-      cols.push({start:d,end:d+span,label:dt.toLocaleString('de',{month:'short',year:'2-digit'})});
-      d+=span;
-    }
-  }
-
-  let html='<table style="width:100%;border-collapse:collapse;font-size:12px;" id="gantt-table">';
-  // Header
-  html+='<tr style="border-bottom:2px solid var(--brd);">';
-  html+='<th style="text-align:left;padding:8px 12px;min-width:160px;font-weight:600;color:var(--tx2);font-size:11px;">PHASE</th>';
-  html+='<th style="width:60px;padding:8px 4px;font-size:11px;color:var(--tx3);">TAGE</th>';
-  cols.forEach(c=>{
-    const w=Math.max((c.end-c.start)*3,24);
-    html+=`<th style="min-width:${w}px;padding:4px 2px;font-size:10px;color:var(--tx3);font-weight:500;text-align:center;border-left:1px solid var(--brd);">${c.label}</th>`;
-  });
-  html+='<th style="width:60px;"></th></tr>';
-
-  // Rows
-  BP.forEach(b=>{
-    html+='<tr style="border-bottom:1px solid var(--brd);">';
-    html+=`<td style="padding:8px 12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;">${b.abgeschlossen?'🔒 ':''}${esc(b.bezeichnung)}</td>`;
-    html+=`<td style="padding:8px 4px;text-align:center;font-family:var(--mo);font-size:11px;color:var(--tx3);">${b.dauer_tage}</td>`;
-    cols.forEach(c=>{
-      const w=Math.max((c.end-c.start)*3,24);
-      let cell='';
-      const bStart=b.start_tag-1;
-      const bEnd=bStart+b.dauer_tage;
-      if(bEnd>c.start&&bStart<c.end){
-        const clipL=Math.max(bStart-c.start,0);
-        const clipR=Math.max(c.end-bEnd,0);
-        const span=c.end-c.start;
-        const left=(clipL/span*100);
-        const right=(clipR/span*100);
-        const opacity=b.abgeschlossen?'0.6':'1';
-        cell=`<div style="position:relative;height:18px;"><div style="position:absolute;left:${left}%;right:${right}%;top:0;height:100%;background:${b.farbe||'var(--ac)'};border-radius:99px;opacity:${opacity};"></div></div>`;
-      }
-      html+=`<td style="padding:4px 2px;border-left:1px solid var(--brd);">${cell}</td>`;
-    });
-    html+=`<td style="padding:4px;text-align:center;">
-      <button onclick="editBP('${b.id}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:13px;" title="Bearbeiten">✏️</button>
-      <button onclick="delBP('${b.id}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:13px;" title="Löschen">🗑</button>
-    </td></tr>`;
-  });
-
-  // Today marker info
-  const today=new Date();
-  const todayDay=Math.floor((today-projStart)/86400000);
-  if(todayDay>=0&&todayDay<totalDays){
-    html+=`<tr><td colspan="2" style="padding:6px 12px;font-size:11px;color:var(--ac);font-weight:500;">📍 Heute: Tag ${todayDay+1}</td>`;
-    html+=`<td colspan="${cols.length+1}"></td></tr>`;
-  }
-
-  html+='</table>';
-  g.innerHTML=html;
+function bpTypChanged(){
+  const t=document.getElementById('bp-typ').value;
+  document.getElementById('bp-mtit').textContent=t==='phase'?'Bauphase':t==='vorgang'?'Vorgang':'Meilenstein';
 }
 
-function getWeek(d){const dt=new Date(d);dt.setHours(0,0,0,0);dt.setDate(dt.getDate()+3-(dt.getDay()+6)%7);const w1=new Date(dt.getFullYear(),0,4);return 1+Math.round(((dt-w1)/86400000-3+(w1.getDay()+6)%7)/7);}
-function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function openBPModal(parentId){
+  _editBP=null;
+  document.getElementById('bp-mtit').textContent='Bauphase';
+  document.getElementById('bp-bez').value='';
+  document.getElementById('bp-typ').value='phase';
+  document.getElementById('bp-stat').value='offen';
+  document.getElementById('bp-gew').value='';
+  document.getElementById('bp-sd').value=new Date().toISOString().split('T')[0];
+  document.getElementById('bp-ed').value=new Date().toISOString().split('T')[0];
+  document.getElementById('bp-farbe').value='#3b82f6';
+  document.getElementById('bp-fix').checked=false;
+  // Fill parent dropdown
+  const sel=document.getElementById('bp-parent');
+  sel.innerHTML='<option value="">— Keine (Hauptphase) —</option>';
+  BP.filter(b=>b.typ==='phase').forEach(b=>{sel.innerHTML+=`<option value="${b.id}">${b.nummer||''} ${b.bezeichnung}</option>`;});
+  if(parentId)sel.value=parentId;
+  om('m-bp');
+}
 
 function editBP(id){
   const b=BP.find(x=>x.id===id);if(!b)return;
   _editBP=id;
-  document.getElementById('bp-mtit').textContent='Bauphase bearbeiten';
-  document.getElementById('bp-bez').value=b.bezeichnung;
-  document.getElementById('bp-start').value=b.start_tag;
-  document.getElementById('bp-dauer').value=b.dauer_tage;
-  document.getElementById('bp-farbe').value=b.farbe||'#f5a623';
-  document.getElementById('bp-reihe').value=b.reihenfolge||0;
+  document.getElementById('bp-mtit').textContent='Bearbeiten';
+  document.getElementById('bp-bez').value=b.bezeichnung||'';
+  document.getElementById('bp-typ').value=b.typ||'vorgang';
+  document.getElementById('bp-stat').value=b.status||'offen';
+  document.getElementById('bp-gew').value=b.gewerk||'';
+  document.getElementById('bp-sd').value=b.start_datum||'';
+  document.getElementById('bp-ed').value=b.ende_datum||'';
+  document.getElementById('bp-farbe').value=b.farbe||'#3b82f6';
   document.getElementById('bp-fix').checked=b.abgeschlossen||false;
+  const sel=document.getElementById('bp-parent');
+  sel.innerHTML='<option value="">— Keine (Hauptphase) —</option>';
+  BP.filter(p=>p.typ==='phase'&&p.id!==id).forEach(p=>{sel.innerHTML+=`<option value="${p.id}">${p.nummer||''} ${p.bezeichnung}</option>`;});
+  sel.value=b.parent_id||'';
   om('m-bp');
 }
 
 async function saveBauphase(){
   const bez=document.getElementById('bp-bez').value.trim();
-  if(!bez){toast('Bezeichnung ist Pflichtfeld.',false);return;}
+  const sd=document.getElementById('bp-sd').value;
+  const ed=document.getElementById('bp-ed').value;
+  if(!bez){toast('Name ist Pflichtfeld.',false);return;}
+  if(!sd||!ed){toast('Start- und Enddatum sind Pflichtfelder.',false);return;}
+  const dur=daysBetween(sd,ed);
+  const parentId=document.getElementById('bp-parent').value||null;
+  // Auto-number
+  let nummer='';
+  if(!_editBP){
+    if(parentId){
+      const siblings=BP.filter(b=>b.parent_id===parentId);
+      const parent=BP.find(b=>b.id===parentId);
+      nummer=(parent?.nummer||'?')+'.'+(siblings.length+1);
+    } else {
+      const tops=BP.filter(b=>!b.parent_id);
+      nummer=String(tops.length+1);
+    }
+  }
   const obj={
     bezeichnung:bez,
-    start_tag:parseInt(document.getElementById('bp-start').value)||1,
-    dauer_tage:parseInt(document.getElementById('bp-dauer').value)||14,
+    typ:document.getElementById('bp-typ').value,
+    status:document.getElementById('bp-stat').value,
+    gewerk:document.getElementById('bp-gew').value.trim()||null,
+    start_datum:sd,ende_datum:ed,
+    start_tag:1,dauer_tage:Math.max(dur,0),
     farbe:document.getElementById('bp-farbe').value,
-    reihenfolge:parseInt(document.getElementById('bp-reihe').value)||0,
-    abgeschlossen:document.getElementById('bp-fix').checked
+    abgeschlossen:document.getElementById('bp-fix').checked,
+    parent_id:parentId
   };
+  if(!_editBP)obj.nummer=nummer;
   let error;
   if(_editBP){
     ({error}=await sb.from('bauphasen').update(obj).eq('id',_editBP));
   } else {
     obj.projekt_id=CPId;
+    obj.reihenfolge=BP.length;
     ({error}=await sb.from('bauphasen').insert(obj));
   }
   if(error){toast('Fehler: '+error.message,false);return;}
-  _editBP=null;
-  cm('m-bp');
-  document.getElementById('bp-mtit').textContent='Neue Bauphase';
-  document.getElementById('bp-bez').value='';document.getElementById('bp-start').value='1';
-  document.getElementById('bp-dauer').value='14';document.getElementById('bp-farbe').value='#f5a623';
-  document.getElementById('bp-reihe').value='0';document.getElementById('bp-fix').checked=false;
+  cm('m-bp');_editBP=null;
   await loadBP();rGantt();
-  toast(_editBP?'Phase aktualisiert!':'Phase hinzugefügt!');
+  toast('Gespeichert!');
 }
 
 async function delBP(id){
-  if(!confirm('Phase wirklich löschen?'))return;
+  if(!confirm('Eintrag wirklich löschen?'))return;
+  // Delete children too
+  await sb.from('bauphasen').delete().eq('parent_id',id);
   await sb.from('bauphasen').delete().eq('id',id);
   await loadBP();rGantt();
-  toast('Phase gelöscht.');
+  toast('Gelöscht.');
+}
+
+function buildTree(items){
+  const roots=items.filter(i=>!i.parent_id);
+  const children=id=>items.filter(i=>i.parent_id===id);
+  const flat=[];
+  roots.sort((a,b)=>(a.reihenfolge||0)-(b.reihenfolge||0)||(a.nummer||'').localeCompare(b.nummer||'',undefined,{numeric:true}));
+  roots.forEach(r=>{
+    flat.push({...r,_depth:0});
+    const kids=children(r.id);
+    kids.sort((a,b)=>(a.reihenfolge||0)-(b.reihenfolge||0)||(a.nummer||'').localeCompare(b.nummer||'',undefined,{numeric:true}));
+    kids.forEach(k=>flat.push({...k,_depth:1}));
+  });
+  return flat;
+}
+
+function rGantt(){
+  const g=document.getElementById('gnt');
+  if(!g)return;
+  if(!BP.length){g.innerHTML='<div class="empty" style="padding:60px 20px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;opacity:.3;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg><div style="font-size:13px;color:var(--tx3);">Keine Einträge — klicke "Neu"</div></div>';return;}
+
+  const tree=buildTree(BP);
+  // Find date range
+  const allDates=BP.filter(b=>b.start_datum&&b.ende_datum);
+  if(!allDates.length){g.innerHTML='<div class="empty" style="padding:60px;"><div style="font-size:13px;color:var(--tx3);">Bitte Datum bei Einträgen setzen</div></div>';return;}
+  const minD=new Date(Math.min(...allDates.map(b=>new Date(b.start_datum))));
+  const maxD=new Date(Math.max(...allDates.map(b=>new Date(b.ende_datum))));
+  // Pad range
+  minD.setDate(1);
+  maxD.setMonth(maxD.getMonth()+2);maxD.setDate(0);
+  const totalDays=Math.max(daysBetween(minD.toISOString(),maxD.toISOString()),30);
+
+  // Build months
+  const months=[];
+  let cur=new Date(minD);
+  while(cur<maxD){
+    const mStart=new Date(cur);
+    const mEnd=new Date(cur.getFullYear(),cur.getMonth()+1,0);
+    const effEnd=mEnd>maxD?maxD:mEnd;
+    months.push({start:new Date(mStart),end:effEnd,label:mStart.toLocaleString('de',{month:'short'}),year:mStart.getFullYear(),month:mStart.getMonth()});
+    cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);
+  }
+
+  // Group months into quarters
+  const quarters=[];
+  let qMonths=[];
+  months.forEach((m,i)=>{
+    qMonths.push(m);
+    const next=months[i+1];
+    if(!next||Math.floor(next.month/3)!==Math.floor(m.month/3)||next.year!==m.year){
+      const qNames=['Jan - Mär','Apr - Jun','Jul - Sep','Okt - Dez'];
+      quarters.push({label:qNames[Math.floor(m.month/3)],months:[...qMonths]});
+      qMonths=[];
+    }
+  });
+
+  const dayW=3; // pixels per day
+  const chartTotalW=totalDays*dayW;
+  const rowH=30;
+
+  // TABLE (left side)
+  let tbl='<table><thead><tr>';
+  tbl+='<th style="min-width:50px;">Nr</th><th style="min-width:140px;">Name</th><th style="min-width:55px;">Status</th>';
+  tbl+='<th style="min-width:80px;">Gewerk</th><th style="min-width:78px;">Start</th><th style="min-width:78px;">Ende</th>';
+  tbl+='<th style="min-width:40px;">Tage</th><th style="width:30px;"></th>';
+  tbl+='</tr></thead><tbody>';
+
+  tree.forEach(b=>{
+    const isPhase=b.typ==='phase';
+    const indent=b._depth*16;
+    const cls=isPhase?'gz-phase':'';
+    const dur=daysBetween(b.start_datum,b.ende_datum);
+    const stBadge=b.status==='erledigt'?'gz-badge-e':b.status==='bearbeitung'?'gz-badge-b':'gz-badge-o';
+    const icon=b.typ==='meilenstein'?'◇':b.typ==='phase'?'↔':'▫';
+    tbl+=`<tr class="${cls}">`;
+    tbl+=`<td class="gz-nr">${esc(b.nummer||'')}</td>`;
+    tbl+=`<td class="gz-nm"><span class="gz-indent" style="width:${indent}px;"></span><span style="margin-right:4px;opacity:.5;">${icon}</span>${esc(b.bezeichnung)}</td>`;
+    tbl+=`<td><span class="gz-badge ${stBadge}">${b.status==='erledigt'?'Erledigt':b.status==='bearbeitung'?'In Bearb.':'Offen'}</span></td>`;
+    tbl+=`<td style="font-size:11px;color:var(--tx2);max-width:80px;overflow:hidden;text-overflow:ellipsis;">${esc(b.gewerk||'')}</td>`;
+    tbl+=`<td class="gz-dt">${fmtDt(b.start_datum)}</td>`;
+    tbl+=`<td class="gz-dt">${fmtDt(b.ende_datum)}</td>`;
+    tbl+=`<td class="gz-dur">${dur}</td>`;
+    tbl+=`<td><span class="gz-acts"><button class="gz-act" onclick="editBP('${b.id}')" title="Bearbeiten">✏️</button><button class="gz-act" onclick="delBP('${b.id}')" title="Löschen">🗑</button></span></td>`;
+    tbl+='</tr>';
+  });
+  tbl+='</tbody></table>';
+
+  // CHART (right side)
+  let chart=`<div class="gz-chart-inner" style="width:${chartTotalW}px;">`;
+  // Quarter + Month header
+  chart+='<div style="position:sticky;top:0;z-index:2;background:var(--bg2);">';
+  chart+='<div class="gz-mhdr" style="border-bottom:1px solid var(--brd);">';
+  quarters.forEach(q=>{
+    let qDays=0;
+    q.months.forEach(m=>{qDays+=daysBetween(m.start.toISOString(),m.end.toISOString())+1;});
+    chart+=`<div style="width:${qDays*dayW}px;text-align:center;font-size:10px;font-weight:600;color:var(--tx3);padding:3px 0;border-right:1px solid var(--brd);">${q.label}</div>`;
+  });
+  chart+='</div>';
+  chart+='<div class="gz-mhdr" style="border-bottom:2px solid var(--brd);">';
+  months.forEach(m=>{
+    const mDays=daysBetween(m.start.toISOString(),m.end.toISOString())+1;
+    chart+=`<div class="gz-mhdr-m" style="width:${mDays*dayW}px;">${m.label}</div>`;
+  });
+  chart+='</div></div>';
+
+  // Rows with bars
+  const today=new Date();today.setHours(0,0,0,0);
+  tree.forEach(b=>{
+    chart+=`<div class="gz-row" style="height:${rowH}px;">`;
+    // Month grid columns
+    months.forEach(m=>{
+      const mDays=daysBetween(m.start.toISOString(),m.end.toISOString())+1;
+      chart+=`<div class="gz-col" style="width:${mDays*dayW}px;position:absolute;left:${daysBetween(minD.toISOString(),m.start.toISOString())*dayW}px;height:100%;"></div>`;
+    });
+    // Bar
+    if(b.start_datum&&b.ende_datum){
+      const bStart=daysBetween(minD.toISOString(),b.start_datum);
+      const bDur=Math.max(daysBetween(b.start_datum,b.ende_datum),0);
+      const left=bStart*dayW;
+      const width=Math.max(bDur*dayW,4);
+      const color=b.farbe||'#3b82f6';
+      const opacity=b.abgeschlossen?0.5:1;
+
+      if(b.typ==='phase'){
+        chart+=`<div class="gz-bar gz-parent" style="left:${left}px;width:${width}px;background:var(--tx4);opacity:${opacity};"></div>`;
+        chart+=`<span style="position:absolute;left:${left+width+6}px;top:6px;font-size:10px;font-weight:600;color:var(--tx2);white-space:nowrap;">Bauphase: ${esc(b.bezeichnung)}</span>`;
+      } else if(b.typ==='meilenstein'){
+        chart+=`<div class="gz-bar gz-mile" style="left:${left-5}px;background:${color};opacity:${opacity};"></div>`;
+        chart+=`<span style="position:absolute;left:${left+10}px;top:8px;font-size:9.5px;font-weight:500;color:var(--tx2);white-space:nowrap;">${esc(b.bezeichnung)}</span>`;
+      } else {
+        chart+=`<div class="gz-bar" style="left:${left}px;width:${width}px;background:${color};opacity:${opacity};"></div>`;
+        chart+=`<span class="gz-bar-date" style="left:${left-4}px;position:absolute;top:10px;font-size:9px;color:var(--tx3);transform:translateX(-100%);white-space:nowrap;">${fmtDt(b.start_datum)}</span>`;
+        chart+=`<span style="position:absolute;left:${left+width+6}px;top:8px;font-size:9.5px;font-weight:500;color:var(--tx2);white-space:nowrap;">${esc(b.bezeichnung)}</span>`;
+      }
+    }
+    chart+='</div>';
+  });
+
+  // Today line
+  const todayOff=daysBetween(minD.toISOString(),today.toISOString());
+  if(todayOff>=0&&todayOff<=totalDays){
+    chart+=`<div class="gz-today" style="left:${todayOff*dayW}px;top:0;height:${tree.length*rowH}px;"></div>`;
+  }
+
+  chart+='</div>';
+
+  g.innerHTML=`<div class="gz-table">${tbl}</div><div class="gz-chart">${chart}</div>`;
+
+  // Sync scroll
+  const tableEl=g.querySelector('.gz-table');
+  const chartEl=g.querySelector('.gz-chart');
+  tableEl.addEventListener('scroll',()=>{chartEl.scrollTop=tableEl.scrollTop;});
+  chartEl.addEventListener('scroll',()=>{tableEl.scrollTop=chartEl.scrollTop;});
 }
 
 function exportGanttPDF(){
   const proj=PR.find(p=>p.id===CPId);
   if(!proj||!BP.length){toast('Keine Daten für PDF.',false);return;}
+
+  const tree=buildTree(BP);
+  const allDates=BP.filter(b=>b.start_datum&&b.ende_datum);
+  if(!allDates.length){toast('Bitte Datum bei Einträgen setzen.',false);return;}
+  const minD=new Date(Math.min(...allDates.map(b=>new Date(b.start_datum))));
+  const maxD=new Date(Math.max(...allDates.map(b=>new Date(b.ende_datum))));
+  minD.setDate(1);maxD.setMonth(maxD.getMonth()+2);maxD.setDate(0);
+  const totalDays=Math.max(daysBetween(minD.toISOString(),maxD.toISOString()),30);
 
   const size=document.getElementById('pdf-size').value;
   const sizes={a4:[297,210],a3:[420,297],a2:[594,420],a1:[841,594],a0:[1189,841]};
@@ -2250,126 +2436,110 @@ function exportGanttPDF(){
   const{jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'landscape',unit:'mm',format:size});
 
-  const m=15; // margin
+  const m=12;
   const usableW=pw-2*m;
   const usableH=ph-2*m;
 
   // Title
-  doc.setFontSize(16);
-  doc.setFont(undefined,'bold');
-  doc.text(`Bauzeitenplan: ${proj.nummer} — ${proj.name}`,m,m+6);
-  doc.setFontSize(9);
-  doc.setFont(undefined,'normal');
-  doc.setTextColor(120);
-  const beginn=proj.beginn?new Date(proj.beginn).toLocaleDateString('de-DE'):'–';
-  const ende=proj.ende?new Date(proj.ende).toLocaleDateString('de-DE'):'–';
-  doc.text(`Zeitraum: ${beginn} – ${ende}  |  Stand: ${new Date().toLocaleDateString('de-DE')}  |  Format: ${size.toUpperCase()}`,m,m+12);
+  doc.setFontSize(14);doc.setFont(undefined,'bold');
+  doc.text(`Bauzeitenplan: ${proj.nummer} — ${proj.name}`,m,m+5);
+  doc.setFontSize(8);doc.setFont(undefined,'normal');doc.setTextColor(120);
+  doc.text(`Stand: ${new Date().toLocaleDateString('de-DE')} | Format: ${size.toUpperCase()}`,m,m+10);
   doc.setTextColor(0);
 
-  const topY=m+20;
-  const labelW=Math.min(55,usableW*0.15);
-  const daysW=15;
-  const chartX=m+labelW+daysW;
-  const chartW=usableW-labelW-daysW;
+  const topY=m+16;
+  const colNr=12,colNm=40,colGw=22,colSt=18,colEn=18,colDur=10;
+  const tblW=colNr+colNm+colGw+colSt+colEn+colDur;
+  const chartX=m+tblW+2;
+  const chartW=usableW-tblW-2;
 
-  const projStart=new Date(proj.beginn);
-  const maxDay=Math.max(...BP.map(b=>b.start_tag+b.dauer_tage));
-  const totalDays=Math.max(maxDay+7,30);
+  // Table header
+  doc.setFontSize(6);doc.setFont(undefined,'bold');doc.setTextColor(100);
+  let hx=m;
+  ['Nr','Name','Gewerk','Start','Ende','Tage'].forEach((h,i)=>{
+    const w=[colNr,colNm,colGw,colSt,colEn,colDur][i];
+    doc.text(h,hx+1,topY);hx+=w;
+  });
 
   // Month headers
-  const rowH=Math.min(8,Math.max(4,(usableH-30)/BP.length));
-  let headerY=topY;
-  doc.setFontSize(7);
-  doc.setFont(undefined,'bold');
-  let d=0;
-  while(d<totalDays){
-    const dt=new Date(projStart);dt.setDate(dt.getDate()+d);
-    const moEnd=new Date(dt.getFullYear(),dt.getMonth()+1,0);
-    const daysLeft=Math.ceil((moEnd-dt)/86400000)+1;
-    const span=Math.min(daysLeft,totalDays-d);
-    const x=chartX+(d/totalDays)*chartW;
-    const w=(span/totalDays)*chartW;
-    doc.setFillColor(240,240,240);
-    doc.rect(x,headerY,w,6,'F');
-    doc.setDrawColor(200);
-    doc.rect(x,headerY,w,6,'S');
-    const label=dt.toLocaleString('de',{month:'short',year:'2-digit'});
-    doc.text(label,x+w/2,headerY+4,{align:'center'});
-    d+=span;
+  let mx=chartX;
+  let curM=new Date(minD);
+  while(curM<maxD){
+    const mEnd=new Date(curM.getFullYear(),curM.getMonth()+1,0);
+    const effEnd=mEnd>maxD?maxD:mEnd;
+    const mDays=daysBetween(curM.toISOString(),effEnd.toISOString())+1;
+    const mW=(mDays/totalDays)*chartW;
+    doc.setFillColor(245,245,245);doc.rect(mx,topY-4,mW,5,'F');
+    doc.setDrawColor(220);doc.rect(mx,topY-4,mW,5,'S');
+    doc.setFontSize(6);doc.setFont(undefined,'bold');doc.setTextColor(100);
+    doc.text(curM.toLocaleString('de',{month:'short',year:'2-digit'}),mx+mW/2,topY-0.5,{align:'center'});
+    mx+=mW;
+    curM=new Date(curM.getFullYear(),curM.getMonth()+1,1);
   }
 
-  // Column headers
-  doc.setFontSize(7);
-  doc.text('Phase',m,headerY+4);
-  doc.text('Tage',m+labelW,headerY+4);
-  doc.setFont(undefined,'normal');
-
   // Rows
-  let y=headerY+8;
-  BP.forEach((b,i)=>{
-    if(y+rowH>ph-m)return; // page overflow protection
-
-    // Zebra
-    if(i%2===0){doc.setFillColor(248,248,248);doc.rect(m,y,usableW,rowH,'F');}
-
-    // Label
-    doc.setFontSize(7);
-    doc.setFont(undefined,b.abgeschlossen?'normal':'bold');
-    const label=(b.abgeschlossen?'✓ ':'')+b.bezeichnung;
-    doc.text(label.substring(0,25),m+1,y+rowH*0.65);
-
-    // Days
-    doc.setFont(undefined,'normal');
-    doc.setFontSize(6.5);
-    doc.setTextColor(120);
-    doc.text(String(b.dauer_tage),m+labelW+2,y+rowH*0.65);
+  const rowH=Math.min(6,Math.max(3.5,(usableH-24)/tree.length));
+  let y=topY+3;
+  doc.setTextColor(0);
+  tree.forEach((b,i)=>{
+    if(y+rowH>ph-m)return;
+    if(i%2===0){doc.setFillColor(250,250,250);doc.rect(m,y-0.5,usableW,rowH,'F');}
+    doc.setFontSize(5.5);
+    const isPhase=b.typ==='phase';
+    doc.setFont(undefined,isPhase?'bold':'normal');
+    let cx=m;
+    doc.text((b.nummer||'').substring(0,8),cx+1,y+rowH*0.6);cx+=colNr;
+    const icon=b.typ==='meilenstein'?'◇ ':b.typ==='phase'?'↔ ':'';
+    const indent=b._depth?'  ':'';
+    doc.text((indent+icon+b.bezeichnung).substring(0,22),cx+1,y+rowH*0.6);cx+=colNm;
+    doc.setFont(undefined,'normal');doc.setFontSize(5);doc.setTextColor(120);
+    doc.text((b.gewerk||'').substring(0,12),cx+1,y+rowH*0.6);cx+=colGw;
+    doc.text(fmtDt(b.start_datum),cx+1,y+rowH*0.6);cx+=colSt;
+    doc.text(fmtDt(b.ende_datum),cx+1,y+rowH*0.6);cx+=colEn;
+    doc.text(String(daysBetween(b.start_datum,b.ende_datum)),cx+1,y+rowH*0.6);
     doc.setTextColor(0);
 
     // Bar
-    const bStart=b.start_tag-1;
-    const barX=chartX+(bStart/totalDays)*chartW;
-    const barW=(b.dauer_tage/totalDays)*chartW;
-    const hex=b.farbe||'#f5a623';
-    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),bl=parseInt(hex.slice(5,7),16);
-    doc.setFillColor(r,g,bl);
-    const barH=rowH*0.55;
-    const barY=y+(rowH-barH)/2;
-    doc.roundedRect(barX,barY,Math.max(barW,1),barH,1,1,'F');
+    if(b.start_datum&&b.ende_datum){
+      const bOff=daysBetween(minD.toISOString(),b.start_datum);
+      const bDur=Math.max(daysBetween(b.start_datum,b.ende_datum),0);
+      const barX=chartX+(bOff/totalDays)*chartW;
+      const barW=Math.max((bDur/totalDays)*chartW,0.5);
+      const hex=b.farbe||'#3b82f6';
+      const r=parseInt(hex.slice(1,3),16),g2=parseInt(hex.slice(3,5),16),bl=parseInt(hex.slice(5,7),16);
 
-    // Strikethrough for fixed
-    if(b.abgeschlossen){
-      doc.setDrawColor(r,g,bl);
-      doc.setLineWidth(0.3);
-      doc.line(barX,barY+barH/2,barX+barW,barY+barH/2);
+      if(b.typ==='phase'){
+        doc.setFillColor(80,80,80);
+        doc.rect(barX,y+rowH*0.35,barW,rowH*0.2,'F');
+      } else if(b.typ==='meilenstein'){
+        doc.setFillColor(r,g2,bl);
+        const s=rowH*0.35;
+        doc.rect(barX-s/2,y+rowH*0.3,s,s,'F');
+      } else {
+        doc.setFillColor(r,g2,bl);
+        doc.roundedRect(barX,y+rowH*0.2,barW,rowH*0.5,0.5,0.5,'F');
+      }
+      // Label after bar
+      doc.setFontSize(4.5);doc.setTextColor(100);
+      doc.text(b.bezeichnung.substring(0,20),barX+barW+1,y+rowH*0.6);
+      doc.setTextColor(0);
     }
-
-    // Grid line
-    doc.setDrawColor(230);
-    doc.setLineWidth(0.1);
-    doc.line(m,y+rowH,m+usableW,y+rowH);
-
+    doc.setDrawColor(235);doc.setLineWidth(0.08);doc.line(m,y+rowH,m+usableW,y+rowH);
     y+=rowH;
   });
 
-  // Today marker
-  const today=new Date();
-  const todayDay=Math.floor((today-projStart)/86400000);
-  if(todayDay>=0&&todayDay<totalDays){
-    const tx=chartX+(todayDay/totalDays)*chartW;
-    doc.setDrawColor(239,68,68);
-    doc.setLineWidth(0.4);
+  // Today line
+  const todayOff=daysBetween(minD.toISOString(),new Date().toISOString());
+  if(todayOff>=0&&todayOff<=totalDays){
+    const tx=chartX+(todayOff/totalDays)*chartW;
+    doc.setDrawColor(239,68,68);doc.setLineWidth(0.3);
     doc.line(tx,topY,tx,y);
-    doc.setFontSize(6);
-    doc.setTextColor(239,68,68);
-    doc.text('Heute',tx+0.5,topY-1);
-    doc.setTextColor(0);
   }
 
   // Footer
-  doc.setFontSize(7);
-  doc.setTextColor(150);
-  doc.text(`BauDoku Pro — ${proj.nummer} ${proj.name}`,m,ph-m+5);
-  doc.text(`Seite 1 | ${new Date().toLocaleDateString('de-DE')} ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`,pw-m,ph-m+5,{align:'right'});
+  doc.setFontSize(6);doc.setTextColor(150);
+  doc.text(`BauDoku Pro — ${proj.nummer} ${proj.name}`,m,ph-m+4);
+  doc.text(`${new Date().toLocaleDateString('de-DE')} ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`,pw-m,ph-m+4,{align:'right'});
 
   doc.save(`Bauzeitenplan_${proj.nummer}_${size.toUpperCase()}.pdf`);
   toast('PDF exportiert!');
