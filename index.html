@@ -6,6 +6,7 @@
 <title>BauDoku Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
 <style>
 :root{--bg:#0f1117;--bg2:#161b25;--bg3:#1e2535;--bg4:#252e42;
 --brd:rgba(255,255,255,0.07);--brd2:rgba(255,255,255,0.13);
@@ -473,7 +474,50 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
     </div>
 
     <!-- BAUZEITPLAN -->
-    <div class="pg" id="pg-bauzeitplan"><div class="tw" style="padding:14px 16px;"><div id="gnt"></div></div></div>
+    <div class="pg" id="pg-bauzeitplan">
+      <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap;">
+        <button class="btn bp" onclick="om('m-bp')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:13px;height:13px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Phase hinzufügen</button>
+        <div class="sp"></div>
+        <select class="fs" id="gantt-zoom" onchange="rGantt()" style="width:auto;padding:5px 10px;">
+          <option value="week">Wochen</option>
+          <option value="month" selected>Monate</option>
+        </select>
+        <select class="fs" id="pdf-size" style="width:auto;padding:5px 10px;">
+          <option value="a4">A4</option>
+          <option value="a3">A3</option>
+          <option value="a2">A2</option>
+          <option value="a1">A1</option>
+          <option value="a0">A0</option>
+        </select>
+        <button class="btn bg" onclick="exportGanttPDF()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF Export</button>
+      </div>
+      <div class="tw" style="padding:0;overflow-x:auto;"><div id="gnt" style="min-width:600px;"></div></div>
+    </div>
+
+    <!-- MODAL BAUPHASE -->
+    <div class="mo" id="m-bp"><div class="md">
+      <div class="mh"><div class="mht" id="bp-mtit">Neue Bauphase</div><button class="mc" onclick="cm('m-bp')">✕</button></div>
+      <div class="mb">
+        <div class="fr fr1"><div class="fg"><label class="fl">Bezeichnung *</label><input type="text" class="fi" id="bp-bez" placeholder="z.B. Rohbau, Elektro, Innenausbau"></div></div>
+        <div class="fr fr2">
+          <div class="fg"><label class="fl">Starttag (ab Projektbeginn)</label><input type="number" class="fi" id="bp-start" min="1" value="1" placeholder="Tag 1"></div>
+          <div class="fg"><label class="fl">Dauer (Tage)</label><input type="number" class="fi" id="bp-dauer" min="1" value="14" placeholder="14"></div>
+        </div>
+        <div class="fr fr2">
+          <div class="fg"><label class="fl">Farbe</label><input type="color" id="bp-farbe" value="#f5a623" style="width:100%;height:36px;border:1px solid var(--brd);border-radius:var(--r);background:var(--bg3);cursor:pointer;"></div>
+          <div class="fg"><label class="fl">Reihenfolge</label><input type="number" class="fi" id="bp-reihe" min="0" value="0"></div>
+        </div>
+        <div style="margin-top:8px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--tx2);">
+            <input type="checkbox" id="bp-fix"> Fixiert (abgeschlossen)
+          </label>
+        </div>
+      </div>
+      <div class="mf">
+        <button class="btn bg" onclick="cm('m-bp')">Abbrechen</button>
+        <button class="btn bp" onclick="saveBauphase()">Speichern</button>
+      </div>
+    </div></div>
 
     <!-- KONTAKTE -->
     <div class="pg" id="pg-kontakte">
@@ -1006,7 +1050,7 @@ const {createClient}=supabase;
 const sb=createClient(SURL,SKEY);
 
 let CU=null,CPId=null;
-let PR=[],BE=[],MG=[],KO=[],MA=[],KT=[],BS=[];
+let PR=[],BE=[],MG=[],KO=[],MA=[],KT=[],BS=[],BP=[];
 let PP=[],_ps='all',_bf='',_bpf='',_mf='all',_kf='all';
 let PT=new Set(); // kontakt IDs im aktuellen Projektteam
 
@@ -1094,7 +1138,12 @@ async function showApp(){
   }catch(e){renderDashboard();}
 }
 
-async function loadAll(){await Promise.all([loadPR(),loadBE(),loadMG(),loadKO(),loadMA(),loadKT(),loadBS()]);}
+async function loadAll(){await Promise.all([loadPR(),loadBE(),loadMG(),loadKO(),loadMA(),loadKT(),loadBS(),loadBP()]);}
+async function loadBP(){
+  if(!CPId)return;
+  const{data}=await sb.from('bauphasen').select('*').eq('projekt_id',CPId).order('reihenfolge');
+  BP=data||[];
+}
 async function loadPR(){
   const{data}=await sb.from('projekte').select('*').order('created_at',{ascending:false});
   PR=data||[];
@@ -1323,7 +1372,7 @@ function sp(id){
   if(id==='projekte'){loadPR().then(()=>rPR());}
   if(id==='berichte')rBE();
   if(id==='maengel')rMG();
-  if(id==='bauzeitplan')rGantt();
+  if(id==='bauzeitplan'){loadBP().then(()=>rGantt());}
   if(id==='kontakte')rKT();
   if(id==='kosten')rKO();
   if(id==='material')rMA();
@@ -2052,6 +2101,278 @@ async function oeffneProtokoll(id){
   await sb.from('baubesprechungen').update({abgeschlossen:false}).eq('id',id);
   await loadBS();rBS();showProtoDet(id);
   toast('Protokoll entsperrt.');
+}
+
+// ── BAUZEITPLAN / GANTT ──────────────────────────────────────────────────
+let _editBP=null;
+
+function rGantt(){
+  const g=document.getElementById('gnt');
+  if(!g)return;
+  const proj=PR.find(p=>p.id===CPId);
+  if(!proj||!proj.beginn){g.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;opacity:.3;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg><div style="font-size:13px;color:var(--tx3);">Bitte Projektbeginn festlegen</div></div>';return;}
+  if(!BP.length){g.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;opacity:.3;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg><div style="font-size:13px;color:var(--tx3);">Keine Bauphasen vorhanden</div></div>';return;}
+
+  const zoom=document.getElementById('gantt-zoom').value;
+  const projStart=new Date(proj.beginn);
+  const maxDay=Math.max(...BP.map(b=>b.start_tag+b.dauer_tage));
+  const totalDays=Math.max(maxDay+7,30);
+
+  // Build time columns
+  const cols=[];
+  if(zoom==='week'){
+    for(let d=0;d<totalDays;d+=7){
+      const dt=new Date(projStart);dt.setDate(dt.getDate()+d);
+      cols.push({start:d,end:d+7,label:'KW'+getWeek(dt)});
+    }
+  } else {
+    let d=0;
+    while(d<totalDays){
+      const dt=new Date(projStart);dt.setDate(dt.getDate()+d);
+      const moEnd=new Date(dt.getFullYear(),dt.getMonth()+1,0);
+      const daysLeft=Math.ceil((moEnd-dt)/(86400000))+1;
+      const span=Math.min(daysLeft,totalDays-d);
+      cols.push({start:d,end:d+span,label:dt.toLocaleString('de',{month:'short',year:'2-digit'})});
+      d+=span;
+    }
+  }
+
+  let html='<table style="width:100%;border-collapse:collapse;font-size:12px;" id="gantt-table">';
+  // Header
+  html+='<tr style="border-bottom:2px solid var(--brd);">';
+  html+='<th style="text-align:left;padding:8px 12px;min-width:160px;font-weight:600;color:var(--tx2);font-size:11px;">PHASE</th>';
+  html+='<th style="width:60px;padding:8px 4px;font-size:11px;color:var(--tx3);">TAGE</th>';
+  cols.forEach(c=>{
+    const w=Math.max((c.end-c.start)*3,24);
+    html+=`<th style="min-width:${w}px;padding:4px 2px;font-size:10px;color:var(--tx3);font-weight:500;text-align:center;border-left:1px solid var(--brd);">${c.label}</th>`;
+  });
+  html+='<th style="width:60px;"></th></tr>';
+
+  // Rows
+  BP.forEach(b=>{
+    html+='<tr style="border-bottom:1px solid var(--brd);">';
+    html+=`<td style="padding:8px 12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;">${b.abgeschlossen?'🔒 ':''}${esc(b.bezeichnung)}</td>`;
+    html+=`<td style="padding:8px 4px;text-align:center;font-family:var(--mo);font-size:11px;color:var(--tx3);">${b.dauer_tage}</td>`;
+    cols.forEach(c=>{
+      const w=Math.max((c.end-c.start)*3,24);
+      let cell='';
+      const bStart=b.start_tag-1;
+      const bEnd=bStart+b.dauer_tage;
+      if(bEnd>c.start&&bStart<c.end){
+        const clipL=Math.max(bStart-c.start,0);
+        const clipR=Math.max(c.end-bEnd,0);
+        const span=c.end-c.start;
+        const left=(clipL/span*100);
+        const right=(clipR/span*100);
+        const opacity=b.abgeschlossen?'0.6':'1';
+        cell=`<div style="position:relative;height:18px;"><div style="position:absolute;left:${left}%;right:${right}%;top:0;height:100%;background:${b.farbe||'var(--ac)'};border-radius:99px;opacity:${opacity};"></div></div>`;
+      }
+      html+=`<td style="padding:4px 2px;border-left:1px solid var(--brd);">${cell}</td>`;
+    });
+    html+=`<td style="padding:4px;text-align:center;">
+      <button onclick="editBP('${b.id}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:13px;" title="Bearbeiten">✏️</button>
+      <button onclick="delBP('${b.id}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);font-size:13px;" title="Löschen">🗑</button>
+    </td></tr>`;
+  });
+
+  // Today marker info
+  const today=new Date();
+  const todayDay=Math.floor((today-projStart)/86400000);
+  if(todayDay>=0&&todayDay<totalDays){
+    html+=`<tr><td colspan="2" style="padding:6px 12px;font-size:11px;color:var(--ac);font-weight:500;">📍 Heute: Tag ${todayDay+1}</td>`;
+    html+=`<td colspan="${cols.length+1}"></td></tr>`;
+  }
+
+  html+='</table>';
+  g.innerHTML=html;
+}
+
+function getWeek(d){const dt=new Date(d);dt.setHours(0,0,0,0);dt.setDate(dt.getDate()+3-(dt.getDay()+6)%7);const w1=new Date(dt.getFullYear(),0,4);return 1+Math.round(((dt-w1)/86400000-3+(w1.getDay()+6)%7)/7);}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+function editBP(id){
+  const b=BP.find(x=>x.id===id);if(!b)return;
+  _editBP=id;
+  document.getElementById('bp-mtit').textContent='Bauphase bearbeiten';
+  document.getElementById('bp-bez').value=b.bezeichnung;
+  document.getElementById('bp-start').value=b.start_tag;
+  document.getElementById('bp-dauer').value=b.dauer_tage;
+  document.getElementById('bp-farbe').value=b.farbe||'#f5a623';
+  document.getElementById('bp-reihe').value=b.reihenfolge||0;
+  document.getElementById('bp-fix').checked=b.abgeschlossen||false;
+  om('m-bp');
+}
+
+async function saveBauphase(){
+  const bez=document.getElementById('bp-bez').value.trim();
+  if(!bez){toast('Bezeichnung ist Pflichtfeld.',false);return;}
+  const obj={
+    bezeichnung:bez,
+    start_tag:parseInt(document.getElementById('bp-start').value)||1,
+    dauer_tage:parseInt(document.getElementById('bp-dauer').value)||14,
+    farbe:document.getElementById('bp-farbe').value,
+    reihenfolge:parseInt(document.getElementById('bp-reihe').value)||0,
+    abgeschlossen:document.getElementById('bp-fix').checked
+  };
+  let error;
+  if(_editBP){
+    ({error}=await sb.from('bauphasen').update(obj).eq('id',_editBP));
+  } else {
+    obj.projekt_id=CPId;
+    ({error}=await sb.from('bauphasen').insert(obj));
+  }
+  if(error){toast('Fehler: '+error.message,false);return;}
+  _editBP=null;
+  cm('m-bp');
+  document.getElementById('bp-mtit').textContent='Neue Bauphase';
+  document.getElementById('bp-bez').value='';document.getElementById('bp-start').value='1';
+  document.getElementById('bp-dauer').value='14';document.getElementById('bp-farbe').value='#f5a623';
+  document.getElementById('bp-reihe').value='0';document.getElementById('bp-fix').checked=false;
+  await loadBP();rGantt();
+  toast(_editBP?'Phase aktualisiert!':'Phase hinzugefügt!');
+}
+
+async function delBP(id){
+  if(!confirm('Phase wirklich löschen?'))return;
+  await sb.from('bauphasen').delete().eq('id',id);
+  await loadBP();rGantt();
+  toast('Phase gelöscht.');
+}
+
+function exportGanttPDF(){
+  const proj=PR.find(p=>p.id===CPId);
+  if(!proj||!BP.length){toast('Keine Daten für PDF.',false);return;}
+
+  const size=document.getElementById('pdf-size').value;
+  const sizes={a4:[297,210],a3:[420,297],a2:[594,420],a1:[841,594],a0:[1189,841]};
+  const[pw,ph]=sizes[size];
+
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:size});
+
+  const m=15; // margin
+  const usableW=pw-2*m;
+  const usableH=ph-2*m;
+
+  // Title
+  doc.setFontSize(16);
+  doc.setFont(undefined,'bold');
+  doc.text(`Bauzeitenplan: ${proj.nummer} — ${proj.name}`,m,m+6);
+  doc.setFontSize(9);
+  doc.setFont(undefined,'normal');
+  doc.setTextColor(120);
+  const beginn=proj.beginn?new Date(proj.beginn).toLocaleDateString('de-DE'):'–';
+  const ende=proj.ende?new Date(proj.ende).toLocaleDateString('de-DE'):'–';
+  doc.text(`Zeitraum: ${beginn} – ${ende}  |  Stand: ${new Date().toLocaleDateString('de-DE')}  |  Format: ${size.toUpperCase()}`,m,m+12);
+  doc.setTextColor(0);
+
+  const topY=m+20;
+  const labelW=Math.min(55,usableW*0.15);
+  const daysW=15;
+  const chartX=m+labelW+daysW;
+  const chartW=usableW-labelW-daysW;
+
+  const projStart=new Date(proj.beginn);
+  const maxDay=Math.max(...BP.map(b=>b.start_tag+b.dauer_tage));
+  const totalDays=Math.max(maxDay+7,30);
+
+  // Month headers
+  const rowH=Math.min(8,Math.max(4,(usableH-30)/BP.length));
+  let headerY=topY;
+  doc.setFontSize(7);
+  doc.setFont(undefined,'bold');
+  let d=0;
+  while(d<totalDays){
+    const dt=new Date(projStart);dt.setDate(dt.getDate()+d);
+    const moEnd=new Date(dt.getFullYear(),dt.getMonth()+1,0);
+    const daysLeft=Math.ceil((moEnd-dt)/86400000)+1;
+    const span=Math.min(daysLeft,totalDays-d);
+    const x=chartX+(d/totalDays)*chartW;
+    const w=(span/totalDays)*chartW;
+    doc.setFillColor(240,240,240);
+    doc.rect(x,headerY,w,6,'F');
+    doc.setDrawColor(200);
+    doc.rect(x,headerY,w,6,'S');
+    const label=dt.toLocaleString('de',{month:'short',year:'2-digit'});
+    doc.text(label,x+w/2,headerY+4,{align:'center'});
+    d+=span;
+  }
+
+  // Column headers
+  doc.setFontSize(7);
+  doc.text('Phase',m,headerY+4);
+  doc.text('Tage',m+labelW,headerY+4);
+  doc.setFont(undefined,'normal');
+
+  // Rows
+  let y=headerY+8;
+  BP.forEach((b,i)=>{
+    if(y+rowH>ph-m)return; // page overflow protection
+
+    // Zebra
+    if(i%2===0){doc.setFillColor(248,248,248);doc.rect(m,y,usableW,rowH,'F');}
+
+    // Label
+    doc.setFontSize(7);
+    doc.setFont(undefined,b.abgeschlossen?'normal':'bold');
+    const label=(b.abgeschlossen?'✓ ':'')+b.bezeichnung;
+    doc.text(label.substring(0,25),m+1,y+rowH*0.65);
+
+    // Days
+    doc.setFont(undefined,'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(120);
+    doc.text(String(b.dauer_tage),m+labelW+2,y+rowH*0.65);
+    doc.setTextColor(0);
+
+    // Bar
+    const bStart=b.start_tag-1;
+    const barX=chartX+(bStart/totalDays)*chartW;
+    const barW=(b.dauer_tage/totalDays)*chartW;
+    const hex=b.farbe||'#f5a623';
+    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),bl=parseInt(hex.slice(5,7),16);
+    doc.setFillColor(r,g,bl);
+    const barH=rowH*0.55;
+    const barY=y+(rowH-barH)/2;
+    doc.roundedRect(barX,barY,Math.max(barW,1),barH,1,1,'F');
+
+    // Strikethrough for fixed
+    if(b.abgeschlossen){
+      doc.setDrawColor(r,g,bl);
+      doc.setLineWidth(0.3);
+      doc.line(barX,barY+barH/2,barX+barW,barY+barH/2);
+    }
+
+    // Grid line
+    doc.setDrawColor(230);
+    doc.setLineWidth(0.1);
+    doc.line(m,y+rowH,m+usableW,y+rowH);
+
+    y+=rowH;
+  });
+
+  // Today marker
+  const today=new Date();
+  const todayDay=Math.floor((today-projStart)/86400000);
+  if(todayDay>=0&&todayDay<totalDays){
+    const tx=chartX+(todayDay/totalDays)*chartW;
+    doc.setDrawColor(239,68,68);
+    doc.setLineWidth(0.4);
+    doc.line(tx,topY,tx,y);
+    doc.setFontSize(6);
+    doc.setTextColor(239,68,68);
+    doc.text('Heute',tx+0.5,topY-1);
+    doc.setTextColor(0);
+  }
+
+  // Footer
+  doc.setFontSize(7);
+  doc.setTextColor(150);
+  doc.text(`BauDoku Pro — ${proj.nummer} ${proj.name}`,m,ph-m+5);
+  doc.text(`Seite 1 | ${new Date().toLocaleDateString('de-DE')} ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`,pw-m,ph-m+5,{align:'right'});
+
+  doc.save(`Bauzeitenplan_${proj.nummer}_${size.toUpperCase()}.pdf`);
+  toast('PDF exportiert!');
 }
 
 </script>
