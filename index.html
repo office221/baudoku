@@ -990,6 +990,16 @@ function getCK(k){
   try{return sessionStorage.getItem(k);}catch(e){return null;}
 }
 
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  const isLight=document.body.classList.contains('light');
+  setCK('bd_theme',isLight?'light':'dark');
+  const di=document.getElementById('theme-icon-dark');
+  const li=document.getElementById('theme-icon-light');
+  if(di)di.style.display=isLight?'none':'block';
+  if(li)li.style.display=isLight?'block':'none';
+}
+
 const SURL='https://oqvgzmzcssamlkuhoamf.supabase.co';
 const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xdmd6bXpjc3NhbWxrdWhvYW1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODI1MDgsImV4cCI6MjA5MTA1ODUwOH0.fHdR7yh0IVKBJJEOA55CqPBSen4dua_eYs-BVUSyrUM';
 const {createClient}=supabase;
