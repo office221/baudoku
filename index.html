@@ -2251,7 +2251,7 @@ async function saveBauphase(){
   }
   if(error){toast('Fehler: '+error.message,false);return;}
   cm('m-bp');_editBP=null;
-  await loadBP();rGantt();
+  await loadBP();await renumberBP();await loadBP();rGantt();
   toast('Gespeichert!');
 }
 
@@ -2391,7 +2391,7 @@ function rGantt(){
 
       if(b.typ==='phase'){
         // Thin dark bar with down-arrows at ends
-        chart+=`<div style="position:absolute;left:${left}px;width:${width}px;top:10px;height:5px;background:#555;border-radius:1px;opacity:${opacity};"></div>`;
+        chart+=`<div onmousedown="barDragStart(event,'${b.id}')" style="position:absolute;left:${left}px;width:${width}px;top:8px;height:10px;background:#555;border-radius:1px;opacity:${opacity};cursor:ew-resize;"></div>`;
         chart+=`<div style="position:absolute;left:${left}px;top:15px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #555;"></div>`;
         chart+=`<div style="position:absolute;left:${left+width-8}px;top:15px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #555;"></div>`;
         chart+=`<span style="position:absolute;left:${afterBar}px;top:7px;font-size:10px;font-weight:600;color:var(--tx);white-space:nowrap;">Bauphase: ${esc(b.bezeichnung)}</span>`;
@@ -2402,7 +2402,7 @@ function rGantt(){
         chart+=`<span style="position:absolute;left:${left+14}px;top:9px;font-size:10px;font-weight:500;color:var(--tx);white-space:nowrap;">${esc(b.bezeichnung)}</span>`;
       } else {
         // Regular bar
-        chart+=`<div style="position:absolute;left:${left}px;width:${width}px;top:8px;height:14px;background:${color};border-radius:3px;opacity:${opacity};"></div>`;
+        chart+=`<div onmousedown="barDragStart(event,'${b.id}')" style="position:absolute;left:${left}px;width:${width}px;top:8px;height:14px;background:${color};border-radius:3px;opacity:${opacity};cursor:ew-resize;"></div>`;
         chart+=`<span style="position:absolute;left:${left-4}px;top:9px;font-size:9px;color:var(--tx3);transform:translateX(-100%);white-space:nowrap;">${dateLbl}</span>`;
         chart+=`<span style="position:absolute;left:${afterBar}px;top:9px;font-size:10px;font-weight:500;color:var(--tx);white-space:nowrap;">${esc(b.bezeichnung)}</span>`;
       }
@@ -2427,6 +2427,24 @@ function rGantt(){
   chartEl.addEventListener('scroll',()=>{tableEl.scrollTop=chartEl.scrollTop;});
 }
 
+// Auto-renumber all entries based on tree order
+async function renumberBP(){
+  const roots=BP.filter(b=>!b.parent_id).sort((a,b)=>(a.reihenfolge||0)-(b.reihenfolge||0));
+  const children=id=>BP.filter(b=>b.parent_id===id).sort((a,b)=>(a.reihenfolge||0)-(b.reihenfolge||0));
+  const updates=[];
+  roots.forEach((r,ri)=>{
+    const nr=String(ri+1);
+    if(r.nummer!==nr)updates.push(sb.from('bauphasen').update({nummer:nr}).eq('id',r.id));
+    r.nummer=nr;
+    children(r.id).forEach((c,ci)=>{
+      const cnr=nr+'.'+(ci+1);
+      if(c.nummer!==cnr)updates.push(sb.from('bauphasen').update({nummer:cnr}).eq('id',c.id));
+      c.nummer=cnr;
+    });
+  });
+  if(updates.length)await Promise.all(updates);
+}
+
 // Drag & Drop sorting
 let _dragBPId=null;
 function bpDragStart(e,id){_dragBPId=id;e.target.style.opacity='0.4';e.dataTransfer.effectAllowed='move';}
@@ -2440,14 +2458,46 @@ async function bpDrop(e,targetId){
   const fromIdx=tree.findIndex(b=>b.id===_dragBPId);
   const toIdx=tree.findIndex(b=>b.id===targetId);
   if(fromIdx<0||toIdx<0)return;
-  // Reorder
-  const updates=[];
   const moved=tree.splice(fromIdx,1)[0];
   tree.splice(toIdx,0,moved);
-  tree.forEach((b,i)=>updates.push(sb.from('bauphasen').update({reihenfolge:i}).eq('id',b.id)));
+  const updates=tree.map((b,i)=>sb.from('bauphasen').update({reihenfolge:i}).eq('id',b.id));
   await Promise.all(updates);
+  await loadBP();
+  await renumberBP();
   await loadBP();rGantt();
   _dragBPId=null;
+}
+
+// Bar dragging in Gantt chart
+let _barDrag=null;
+function barDragStart(e,id){
+  e.stopPropagation();
+  _barDrag={id,startX:e.clientX};
+  const bar=e.target;
+  const onMove=ev=>{
+    const dx=ev.clientX-_barDrag.startX;
+    bar.style.transform=`translateX(${dx}px)`;
+    bar._dx=dx;
+  };
+  const onUp=async ev=>{
+    document.removeEventListener('mousemove',onMove);
+    document.removeEventListener('mouseup',onUp);
+    bar.style.transform='';
+    const dx=bar._dx||0;
+    if(Math.abs(dx)<5){_barDrag=null;return;}
+    const daysMoved=Math.round(dx/5); // 5px per day (dayW)
+    const b=BP.find(x=>x.id===id);
+    if(!b||!b.start_datum||!b.ende_datum){_barDrag=null;return;}
+    const ns=new Date(b.start_datum);ns.setDate(ns.getDate()+daysMoved);
+    const ne=new Date(b.ende_datum);ne.setDate(ne.getDate()+daysMoved);
+    const nsd=ns.toISOString().split('T')[0];
+    const ned=ne.toISOString().split('T')[0];
+    await sb.from('bauphasen').update({start_datum:nsd,ende_datum:ned}).eq('id',id);
+    await loadBP();rGantt();
+    _barDrag=null;
+  };
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('mouseup',onUp);
 }
 
 function exportGanttPDF(){
