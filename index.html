@@ -1528,6 +1528,34 @@ function selPDet(id){
   document.getElementById('tb-pn').textContent=p.nummer+' · '+p.name;CPId=p.id;
 }
 
+async function saveProjekt(){
+  const nr=document.getElementById('p-nr').value.trim();
+  const nm=document.getElementById('p-nm').value.trim();
+  if(!nr||!nm){toast('Projektnummer und Name sind Pflichtfelder.',false);return;}
+  const{error}=await sb.from('projekte').insert({
+    user_id:(await sb.auth.getUser()).data.user.id,
+    nummer:nr,
+    name:nm,
+    beschreibung:document.getElementById('p-desc').value.trim(),
+    status:document.getElementById('p-st').value,
+    beginn:document.getElementById('p-bg').value||null,
+    ende:document.getElementById('p-en').value||null,
+    strasse:document.getElementById('p-str').value.trim(),
+    hausnummer:document.getElementById('p-hn').value.trim(),
+    plz:document.getElementById('p-plz').value.trim(),
+    ort:document.getElementById('p-ort').value.trim()
+  });
+  if(error){toast('Fehler: '+error.message,false);return;}
+  cm('m-p');
+  document.getElementById('p-nr').value='';document.getElementById('p-nm').value='';
+  document.getElementById('p-desc').value='';document.getElementById('p-bg').value='';
+  document.getElementById('p-en').value='';document.getElementById('p-str').value='';
+  document.getElementById('p-hn').value='';document.getElementById('p-plz').value='';
+  document.getElementById('p-ort').value='';
+  await loadPR();rPR();renderDashboard();
+  toast('Projekt angelegt!');
+}
+
 async function saveDetProjekt(id){
   const{error}=await sb.from('projekte').update({
     nummer:document.getElementById('det-nr').value,
