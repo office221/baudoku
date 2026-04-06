@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BauDoku Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#0f1117;--bg2:#161b25;--bg3:#1e2535;--bg4:#252e42;
+--brd:rgba(255,255,255,0.07);--brd2:rgba(255,255,255,0.13);
+--tx:#e8eaf0;--tx2:#8b93a8;--tx3:#5a6070;--tx4:#3a4050;
+--ac:#f5a623;--ac2:#e8961f;--adm:rgba(245,166,35,0.12);
+--bl:#3b82f6;--bldm:rgba(59,130,246,0.12);
+--gn:#22c55e;--gndm:rgba(34,197,94,0.12);
+--rd:#ef4444;--rddm:rgba(239,68,68,0.1);
+--or:#f97316;--ordm:rgba(249,115,22,0.12);
+--pu:#a78bfa;--pudm:rgba(167,139,250,0.12);
+--tl:#2dd4bf;--tldm:rgba(45,212,191,0.12);
+--fn:'DM Sans',sans-serif;--mo:'DM Mono',monospace;
+--r:8px;--rl:14px;--rxl:20px;--sw:250px;--tr:0.15s ease;}
+/* LIGHT MODE */
+body.light{
+  --bg:#f0f2f5;--bg2:#ffffff;--bg3:#f5f6f8;--bg4:#e8eaed;
+  --brd:rgba(0,0,0,0.08);--brd2:rgba(0,0,0,0.15);
+  --tx:#1a1d23;--tx2:#4a5568;--tx3:#718096;--tx4:#a0aec0;
+  --adm:rgba(245,166,35,0.15);--bldm:rgba(59,130,246,0.12);
+  --gndm:rgba(34,197,94,0.12);--rddm:rgba(239,68,68,0.1);
+  --ordm:rgba(249,115,22,0.12);--pudm:rgba(167,139,250,0.12);--tldm:rgba(45,212,191,0.12);
+}
+body.light .ni.act{background:var(--ac);color:#1a1200;}
+body.light .tw{box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+body.light .sc{box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+body.light .pc{box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+body.light .md{box-shadow:0 20px 60px rgba(0,0,0,0.15);}
+body.light #as{background:var(--bg);}
+body.light .fi,body.light .fs,body.light .ft{background:var(--bg3);}
+body.light .si{background:var(--bg3);}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;font-size:14px;}
+/* SIDEBAR */
+#sb{width:260px;background:var(--bg2);border-right:1px solid var(--brd);display:flex;flex-direction:column;height:100vh;overflow-y:auto;flex-shrink:0;padding:8px;}
+.logo{padding:16px 8px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--brd);margin-bottom:6px;}
+.li{width:30px;height:30px;background:var(--ac);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lt{font-size:14px;font-weight:600;}
+.lt span{color:var(--ac);}
+.lv{font-size:10px;font-family:var(--mo);color:var(--tx3);}
+.ns{padding:0;}
+.nl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);padding:4px 16px;margin-bottom:4px;margin-top:10px;}
+.ni{display:flex;align-items:center;gap:14px;padding:13px 16px;border-radius:12px;cursor:pointer;color:var(--tx2);transition:background var(--tr),color var(--tr);font-size:15px;font-weight:500;user-select:none;margin-bottom:2px;}
+.ni:hover{background:var(--bg3);color:var(--tx);}
+.ni.act{background:var(--ac);color:#1a1200;font-weight:600;}
+.ni svg{width:20px;height:20px;flex-shrink:0;opacity:.8;}
+.ni.act svg{opacity:1;}
+.nb{margin-left:auto;background:rgba(0,0,0,0.15);color:inherit;font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px;font-family:var(--mo);}
+.ni.act .nb{background:rgba(0,0,0,0.2);color:#1a1200;}
+.sf{margin-top:auto;padding:12px 16px;border-top:1px solid var(--brd);display:flex;align-items:center;gap:9px;}
+.av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--ac),var(--or));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#1a1200;flex-shrink:0;}
+/* MAIN */
+#mn{flex:1;display:flex;flex-direction:column;overflow:hidden;height:100vh;}
+#tb{height:58px;border-bottom:1px solid var(--brd);display:flex;align-items:center;padding:0 22px;gap:12px;flex-shrink:0;}
+.pp{display:flex;align-items:center;gap:10px;background:var(--bg2);border:2px solid var(--ac);border-radius:30px;padding:9px 18px;cursor:pointer;font-size:14px;font-weight:600;color:var(--tx);transition:all var(--tr);box-shadow:0 0 0 4px rgba(245,166,35,0.08);}
+.pp:hover{background:var(--adm);box-shadow:0 0 0 6px rgba(245,166,35,0.12);}
+.pp:hover{border-color:var(--brd2);}
+.pdot{width:9px;height:9px;border-radius:50%;background:var(--gn);flex-shrink:0;box-shadow:0 0 8px rgba(34,197,94,.8),0 0 16px rgba(34,197,94,.3);}
+.sp{flex:1;}
+.btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--r);border:none;cursor:pointer;font-family:var(--fn);font-size:12.5px;font-weight:500;transition:background var(--tr),transform .1s;}
+.btn:active{transform:scale(.97);}
+.btn svg{width:13px;height:13px;}
+.bp{background:var(--ac);color:#1a1200;}
+.bp:hover{background:var(--ac2);}
+.bg{background:var(--bg3);color:var(--tx2);border:1px solid var(--brd);}
+.bg:hover{background:var(--bg4);color:var(--tx);}
+/* CONTENT */
+#ct{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.pg{display:none;animation:fi .15s ease;padding:18px 20px;overflow-y:auto;flex:1;}
+.pg.act{display:block;}
+#pg-projekte{padding:0;overflow:hidden;display:none;flex-direction:row;}
+#pg-projekte.act{display:flex;}
+#pg-besprechungen{padding:0;overflow:hidden;display:none;flex-direction:row;}
+#pg-besprechungen.act{display:flex;}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+/* AUTH */
+#as{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:200;}
+.ab{background:var(--bg2);border:1px solid var(--brd2);border-radius:var(--rxl);padding:32px 36px;width:380px;}
+.at{display:flex;gap:2px;background:var(--bg3);border-radius:var(--r);padding:3px;margin-bottom:18px;}
+.at-t{flex:1;text-align:center;padding:6px;border-radius:6px;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--tx3);transition:background var(--tr),color var(--tr);}
+.at-t.act{background:var(--bg4);color:var(--tx);}
+.ae{background:var(--rddm);border:1px solid rgba(239,68,68,.2);border-radius:var(--r);padding:9px 12px;font-size:12px;color:#fca5a5;margin-bottom:12px;display:none;}
+/* STATS */
+.sr{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.sc{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rl);padding:14px 16px;position:relative;overflow:hidden;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.sc.ca::before{background:var(--ac);}
+.sc.cb::before{background:var(--bl);}
+.sc.cg::before{background:var(--gn);}
+.sc.cr::before{background:var(--rd);}
+.sc.ct::before{background:var(--tl);}
+.sl{font-size:10.5px;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;font-weight:500;margin-bottom:6px;}
+.sv{font-size:22px;font-weight:600;letter-spacing:-.5px;font-family:var(--mo);}
+.ss{font-size:11px;color:var(--tx3);margin-top:2px;}
+/* PROJECT CARDS */
+.pg2{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px;}
+.pc{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rl);padding:16px;cursor:pointer;transition:border-color var(--tr),transform var(--tr);}
+.pc:hover{border-color:var(--brd2);transform:translateY(-1px);}
+.pc.sel{border-color:var(--ac);}
+.pc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.pc-nr{font-family:var(--mo);font-size:10.5px;color:var(--tx3);}
+.badge{font-size:10.5px;font-weight:500;padding:2px 7px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;}
+.bgg{background:var(--gndm);color:var(--gn);}
+.bga{background:var(--adm);color:var(--ac);}
+.bgp{background:var(--pudm);color:var(--pu);}
+.bbb{background:var(--bldm);color:var(--bl);}
+.bgr{background:var(--rddm);color:var(--rd);}
+.bgt{background:var(--tldm);color:var(--tl);}
+.pc-n{font-size:14px;font-weight:600;letter-spacing:-.2px;margin-bottom:2px;}
+.pc-a{font-size:11.5px;color:var(--tx3);margin-bottom:12px;}
+.pbar{height:3px;background:var(--bg4);border-radius:99px;overflow:hidden;margin:10px 0 4px;}
+.pfill{height:100%;background:var(--ac);border-radius:99px;}
+.ptxt{display:flex;justify-content:space-between;font-size:10px;color:var(--tx3);}
+/* TABLE */
+.tw{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rl);overflow:hidden;}
+.br{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background var(--tr);}
+.br:hover{background:var(--bg3);}
+.br:last-child{border-bottom:none;}
+.bd{width:72px;flex-shrink:0;font-family:var(--mo);font-size:11px;color:var(--tx3);}
+.bi{flex:1;min-width:0;}
+.bt2{font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bs2{font-size:11px;color:var(--tx3);margin-top:1px;}
+.bm{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;max-width:180px;justify-content:flex-end;}
+.tag{font-size:10.5px;font-weight:500;padding:2px 6px;border-radius:20px;white-space:nowrap;}
+.tbl{background:var(--bldm);color:#93bbff;}
+.tgg{background:var(--gndm);color:#86efac;}
+.tog{background:var(--ordm);color:#fdba74;}
+.tab{background:var(--adm);color:var(--ac);}
+/* SEARCH */
+.sw{position:relative;margin-bottom:14px;}
+.sw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--tx3);}
+.si{width:100%;background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);padding:7px 10px 7px 30px;color:var(--tx);font-family:var(--fn);font-size:12.5px;outline:none;transition:border-color var(--tr);}
+.si:focus{border-color:var(--ac);}
+.si::placeholder{color:var(--tx3);}
+/* TABS */
+.tabs{display:flex;gap:2px;margin-bottom:14px;background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);padding:3px;width:fit-content;}
+.tab2{padding:5px 12px;border-radius:5px;cursor:pointer;font-size:12px;font-weight:500;color:var(--tx3);transition:background var(--tr),color var(--tr);border:none;background:transparent;font-family:var(--fn);}
+.tab2:hover{color:var(--tx);}
+.tab2.act{background:var(--bg3);color:var(--tx);}
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.mo.open{display:flex;}
+.md{background:var(--bg2);border:1px solid var(--brd2);border-radius:var(--rxl);width:680px;max-width:95vw;max-height:90vh;overflow-y:auto;animation:mi .18s cubic-bezier(.16,1,.3,1);}
+.md.wide{width:800px;}
+@keyframes mi{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.mh{padding:18px 20px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;}
+.mht{font-size:15px;font-weight:600;}
+.mc{width:26px;height:26px;border-radius:6px;border:none;background:var(--bg3);color:var(--tx2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.mc:hover{background:var(--bg4);}
+.mb{padding:18px 20px;}
+.mf{padding:12px 20px 18px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--brd);}
+/* FORM */
+.fr{display:grid;gap:10px;margin-bottom:10px;}
+.fr2{grid-template-columns:1fr 1fr;}
+.fr3{grid-template-columns:1fr 1fr 1fr;}
+.fr1{grid-template-columns:1fr;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fl{font-size:10.5px;font-weight:500;color:var(--tx3);letter-spacing:.03em;text-transform:uppercase;}
+.fi,.fs,.ft{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);padding:7px 10px;color:var(--tx);font-family:var(--fn);font-size:12.5px;transition:border-color var(--tr);outline:none;}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--ac);}
+.ft{resize:vertical;min-height:70px;line-height:1.6;}
+.fi::placeholder,.ft::placeholder{color:var(--tx3);}
+.fs option{background:var(--bg3);}
+.fdiv{border:none;border-top:1px solid var(--brd);margin:14px 0;}
+.stit{font-size:13px;font-weight:600;margin-bottom:10px;}
+/* CHIPS */
+.cr{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.chip{display:flex;align-items:center;background:var(--bg3);border:1px solid var(--brd);border-radius:20px;padding:3px 9px;font-size:11.5px;color:var(--tx2);cursor:pointer;transition:border-color var(--tr),color var(--tr);}
+.chip:hover{border-color:var(--brd2);color:var(--tx);}
+.chip.sel{border-color:var(--ac);color:var(--ac);background:var(--adm);}
+/* PHOTO ZONE */
+.pz{border:1.5px dashed var(--brd2);border-radius:var(--rl);padding:22px;text-align:center;cursor:pointer;transition:border-color var(--tr),background var(--tr);}
+.pz:hover{border-color:var(--ac);background:var(--adm);}
+.pz svg{width:24px;height:24px;color:var(--tx3);margin-bottom:8px;}
+.pgr{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:7px;margin-top:9px;}
+.pth{aspect-ratio:1;border-radius:7px;overflow:hidden;position:relative;background:var(--bg4);}
+.pth img{width:100%;height:100%;object-fit:cover;}
+.pdl{position:absolute;top:3px;right:3px;width:18px;height:18px;background:rgba(0,0,0,.65);border-radius:50%;border:none;cursor:pointer;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;}
+/* WETTER */
+.wa{display:flex;align-items:center;gap:7px;background:var(--bldm);border:1px solid rgba(59,130,246,.2);border-radius:var(--r);padding:7px 11px;font-size:12px;color:#93bbff;cursor:pointer;margin-bottom:10px;width:fit-content;}
+.wa svg{width:13px;height:13px;}
+.wl{background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);padding:9px 11px;display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+/* MANGEL */
+.mr{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background var(--tr);}
+.mr:hover{background:var(--bg3);}
+.mr:last-child{border-bottom:none;}
+.mp{width:3px;border-radius:99px;flex-shrink:0;align-self:stretch;min-height:40px;}
+/* KOSTEN */
+.kr{display:flex;align-items:center;gap:9px;padding:9px 13px;border-bottom:1px solid var(--brd);font-size:12.5px;}
+.kr:last-child{border-bottom:none;}
+.kb{font-family:var(--mo);font-size:12.5px;font-weight:500;text-align:right;min-width:90px;}
+.ktot{background:var(--bg3);display:flex;align-items:center;gap:9px;padding:11px 13px;font-size:13px;font-weight:600;}
+/* MATERIAL */
+.matr{display:grid;grid-template-columns:1fr 65px 65px 90px 80px;gap:7px;align-items:center;padding:8px 13px;border-bottom:1px solid var(--brd);font-size:12.5px;}
+.matr:last-child{border-bottom:none;}
+.math{background:var(--bg3);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);}
+/* GANTT */
+.gr{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--brd);}
+.gr:last-child{border-bottom:none;}
+.gla{width:140px;flex-shrink:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gtr{flex:1;height:18px;background:var(--bg4);border-radius:99px;position:relative;overflow:hidden;}
+.gba{height:100%;border-radius:99px;position:absolute;display:flex;align-items:center;padding:0 6px;}
+.gba span{font-size:10px;color:#fff;font-weight:500;white-space:nowrap;}
+/* BESPRECHUNG */
+.besr{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background var(--tr);}
+.besr:hover{background:var(--bg3);}
+.besr:last-child{border-bottom:none;}
+/* MA CARD */
+.mac{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rl);padding:14px;display:flex;gap:10px;}
+.mav{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
+/* DETAIL */
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.di{background:var(--bg3);border-radius:var(--r);padding:10px 12px;}
+.dl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;}
+.dv{font-size:13px;font-weight:500;}
+.dbl{background:var(--bg3);border-radius:var(--r);padding:11px 13px;font-size:13px;line-height:1.7;margin-top:4px;}
+.dbl.warn{background:var(--rddm);border:1px solid rgba(239,68,68,.15);}
+/* EMPTY/LOADING */
+.empty{display:flex;flex-direction:column;align-items:center;padding:44px 20px;color:var(--tx3);gap:9px;text-align:center;}
+.empty svg{width:32px;height:32px;opacity:.3;}
+.spin{width:16px;height:16px;border:2px solid var(--brd2);border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* TOAST */
+#toast{position:fixed;bottom:20px;right:20px;background:var(--bg3);border:1px solid var(--brd2);border-radius:var(--r);padding:10px 14px;font-size:12.5px;color:var(--tx);display:none;z-index:300;gap:8px;align-items:center;box-shadow:0 8px 28px rgba(0,0,0,.45);}
+#toast.show{display:flex;}
+.tdot{width:6px;height:6px;border-radius:50%;}
+.gw-opt{padding:9px 14px;font-size:13px;cursor:pointer;transition:background var(--tr);display:flex;align-items:center;gap:9px;}
+.gw-opt:hover{background:var(--bg3);}
+.gw-opt.sel{color:var(--ac);font-weight:500;}
+.gw-opt::before{content:'';width:16px;height:16px;border-radius:4px;border:1.5px solid var(--brd2);flex-shrink:0;transition:all var(--tr);}
+.gw-opt.sel::before{background:var(--ac);border-color:var(--ac);background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='%231a1200' stroke-width='3' stroke-linecap='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");background-size:11px;background-position:center;background-repeat:no-repeat;}
+.gw-tag{display:inline-flex;align-items:center;gap:4px;background:var(--adm);color:var(--ac);border-radius:20px;padding:2px 8px;font-size:11.5px;font-weight:500;}
+.gw-tag-x{cursor:pointer;opacity:.7;font-size:13px;line-height:1;}
+.gw-tag-x:hover{opacity:1;}
+.proto-art{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r);cursor:pointer;transition:background var(--tr);margin-bottom:2px;}
+.proto-art:hover{background:var(--bg3);}
+.proto-art.act{background:var(--adm);}
+/* SECTION HEADER */
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.sh-t{font-size:13px;font-weight:600;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:99px;}
+/* PROJEKT GRUPPE NAV */
+.pg-grp{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:var(--r);cursor:pointer;font-size:12.5px;color:var(--tx2);transition:background var(--tr),color var(--tr);user-select:none;}
+.pg-grp:hover{background:var(--bg3);color:var(--tx);}
+.pg-grp.act{background:var(--adm);color:var(--ac);font-weight:500;}
+.pg-grp svg{flex-shrink:0;opacity:.7;}
+.pg-grp.act svg{opacity:1;}
+/* PROJEKT KARTE (Liste) */
+.pkl{display:flex;align-items:center;gap:12px;padding:14px 14px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background var(--tr),border-left var(--tr);border-left:3px solid transparent;}
+.pkl:hover{background:var(--bg3);}
+.pkl.act{background:var(--adm);border-left-color:var(--ac);}
+.pkl-img{width:54px;height:54px;border-radius:10px;background:var(--bg4);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+.pkl-img img{width:100%;height:100%;object-fit:cover;}
+.pkl-nm{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px;}
+.pkl-nr{font-size:10.5px;color:var(--ac);font-family:var(--mo);font-weight:500;margin-bottom:2px;}
+.pkl-sz{font-size:11px;color:var(--tx3);margin-top:3px;}
+/* DETAIL FELDER */
+.df{border:none;border-bottom:1px solid var(--brd);padding:10px 0;margin-bottom:2px;}
+.df:focus{outline:none;border-bottom-color:var(--ac);}
+.dfl{font-size:10.5px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.dfv{font-size:13.5px;color:var(--tx);background:transparent;border:none;outline:none;width:100%;font-family:var(--fn);}
+.dfv:focus{color:var(--tx);}
+.det-sec{font-size:14px;font-weight:600;margin:20px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--brd);}
+.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;}
+.det-actions{display:flex;gap:8px;margin-bottom:20px;}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="as">
+  <div class="ab">
+    <div class="logo" style="border:none;padding:0;margin-bottom:22px;">
+      <div class="li"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1200" stroke-width="2.5" stroke-linecap="round"><polygon points="3 9 12 2 21 9 21 20 3 20"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+      <div><div class="lt">Bau<span>Doku</span> Pro</div><div class="lv">Cloud Edition · Supabase</div></div>
+    </div>
+    <div class="at"><div class="at-t act" id="at-login" onclick="setAM('login')">Anmelden</div><div class="at-t" id="at-reg" onclick="setAM('reg')">Registrieren</div></div>
+    <div class="ae" id="ae"></div>
+    <div class="fg" style="margin-bottom:10px;"><label class="fl">E-Mail</label><input type="email" class="fi" id="aem" placeholder="deine@email.at"></div>
+    <div class="fg" style="margin-bottom:18px;"><label class="fl">Passwort</label><input type="password" class="fi" id="apw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()"></div>
+    <button class="btn bp" onclick="doAuth()" id="abtn" style="width:100%;justify-content:center;padding:9px;">Anmelden</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav id="sb" style="display:none;">
+  <div class="logo">
+    <div class="li"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="3 9 12 2 21 9 21 20 3 20"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    <div><div class="lt">Bau<span>Doku</span> Pro</div><div class="lv">v3 · Live</div></div>
+  </div>
+  <div class="ns">
+    <div class="ni act" onclick="sp('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</div>
+    <div class="ni" onclick="sp('projekte')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Projekte<span class="nb" id="nbp">0</span></div>
+    <div class="ni" onclick="sp('kontakte')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Kontakte</div>
+    <div class="ni" onclick="sp('berichte')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Bautagebuch<span class="nb" id="nbb">0</span></div>
+    <div class="ni" onclick="sp('berichte')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Bautagesbericht</div>
+    <div class="ni" onclick="sp('besprechungen')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Protokolle<span class="nb" id="nbbs">0</span></div>
+    <div class="ni" onclick="sp('maengel')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Mängel<span class="nb" id="nbm">0</span></div>
+    <div class="ni" onclick="sp('kosten')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>PDF-Pläne & Dokumente</div>
+    <div class="ni" onclick="sp('bauzeitplan')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>Bauzeitplan</div>
+    <div class="nl" style="margin-top:14px;">Service</div>
+    <div class="ni" onclick="loadAll();toast('Synchronisiert!')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>Synchronisieren</div>
+  </div>
+  <div class="sf">
+    <div class="av" id="av-i">?</div>
+    <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" id="sf-em">—</div><div style="font-size:10.5px;color:var(--tx3);">Eingeloggt · Supabase</div></div>
+    <svg onclick="doLogout()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;color:var(--tx3);cursor:pointer;" title="Abmelden"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="mn" style="display:none;">
+  <div id="tb">
+    <div style="font-size:17px;font-weight:700;letter-spacing:-.4px;" id="tb-t">Dashboard</div>
+    <div class="pp" onclick="toggleProjPicker()" id="proj-pill" style="position:relative;">
+      <div class="pdot" id="proj-pdot"></div>
+      <span id="tb-pn" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Kein Projekt</span>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <!-- Project Picker Dropdown -->
+    <div id="proj-picker" style="display:none;position:absolute;top:66px;left:22px;background:var(--bg2);border:1px solid var(--brd2);border-radius:var(--rl);min-width:280px;max-height:340px;overflow-y:auto;z-index:50;box-shadow:0 8px 30px rgba(0,0,0,.4);">
+      <div style="padding:10px 12px;border-bottom:1px solid var(--brd);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);">Projekt wählen</div>
+      <div id="proj-picker-list"></div>
+    </div>
+    <div class="sp"></div>
+    <button onclick="toggleTheme()" id="theme-btn" style="width:32px;height:32px;border-radius:var(--r);border:1px solid var(--brd);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background var(--tr),border-color var(--tr);" title="Hell/Dunkel">
+      <svg id="theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;color:var(--tx2);"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg id="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;color:var(--tx2);display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="btn bp" id="tb-btn" onclick="handleBtn()" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span id="tb-bt">Neu</span></button>
+  </div>
+  <div id="ct">
+
+    <!-- DASHBOARD -->
+    <div class="pg act" id="pg-dashboard">
+      <div class="sr">
+        <div class="sc ca"><div class="sl">Projekte</div><div class="sv" id="ds-p">—</div><div class="ss">aktive</div></div>
+        <div class="sc cb"><div class="sl">Berichte</div><div class="sv" id="ds-b">—</div><div class="ss">gesamt</div></div>
+        <div class="sc cr"><div class="sl">Offene Mängel</div><div class="sv" id="ds-m">—</div><div class="ss">offen</div></div>
+        <div class="sc ct"><div class="sl">Besprechungen</div><div class="sv" id="ds-bs">—</div></div>
+      </div>
+      <div class="sh"><div class="sh-t">Meine Projekte</div><button class="btn bg" onclick="sp('projekte')" style="font-size:11.5px;padding:4px 10px;">Alle</button></div>
+      <div class="pg2" id="ds-pgr" style="margin-bottom:20px;"></div>
+      <div class="sh"><div class="sh-t">Letzte Berichte</div><button class="btn bg" onclick="sp('berichte')" style="font-size:11.5px;padding:4px 10px;">Alle</button></div>
+      <div class="tw"><div id="ds-bl"></div></div>
+    </div>
+
+    <!-- PROJEKTE -->
+    <div class="pg" id="pg-projekte">
+      <div style="display:flex;height:calc(100vh - 50px);gap:0;">
+        <!-- COL 1: Gruppen -->
+        <div style="width:200px;flex-shrink:0;border-right:1px solid var(--brd);padding:12px 10px;overflow-y:auto;">
+          <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:8px;padding:0 4px;">Projekte</div>
+          <div class="pg-grp act" id="grp-active" onclick="setPGrp('active')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Aktive Projekte
+            <span class="nb" id="grp-nb-active">0</span>
+          </div>
+          <div class="pg-grp" id="grp-done" onclick="setPGrp('done')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="9 12 12 15 15 10"/></svg>
+            Archivierte
+            <span class="nb" id="grp-nb-done">0</span>
+          </div>
+        </div>
+        <!-- COL 2: Projektliste -->
+        <div style="width:280px;flex-shrink:0;border-right:1px solid var(--brd);display:flex;flex-direction:column;overflow:hidden;">
+          <div style="padding:10px 10px 8px;border-bottom:1px solid var(--brd);">
+            <div style="position:relative;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);width:12px;height:12px;color:var(--tx3);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" class="si" placeholder="Suchen …" oninput="fP(this.value)" style="padding-left:28px;font-size:12px;"></div>
+          </div>
+          <div style="flex:1;overflow-y:auto;" id="pgl"></div>
+        </div>
+        <!-- COL 3: Detail -->
+        <div style="flex:1;overflow-y:auto;padding:20px 24px;" id="p-detail">
+          <div class="empty" style="margin-top:60px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px;height:36px;opacity:.25;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <div style="font-size:13px;color:var(--tx3);">Projekt auswählen</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BERICHTE -->
+    <div class="pg" id="pg-berichte">
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+        <div class="sw" style="flex:1;margin:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" class="si" placeholder="Bericht suchen …" oninput="fB(this.value)"></div>
+        <select class="fs" onchange="fBP(this.value)" id="bpsel" style="width:190px;"><option value="">Alle Projekte</option></select>
+      </div>
+      <div class="tw"><div id="bl"></div></div>
+    </div>
+
+    <!-- BESPRECHUNGEN -->
+    <div class="pg" id="pg-besprechungen" style="padding:0;overflow:hidden;display:none;flex-direction:row;">
+      <!-- COL 1: Protokollarten -->
+      <div style="width:220px;flex-shrink:0;border-right:1px solid var(--brd);overflow-y:auto;padding:12px 10px;">
+        <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);padding:0 8px;margin-bottom:8px;">Protokollarten</div>
+        <div class="proto-art act" id="pa-all" onclick="setPArt('all',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          Alle Protokolle
+          <span class="nb" id="pa-all-nb">0</span>
+        </div>
+        <div style="height:8px;"></div>
+        <div id="pa-list">
+          <div class="proto-art" onclick="setPArt('BB',this)">
+            <div style="font-size:10px;font-weight:700;color:var(--bl);background:var(--bldm);padding:1px 5px;border-radius:4px;flex-shrink:0;">BB</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:10px;color:var(--tx3);">Fortlaufend</div>
+              <div style="font-size:12.5px;font-weight:500;">Baubesprechungsprotokoll</div>
+            </div>
+            <span class="nb" id="pa-bb-nb">0</span>
+          </div>
+          <div class="proto-art" onclick="setPArt('BE',this)">
+            <div style="font-size:10px;font-weight:700;color:var(--gn);background:var(--gndm);padding:1px 5px;border-radius:4px;flex-shrink:0;">BE</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:10px;color:var(--tx3);">Standard</div>
+              <div style="font-size:12.5px;font-weight:500;">Besprechungsprotokoll</div>
+            </div>
+            <span class="nb" id="pa-be-nb">0</span>
+          </div>
+          <div class="proto-art" onclick="setPArt('AK',this)">
+            <div style="font-size:10px;font-weight:700;color:var(--ac);background:var(--adm);padding:1px 5px;border-radius:4px;flex-shrink:0;">AK</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:10px;color:var(--tx3);">Standard</div>
+              <div style="font-size:12.5px;font-weight:500;">Aktennotiz</div>
+            </div>
+            <span class="nb" id="pa-ak-nb">0</span>
+          </div>
+          <div class="proto-art" onclick="setPArt('AB',this)">
+            <div style="font-size:10px;font-weight:700;color:var(--pu);background:var(--pudm);padding:1px 5px;border-radius:4px;flex-shrink:0;">AB</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:10px;color:var(--tx3);">Standard</div>
+              <div style="font-size:12.5px;font-weight:500;">Abnahmeprotokoll</div>
+            </div>
+            <span class="nb" id="pa-ab-nb">0</span>
+          </div>
+          <div class="proto-art" onclick="setPArt('CL',this)">
+            <div style="font-size:10px;font-weight:700;color:var(--tl);background:var(--tldm);padding:1px 5px;border-radius:4px;flex-shrink:0;">CL</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:10px;color:var(--tx3);">Kurz</div>
+              <div style="font-size:12.5px;font-weight:500;">Checkliste</div>
+            </div>
+            <span class="nb" id="pa-cl-nb">0</span>
+          </div>
+        </div>
+      </div>
+      <!-- COL 2: Protokollliste -->
+      <div style="flex:1;overflow-y:auto;border-right:1px solid var(--brd);">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--brd);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Protokolle</div>
+        <div id="bsl"></div>
+      </div>
+      <!-- COL 3: Detail -->
+      <div style="width:420px;flex-shrink:0;overflow-y:auto;" id="proto-det">
+        <div class="empty" style="margin-top:60px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px;height:36px;opacity:.25;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <div style="font-size:13px;color:var(--tx3);">Protokoll auswählen</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÄNGEL -->
+    <div class="pg" id="pg-maengel">
+      <div class="tabs"><button class="tab2 act" onclick="fM('all',this)">Alle</button><button class="tab2" onclick="fM('offen',this)">Offen</button><button class="tab2" onclick="fM('bearbeitung',this)">In Bearb.</button><button class="tab2" onclick="fM('erledigt',this)">Erledigt</button></div>
+      <div class="tw"><div id="mgl"></div></div>
+    </div>
+
+    <!-- BAUZEITPLAN -->
+    <div class="pg" id="pg-bauzeitplan"><div class="tw" style="padding:14px 16px;"><div id="gnt"></div></div></div>
+
+    <!-- KONTAKTE -->
+    <div class="pg" id="pg-kontakte">
+      <!-- Toolbar -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <div class="tabs" style="margin-bottom:0;">
+          <button class="tab2 act" onclick="fK('all',this)">Alle Firmen</button>
+          <button class="tab2" onclick="fK('firma',this)">Projektteam</button>
+          <button class="tab2" onclick="fK('mitarbeiter',this)">Eigentümer/Mieter</button>
+        </div>
+        <div style="position:relative;flex:1;min-width:180px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--tx3);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="si" placeholder="Suche …" oninput="fKS(this.value)" style="padding-left:30px;">
+        </div>
+        <button class="btn bp" onclick="om('m-kt')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:13px;height:13px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Neue Firma
+        </button>
+      </div>
+      <!-- Liste -->
+      <div class="tw" id="kgl"></div>
+    </div>
+
+    <!-- KOSTEN -->
+    <div class="pg" id="pg-kosten">
+      <div class="sr" style="grid-template-columns:repeat(3,1fr);">
+        <div class="sc cg"><div class="sl">Budget gesamt</div><div class="sv">€ 320k</div><div class="ss">geplant</div></div>
+        <div class="sc ca"><div class="sl">Verbucht</div><div class="sv" id="ks">€ 0</div></div>
+        <div class="sc cr"><div class="sl">Restbudget</div><div class="sv" id="kr2">€ 320k</div></div>
+      </div>
+      <div class="tw"><div id="kl"></div></div>
+    </div>
+
+    <!-- MATERIAL -->
+    <div class="pg" id="pg-material">
+      <div class="tw">
+        <div class="matr math"><div>Material</div><div>Menge</div><div>Einheit</div><div>Preis/E.</div><div>Status</div></div>
+        <div id="matl"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL PROJEKT -->
+<div class="mo" id="m-p"><div class="md">
+  <div class="mh"><div class="mht">Neues Projekt</div><button class="mc" onclick="cm('m-p')">✕</button></div>
+  <div class="mb">
+    <div class="fr fr2"><div class="fg"><label class="fl">Projektnummer *</label><input type="text" class="fi" id="p-nr" placeholder="2025-004"></div><div class="fg"><label class="fl">Status</label><select class="fs" id="p-st"><option value="active">Aktiv</option><option value="paused">Pausiert</option><option value="done">Fertig</option></select></div></div>
+    <div class="fr fr1"><div class="fg"><label class="fl">Projektname *</label><input type="text" class="fi" id="p-nm"></div></div>
+    <div class="fr fr1"><div class="fg"><label class="fl">Beschreibung</label><textarea class="ft" id="p-desc"></textarea></div></div>
+    <div class="fr fr2"><div class="fg"><label class="fl">Beginn</label><input type="date" class="fi" id="p-bg"></div><div class="fg"><label class="fl">Ende (geplant)</label><input type="date" class="fi" id="p-en"></div></div>
+    <hr class="fdiv"><div class="stit">Projektadresse</div>
+    <div class="fr fr2"><div class="fg"><label class="fl">Straße</label><input type="text" class="fi" id="p-str"></div><div class="fg"><label class="fl">Nr.</label><input type="text" class="fi" id="p-hn"></div></div>
+    <div class="fr fr2"><div class="fg"><label class="fl">PLZ</label><input type="text" class="fi" id="p-plz"></div><div class="fg"><label class="fl">Ort</label><input type="text" class="fi" id="p-ort"></div></div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="cm('m-p')">Abbrechen</button><button class="btn bp" onclick="saveProjekt()">Speichern</button></div>
+</div></div>
+
+<!-- MODAL BERICHT -->
+<div class="mo" id="m-b"><div class="md wide">
+  <div class="mh"><div class="mht">Neuer Bautagesbericht</div><button class="mc" onclick="cm('m-b')">✕</button></div>
+  <div class="mb">
+    <div class="wa" onclick="ladeWetter()" id="wb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="9" x2="12" y2="2"/><polyline points="4.22 10.22 5.64 11.64"/><line x1="1" y1="18" x2="3" y2="18"/><polyline points="19.78 10.22 18.36 11.64"/><line x1="21" y1="18" x2="23" y2="18"/></svg>Wetter automatisch laden (GPS)</div>
+    <div class="wl" id="wlv" style="display:none;"><span id="wl-i" style="font-size:20px;">☀️</span><div style="flex:1;"><div style="font-size:13.5px;font-weight:500;" id="wl-m"></div><div style="font-size:11.5px;color:var(--tx3);" id="wl-s"></div></div><span class="badge bgg">Live</span></div>
+    <div class="fr fr3"><div class="fg"><label class="fl">Datum *</label><input type="date" class="fi" id="b-dt"></div><div class="fg"><label class="fl">Projekt *</label><select class="fs" id="b-pj"></select></div><div class="fg"><label class="fl">Nr.</label><input type="text" class="fi" id="b-nr" readonly style="opacity:.6"></div></div>
+    <div class="fr fr3"><div class="fg"><label class="fl">Wetter</label><select class="fs" id="b-we"><option>☀️ Sonnig</option><option>⛅ Bewölkt</option><option>🌧️ Regnerisch</option><option>❄️ Schnee</option><option>🌫️ Nebel</option><option>⛈️ Gewitter</option></select></div><div class="fg"><label class="fl">Temperatur °C</label><input type="number" class="fi" id="b-tp"></div><div class="fg"><label class="fl">Wind</label><select class="fs" id="b-wi"><option>Windstill</option><option>Schwach</option><option>Mäßig</option><option>Stark</option><option>Sturm</option></select></div></div>
+    <hr class="fdiv"><div class="stit">Personal & Gewerke</div>
+    <div class="fr fr2"><div class="fg"><label class="fl">Arbeitskräfte</label><input type="number" class="fi" id="b-ak" min="0"></div><div class="fg"><label class="fl">Arbeitsstunden</label><input type="number" class="fi" id="b-as" min="0"></div></div>
+    <div class="fg" style="margin-bottom:10px;"><label class="fl">Gewerke</label>
+      <div class="cr" id="gc"><div class="chip" onclick="tc(this)">Rohbau</div><div class="chip" onclick="tc(this)">Zimmerei</div><div class="chip" onclick="tc(this)">Elektro</div><div class="chip" onclick="tc(this)">Sanitär</div><div class="chip" onclick="tc(this)">Heizung/HKLS</div><div class="chip" onclick="tc(this)">Maurer</div><div class="chip" onclick="tc(this)">Fenster/Türen</div><div class="chip" onclick="tc(this)">Putz/Innenausbau</div><div class="chip" onclick="tc(this)">Estrich</div><div class="chip" onclick="tc(this)">Fliesen</div><div class="chip" onclick="tc(this)">Maler</div><div class="chip" onclick="tc(this)">Aushub</div><div class="chip" onclick="tc(this)">Kran/Gerüst</div><div class="chip" onclick="tc(this)">Dach</div></div>
+      <div style="display:flex;gap:7px;margin-top:7px;"><input type="text" class="fi" id="cgv" placeholder="Eigenes Gewerk …" style="flex:1"><button class="btn bg" onclick="addCG()" style="flex-shrink:0;font-size:11.5px;">+ Hinzufügen</button></div>
+    </div>
+    <hr class="fdiv"><div class="stit">Tätigkeiten</div>
+    <div class="fr fr1"><div class="fg"><label class="fl">Heute ausgeführte Arbeiten *</label><textarea class="ft" id="b-ta" style="min-height:80px;"></textarea></div></div>
+    <div class="fr fr2"><div class="fg"><label class="fl">Lieferungen</label><textarea class="ft" id="b-lf" style="min-height:60px;"></textarea></div><div class="fg"><label class="fl">Besonderheiten / Probleme</label><textarea class="ft" id="b-pr" style="min-height:60px;"></textarea></div></div>
+    <div class="fr fr1"><div class="fg"><label class="fl">Bemerkungen</label><textarea class="ft" id="b-be" style="min-height:50px;"></textarea></div></div>
+    <hr class="fdiv"><div class="stit">Fotos</div>
+    <div class="pz" onclick="document.getElementById('pfi').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div style="font-size:12.5px;color:var(--tx2);">Fotos auswählen oder hierher ziehen</div><div style="font-size:11px;color:var(--tx3);margin-top:3px;">Wird in Supabase Storage hochgeladen</div></div>
+    <input type="file" id="pfi" multiple accept="image/*" style="display:none" onchange="handlePF(this)">
+    <div class="pgr" id="ppv"></div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="cm('m-b')">Abbrechen</button><button class="btn bp" onclick="saveBericht()">In Supabase speichern</button></div>
+</div></div>
+
+<!-- MODAL BESPRECHUNG -->
+<div class="mo" id="m-bs"><div class="md wide">
+  <div class="mh">
+    <div>
+      <div class="mht" id="bs-title">Neues Protokoll</div>
+      <div style="font-size:11.5px;color:var(--tx3);margin-top:2px;" id="bs-proj-nm"></div>
+    </div>
+    <button class="mc" onclick="cm('m-bs')">✕</button>
+  </div>
+  <div class="mb">
+    <div class="fr fr3" style="margin-bottom:10px;">
+      <div class="fg"><label class="fl">Protokollart</label>
+        <select class="fs" id="bs-typ" onchange="updateBsNr()">
+          <option value="BB">BB · Baubesprechungsprotokoll</option>
+          <option value="BE">BE · Besprechungsprotokoll</option>
+          <option value="AK">AK · Aktennotiz</option>
+          <option value="AB">AB · Abnahmeprotokoll</option>
+          <option value="CL">CL · Checkliste</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Nummer (auto)</label>
+        <input type="text" class="fi" id="bs-nr" readonly style="opacity:.7;font-family:var(--mo);">
+      </div>
+      <div class="fg"><label class="fl">Datum *</label>
+        <input type="date" class="fi" id="bs-d">
+      </div>
+    </div>
+    <div class="fr fr2">
+      <div class="fg"><label class="fl">Uhrzeit</label><input type="time" class="fi" id="bs-u"></div>
+      <div class="fg"><label class="fl">Ort</label><input type="text" class="fi" id="bs-o" placeholder="z.B. Baustelle / Baubüro"></div>
+    </div>
+    <div class="fr fr2">
+      <div class="fg"><label class="fl">Besprechungsleiter</label><input type="text" class="fi" id="bs-l"></div>
+      <div class="fg"><label class="fl">Nächster Termin</label><input type="date" class="fi" id="bs-nt"></div>
+    </div>
+    <hr class="fdiv">
+    <div style="font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+      <span>Teilnehmer anhaken</span>
+      <span style="font-size:11px;color:var(--tx3);font-weight:400;">aus Projektteam</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 120px 80px 80px;padding:6px 10px;background:var(--bg3);border-radius:var(--r) var(--r) 0 0;border:1px solid var(--brd);border-bottom:none;">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);">Firma / Person</div>
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);">Gewerk</div>
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);text-align:center;">Vertreten</div>
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);text-align:center;">Teilgen.</div>
+    </div>
+    <div id="bs-tn-list" style="border:1px solid var(--brd);border-radius:0 0 var(--r) var(--r);max-height:300px;overflow-y:auto;">
+      <div style="padding:14px;text-align:center;color:var(--tx3);font-size:12.5px;">Projektteam wird geladen …</div>
+    </div>
+    <input type="hidden" id="bs-tn">
+    <input type="hidden" id="bs-th" value="Baubesprechung">
+    <input type="hidden" id="bs-be" value="">
+    <input type="hidden" id="bs-ns" value="">
+  </div>
+  <div class="mf">
+    <button class="btn bg" onclick="cm('m-bs')">Abbrechen</button>
+    <button class="btn bp" onclick="saveBesprechung()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:13px;height:13px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      Protokoll erstellen &amp; Einträge hinzufügen
+    </button>
+  </div>
+</div></div>
+
+<!-- MODAL MANGEL -->
+<div class="mo" id="m-mn"><div class="md">
+  <div class="mh"><div class="mht">Mangel erfassen</div><button class="mc" onclick="cm('m-mn')">✕</button></div>
+  <div class="mb">
+    <div class="fr fr2"><div class="fg"><label class="fl">Priorität</label><select class="fs" id="mn-pr"><option value="kritisch">🔴 Kritisch</option><option value="hoch">🟠 Hoch</option><option value="mittel" selected>🟡 Mittel</option><option value="niedrig">🟢 Niedrig</option></select></div><div class="fg"><label class="fl">Gewerk</label><input type="text" class="fi" id="mn-gw" placeholder="z.B. Rohbau"></div></div>
+    <div class="fr fr1"><div class="fg"><label class="fl">Beschreibung *</label><textarea class="ft" id="mn-de" style="min-height:80px;"></textarea></div></div>
+    <div class="fr fr2"><div class="fg"><label class="fl">Ort / Bereich</label><input type="text" class="fi" id="mn-or" placeholder="z.B. Keller Nord"></div><div class="fg"><label class="fl">Frist</label><input type="date" class="fi" id="mn-fr"></div></div>
+    <div class="fr fr1"><div class="fg"><label class="fl">Zugewiesen an</label><input type="text" class="fi" id="mn-zu"></div></div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="cm('m-mn')">Abbrechen</button><button class="btn bp" onclick="saveMangel()">Speichern</button></div>
+</div></div>
+
+<!-- MODAL KOSTEN -->
+<div class="mo" id="m-k"><div class="md">
+  <div class="mh"><div class="mht">Kostenposition</div><button class="mc" onclick="cm('m-k')">✕</button></div>
+  <div class="mb">
+    <div class="fr fr2"><div class="fg"><label class="fl">Bezeichnung *</label><input type="text" class="fi" id="k-bz" placeholder="z.B. Betonarbeiten"></div><div class="fg"><label class="fl">Kategorie</label><select class="fs" id="k-kt"><option>Material</option><option>Lohnkosten</option><option>Fremdleistung</option><option>Geräte</option><option>Sonstiges</option></select></div></div>
+    <div class="fr fr2"><div class="fg"><label class="fl">Betrag € *</label><input type="number" class="fi" id="k-bt" step="0.01" min="0"></div><div class="fg"><label class="fl">Datum</label><input type="date" class="fi" id="k-dt"></div></div>
+    <div class="fr fr1"><div class="fg"><label class="fl">Notiz</label><textarea class="ft" id="k-nt" style="min-height:55px;"></textarea></div></div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="cm('m-k')">Abbrechen</button><button class="btn bp" onclick="saveKosten()">Speichern</button></div>
+</div></div>
+
+<!-- MODAL MATERIAL -->
+<div class="mo" id="m-mt"><div class="md">
+  <div class="mh"><div class="mht">Material erfassen</div><button class="mc" onclick="cm('m-mt')">✕</button></div>
+  <div class="mb">
+    <div class="fr fr1"><div class="fg"><label class="fl">Bezeichnung *</label><input type="text" class="fi" id="mt-nm"></div></div>
+    <div class="fr fr3"><div class="fg"><label class="fl">Menge *</label><input type="number" class="fi" id="mt-me" step="0.1" min="0"></div><div class="fg"><label class="fl">Einheit</label><select class="fs" id="mt-eh"><option>m²</option><option>m³</option><option>lfm</option><option>kg</option><option>Stk</option><option>Pal</option><option>L</option></select></div><div class="fg"><label class="fl">Preis/Einh. €</label><input type="number" class="fi" id="mt-pr" step="0.01" min="0"></div></div>
+    <div class="fr fr2"><div class="fg"><label class="fl">Status</label><select class="fs" id="mt-st"><option value="bestellt">Bestellt</option><option value="geliefert">Geliefert</option><option value="verbaut">Verbaut</option><option value="fehlend">Fehlend</option></select></div><div class="fg"><label class="fl">Liefertermin</label><input type="date" class="fi" id="mt-dt"></div></div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="cm('m-mt')">Abbrechen</button><button class="btn bp" onclick="saveMaterial()">Speichern</button></div>
+</div></div>
+
+<!-- MODAL KONTAKT -->
+<div class="mo" id="m-kt"><div class="md wide">
+  <div class="mh">
+    <div><div class="mht">Neue Firma anlegen</div><div style="font-size:11.5px;color:var(--tx3);margin-top:2px);">Projekt: <span id="kt-proj-nm" style="color:var(--ac);"></span></div></div>
+    <button class="mc" onclick="cm('m-kt')">✕</button>
+  </div>
+  <div class="mb">
+
+    <!-- FIRMENDATEN -->
+    <div class="stit" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px;color:var(--ac);"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      Firmendaten
+    </div>
+    <div class="fr fr1" style="margin-bottom:10px;">
+      <div class="fg"><label class="fl">Firmenname *</label><input type="text" class="fi" id="kt-nn" placeholder="z.B. Musterbau GmbH"></div>
+    </div>
+    <div class="fr fr2">
+      <div class="fg" style="margin-bottom:14px;position:relative;">
+        <label class="fl">Gewerke</label>
+        <div id="kt-gw-trigger" onclick="openGWDrop('kt')" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);padding:8px 11px;cursor:pointer;min-height:38px;transition:border-color var(--tr);">
+          <div id="kt-gw-tags" style="display:flex;flex-wrap:wrap;gap:5px;flex:1;">
+            <span id="kt-gw-placeholder" style="color:var(--tx3);font-size:12.5px;">Gewerke auswählen …</span>
+          </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:13px;height:13px;color:var(--tx3);flex-shrink:0;margin-left:6px;transition:transform .2s;" id="kt-gw-arrow"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div id="kt-gw-drop" style="display:none;position:absolute;left:0;right:0;background:var(--bg2);border:1px solid var(--brd2);border-radius:var(--r);z-index:99;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.35);top:calc(100% + 4px);">
+          <div style="padding:8px;border-bottom:1px solid var(--brd);">
+            <input type="text" class="si" placeholder="Suchen …" oninput="filterGWOpts(this.value,'kt')" style="font-size:12px;" onclick="event.stopPropagation()">
+          </div>
+          <div id="kt-gw-opts">
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Rohbau</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Zimmerei</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Dach</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Elektro</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Sanitär</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Heizung/HKLS</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Maurer</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Fenster/Türen</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Putz/Innenausbau</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Estrich</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Fliesen</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Maler</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Aushub</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Kran/Gerüst</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Schwarzdecker</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Spengler</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Schlosser</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Trockenbau</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Architektur</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Statik</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Generalplanung</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">ÖBA</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Vermessung</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Bodenleger</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Glaser</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Schreiner</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Hafner</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Gerüstbau</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Abbruch</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'kt')">Begrünung</div>
+          </div>
+        </div>
+        <input type="hidden" id="kt-gw">
+      </div>
+      <div class="fg"><label class="fl">Typ</label><select class="fs" id="kt-typ"><option value="firma">Firma</option><option value="mitarbeiter">Mitarbeiter / Person</option></select></div>
+    </div>
+
+    <hr class="fdiv">
+
+    <!-- KONTAKTDATEN -->
+    <div class="stit" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px;color:var(--ac);"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l.97-.97a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      Kontaktdaten
+    </div>
+    <div class="fr fr3">
+      <div class="fg"><label class="fl">Telefonnummer</label><input type="tel" class="fi" id="kt-tel" placeholder="+43 ..."></div>
+      <div class="fg"><label class="fl">E-Mail</label><input type="email" class="fi" id="kt-em" placeholder="firma@example.at"></div>
+      <div class="fg"><label class="fl">Fax</label><input type="text" class="fi" id="kt-fax" placeholder="+43 ..."></div>
+    </div>
+
+    <hr class="fdiv">
+
+    <!-- ADRESSE -->
+    <div class="stit" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px;color:var(--ac);"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Adresse
+    </div>
+    <div class="fr fr2">
+      <div class="fg"><label class="fl">Straße</label><input type="text" class="fi" id="kt-str" placeholder="Musterstraße"></div>
+      <div class="fg"><label class="fl">Nummer</label><input type="text" class="fi" id="kt-hn" placeholder="12a"></div>
+    </div>
+    <div class="fr fr3">
+      <div class="fg"><label class="fl">PLZ</label><input type="text" class="fi" id="kt-plz" placeholder="1010"></div>
+      <div class="fg"><label class="fl">Ort</label><input type="text" class="fi" id="kt-ort" placeholder="Wien"></div>
+      <div class="fg"><label class="fl">Land</label><input type="text" class="fi" id="kt-land" placeholder="Österreich" value="Österreich"></div>
+    </div>
+
+    <hr class="fdiv">
+
+    <!-- NOTIZEN -->
+    <div class="stit" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:15px;height:15px;color:var(--ac);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Notizen
+    </div>
+    <div class="fr fr1">
+      <div class="fg"><label class="fl">Notizen</label><textarea class="ft" id="kt-not" style="min-height:90px;" placeholder="Anmerkungen, Besonderheiten …"></textarea></div>
+    </div>
+
+    <!-- hidden -->
+    <input type="hidden" id="kt-vn" value="—">
+  </div>
+  <div class="mf" style="justify-content:space-between;">
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;color:var(--tx2);">
+      <input type="checkbox" id="kt-im-projekt" checked style="width:16px;height:16px;accent-color:var(--ac);">
+      Im Projekt
+    </label>
+    <div style="display:flex;gap:8px;">
+      <button class="btn bg" onclick="cm('m-kt')">Abbrechen</button>
+      <button class="btn bp" onclick="saveKontakt()">Anlegen</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- MODAL FIRMA DETAIL -->
+<div class="mo" id="m-fd"><div class="md" style="width:900px;max-width:96vw;">
+  <div class="mh">
+    <div>
+      <div class="mht" id="fd-title">Firma</div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <span id="fd-tel-lnk" style="font-size:12px;color:var(--tl);cursor:pointer;display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;display:inline;vertical-align:middle;"></svg> <span id="fd-tel-txt"></span>
+        </span>
+        <span id="fd-em-lnk" style="font-size:12px;color:var(--tl);cursor:pointer;display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;display:inline;vertical-align:middle;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> <span id="fd-em-txt"></span>
+        </span>
+      </div>
+    </div>
+    <div style="display:flex;gap:7px;align-items:center;">
+      <button class="btn bg" onclick="saveFirmaDetail()" style="font-size:12px;">Speichern</button>
+      <button class="mc" onclick="cm('m-fd')">✕</button>
+    </div>
+  </div>
+  <div class="mb" style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+    <!-- LINKS: Firmendaten -->
+    <div style="padding-right:24px;border-right:1px solid var(--brd);overflow-y:auto;max-height:70vh;">
+      <div class="stit" style="margin-bottom:14px;">Firmendaten</div>
+      <div class="fg" style="margin-bottom:14px;"><label class="fl">Name *</label><input class="dfv" id="fd-nm" style="border-bottom:1px solid var(--brd);padding:6px 0;width:100%;"></div>
+      <div class="fg" style="margin-bottom:14px;position:relative;">
+        <label class="fl">Gewerke</label>
+        <div id="fd-gw-trigger" onclick="openGWDrop('fd')" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--brd);border-radius:var(--r);padding:8px 11px;cursor:pointer;min-height:38px;transition:border-color var(--tr);">
+          <div id="fd-gw-tags" style="display:flex;flex-wrap:wrap;gap:5px;flex:1;">
+            <span id="fd-gw-placeholder" style="color:var(--tx3);font-size:12.5px;">Gewerke auswählen …</span>
+          </div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:13px;height:13px;color:var(--tx3);flex-shrink:0;margin-left:6px;transition:transform .2s;" id="fd-gw-arrow"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div id="fd-gw-drop" style="display:none;position:absolute;left:0;right:0;background:var(--bg2);border:1px solid var(--brd2);border-radius:var(--r);z-index:99;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.35);top:calc(100% + 4px);">
+          <div style="padding:8px;border-bottom:1px solid var(--brd);">
+            <input type="text" class="si" placeholder="Suchen …" oninput="filterGWOpts(this.value,'fd')" style="font-size:12px;" onclick="event.stopPropagation()">
+          </div>
+          <div id="fd-gw-opts">
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Rohbau</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Zimmerei</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Dach</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Elektro</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Sanitär</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Heizung/HKLS</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Maurer</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Fenster/Türen</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Putz/Innenausbau</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Estrich</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Fliesen</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Maler</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Aushub</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Kran/Gerüst</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Schwarzdecker</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Spengler</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Schlosser</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Trockenbau</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Architektur</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Statik</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Generalplanung</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">ÖBA</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Vermessung</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Bodenleger</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Glaser</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Schreiner</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Hafner</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Gerüstbau</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Abbruch</div>
+            <div class="gw-opt" onclick="toggleGWOpt(this,'fd')">Begrünung</div>
+          </div>
+        </div>
+        <input type="hidden" id="fd-gw">
+      </div>
+      <div class="stit" style="margin:20px 0 14px;">Kontaktdaten</div>
+      <div class="fg" style="margin-bottom:14px;"><label class="fl">Telefonnummer</label><input class="dfv" id="fd-tel" style="border-bottom:1px solid var(--brd);padding:6px 0;width:100%;"></div>
+      <div class="fg" style="margin-bottom:14px;"><label class="fl">E-Mail</label><input class="dfv" id="fd-em" style="border-bottom:1px solid var(--brd);padding:6px 0;width:100%;"></div>
+      <div class="fg" style="margin-bottom:14px;"><label class="fl">Fax</label><input class="dfv" id="fd-fax" style="border-bottom:1px solid var(--brd);padding:6px 0;width:100%;"></div>
+      <div class="stit" style="margin:20px 0 14px;">Adresse</div>
+      <div style="display:grid;grid-template-columns:1fr 80px;gap:10px;margin-bottom:10px;">
+        <div class="fg"><label class="fl">Straße</label><input class="dfv" id="fd-str" style="border-bottom:1px solid var(--brd);padding:6px 0;width:100%;"></div>
+        <div class="fg"><label class="fl">Nummer</label><input class="dfv" id="fd-hn" style="border-bottom:1px solid var(--brd);padding:6px 0;width:100%;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:80px 1fr;gap:10px;margin-bottom:10px;">
+        <div class="fg"><label class="fl">PLZ</label><input class="dfv" id="fd-plz" style="border-bottom:1px solid var(--brd);padding:6px 0;width:100%;"></div>
+        <div class="fg"><label class="fl">Ort</label><input class="dfv" id="fd-ort" style="border-bottom:1px solid var(--brd);padding:6px 0;width:100%;"></div>
+      </div>
+      <div class="fg" style="margin-bottom:20px;"><label class="fl">Land</label><input class="dfv" id="fd-land" style="border-bottom:1px solid var(--brd);padding:6px 0;width:100%;" value="Österreich"></div>
+      <div class="stit" style="margin-bottom:14px;">Notizen</div>
+      <div class="fg"><label class="fl">Notizen</label><textarea class="ft" id="fd-not" style="min-height:80px;width:100%;"></textarea></div>
+    </div>
+    <!-- RECHTS: Ansprechpartner -->
+    <div style="padding-left:24px;overflow-y:auto;max-height:70vh;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div class="stit" style="margin:0;">Kontakt</div>
+        <button class="btn bp" onclick="openAPModal()" style="font-size:12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:12px;height:12px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Neuer Kontakt
+        </button>
+      </div>
+      <!-- Suche -->
+      <div style="position:relative;margin-bottom:12px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);width:12px;height:12px;color:var(--tx3);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="si" placeholder="Suchen …" oninput="filterAP(this.value)" style="padding-left:28px;">
+      </div>
+      <!-- Tabelle -->
+      <div style="background:var(--bg3);border-radius:var(--r);overflow:hidden;border:1px solid var(--brd);">
+        <div style="display:grid;grid-template-columns:1fr 1fr 80px;padding:8px 12px;border-bottom:1px solid var(--brd);background:var(--bg4);">
+          <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);">Name</div>
+          <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);">Gewerke</div>
+          <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);">Vernetzt</div>
+        </div>
+        <div id="ap-list"><div class="empty" style="padding:24px;">Noch keine Ansprechpartner</div></div>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<!-- MODAL ANSPRECHPARTNER -->
+<div class="mo" id="m-ap"><div class="md">
+  <div class="mh"><div class="mht">Neuer Ansprechpartner</div><button class="mc" onclick="cm('m-ap')">✕</button></div>
+  <div class="mb">
+    <div class="fr fr2">
+      <div class="fg"><label class="fl">Vorname *</label><input type="text" class="fi" id="ap-vn" placeholder="Max"></div>
+      <div class="fg"><label class="fl">Nachname *</label><input type="text" class="fi" id="ap-nn" placeholder="Mustermann"></div>
+    </div>
+    <div class="fr fr2">
+      <div class="fg"><label class="fl">Gewerke / Funktion</label><input type="text" class="fi" id="ap-gw" placeholder="z.B. Zimmerer"></div>
+      <div class="fg"><label class="fl">Telefon</label><input type="tel" class="fi" id="ap-tel"></div>
+    </div>
+    <div class="fr fr1"><div class="fg"><label class="fl">E-Mail</label><input type="email" class="fi" id="ap-em"></div></div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="cm('m-ap')">Abbrechen</button><button class="btn bp" onclick="saveAP()">Speichern</button></div>
+</div></div>
+
+<!-- MODAL PROTOKOLL EINTRAG -->
+<div class="mo" id="m-pe"><div class="md wide">
+  <div class="mh">
+    <div><div class="mht" id="pe-title">Neuer Eintrag</div><div style="font-size:11.5px;color:var(--tx3);margin-top:2px;" id="pe-proto-nm"></div></div>
+    <button class="mc" onclick="cm('m-pe')">✕</button>
+  </div>
+  <div class="mb">
+    <div class="fr fr1"><div class="fg"><label class="fl">Titel *</label><input type="text" class="fi" id="pe-ti" placeholder="Beschreibung des Punktes …"></div></div>
+    <div class="fr fr1"><div class="fg"><label class="fl">Langtext</label><textarea class="ft" id="pe-lt" style="min-height:90px;" placeholder="Detaillierte Beschreibung …"></textarea></div></div>
+    <hr class="fdiv">
+    <div class="fr fr2">
+      <div class="fg"><label class="fl">Firma</label>
+        <select class="fs" id="pe-fi">
+          <option value="">— keine —</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Zuständig</label><input type="text" class="fi" id="pe-zu" placeholder="Name der Person"></div>
+    </div>
+    <div class="fr fr2">
+      <div class="fg"><label class="fl">Typ</label>
+        <select class="fs" id="pe-typ">
+          <option value="zu_erledigen">Zu erledigen</option>
+          <option value="offen">Offen</option>
+          <option value="info">Info</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Priorität</label>
+        <select class="fs" id="pe-pri">
+          <option value="keine">Keine Priorität</option>
+          <option value="niedrig">🟢 Niedrig</option>
+          <option value="mittel">🟡 Mittel</option>
+          <option value="hoch">🟠 Hoch</option>
+          <option value="kritisch">🔴 Kritisch</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr fr2">
+      <div class="fg"><label class="fl">Gewerk</label><input type="text" class="fi" id="pe-gw" placeholder="z.B. Maurer"></div>
+      <div class="fg"><label class="fl">Lage / Bereich</label><input type="text" class="fi" id="pe-la" placeholder="z.B. EG Küche"></div>
+    </div>
+    <div class="fr fr2">
+      <div class="fg"><label class="fl">Zu erledigen von</label><input type="date" class="fi" id="pe-fv"></div>
+      <div class="fg"><label class="fl">Zu erledigen bis</label><input type="date" class="fi" id="pe-fb"></div>
+    </div>
+    <div class="fr fr2">
+      <div class="fg"><label class="fl">Kosten exkl. MwSt. €</label><input type="number" class="fi" id="pe-ko" step="0.01" min="0" placeholder="0.00"></div>
+      <div class="fg"></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn bg" onclick="cm('m-pe')">Abbrechen</button><button class="btn bp" onclick="saveEintrag()">Eintrag speichern</button></div>
+</div></div>
+
+<!-- MODAL BERICHT DETAIL -->
+<div class="mo" id="m-dt"><div class="md wide">
+  <div class="mh">
+    <div><div class="mht" id="dt-t">Bautagesbericht</div><div style="font-size:11px;color:var(--tx3);margin-top:2px;" id="dt-s"></div></div>
+    <div style="display:flex;gap:7px;align-items:center;"><button class="btn bg" onclick="window.print()" style="font-size:11.5px;padding:4px 10px;">Drucken/PDF</button><button class="mc" onclick="cm('m-dt')">✕</button></div>
+  </div>
+  <div class="mb" id="dt-body"></div>
+</div></div>
+
+<div id="toast"><div class="tdot" id="tdot"></div><span id="tmsg"></span></div>
+
+<script>
+// Cookie helpers — work on file:// and http://
+function setCK(k,v){
+  const d=new Date();d.setFullYear(d.getFullYear()+1);
+  document.cookie=k+'='+encodeURIComponent(v)+';expires='+d.toUTCString()+';path=/;SameSite=Lax';
+  // Also try sessionStorage as backup
+  try{sessionStorage.setItem(k,v);}catch(e){}
+}
+function getCK(k){
+  // Try cookie first
+  const m=document.cookie.match('(?:^|;)\\s*'+k+'=([^;]*)');
+  if(m)return decodeURIComponent(m[1]);
+  // Fallback to sessionStorage
+  try{return sessionStorage.getItem(k);}catch(e){return null;}
+}
+
+const SURL='https://oqvgzmzcssamlkuhoamf.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xdmd6bXpjc3NhbWxrdWhvYW1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0ODI1MDgsImV4cCI6MjA5MTA1ODUwOH0.fHdR7yh0IVKBJJEOA55CqPBSen4dua_eYs-BVUSyrUM';
+const {createClient}=supabase;
+const sb=createClient(SURL,SKEY);
+
+let CU=null,CPId=null;
+let PR=[],BE=[],MG=[],KO=[],MA=[],KT=[],BS=[];
+let PP=[],_ps='all',_bf='',_bpf='',_mf='all',_kf='all';
+let PT=new Set(); // kontakt IDs im aktuellen Projektteam
+
+window.addEventListener('DOMContentLoaded',async()=>{
+  // First try existing session
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){CU=session.user;showApp();return;}
+  // Try auto-login from saved credentials
+  const savedEmail=getCK('bd_email');
+  const savedPw=getCK('bd_pw');
+  if(savedEmail&&savedPw){
+    const btn=document.getElementById('abtn');
+    if(btn)btn.textContent='Wird angemeldet …';
+    const r=await sb.auth.signInWithPassword({email:savedEmail,password:savedPw});
+    if(!r.error){CU=r.data.user;showApp();return;}
+    // Failed - clear saved creds
+    setCK('bd_email','');setCK('bd_pw','');
+    if(btn)btn.textContent='Anmelden';
+    const emEl=document.getElementById('aem');
+    if(emEl)emEl.value=savedEmail;
+  }
+  document.getElementById('as').style.display='flex';
+  sb.auth.onAuthStateChange((ev,sess)=>{
+    if(ev==='SIGNED_IN'){CU=sess.user;showApp();}
+    if(ev==='SIGNED_OUT'){CU=null;showLogin();}
+  });
+});
+
+let _am='login';
+function setAM(m){
+  _am=m;
+  document.getElementById('at-login').classList.toggle('act',m==='login');
+  document.getElementById('at-reg').classList.toggle('act',m==='reg');
+  document.getElementById('abtn').textContent=m==='login'?'Anmelden':'Konto erstellen';
+  document.getElementById('ae').style.display='none';
+}
+async function doAuth(){
+  const em=document.getElementById('aem').value.trim();
+  const pw=document.getElementById('apw').value;
+  const ae=document.getElementById('ae');
+  ae.style.display='none';
+  if(!em||!pw){ae.textContent='E-Mail und Passwort erforderlich.';ae.style.display='block';return;}
+  document.getElementById('abtn').textContent='…';
+  const r=_am==='login'
+    ?await sb.auth.signInWithPassword({email:em,password:pw})
+    :await sb.auth.signUp({email:em,password:pw});
+  if(r.error){ae.textContent=r.error.message;ae.style.display='block';document.getElementById('abtn').textContent=_am==='login'?'Anmelden':'Konto erstellen';return;}
+  // Save credentials for auto-login
+  if(_am==='login'){
+    setCK('bd_email', em);
+    setCK('bd_pw', pw);
+  }
+}
+async function doLogout(){await sb.auth.signOut();}
+function showLogin(){document.getElementById('as').style.display='flex';document.getElementById('sb').style.display='none';document.getElementById('mn').style.display='none';}
+async function showApp(){
+  document.getElementById('as').style.display='none';
+  document.getElementById('sb').style.display='flex';
+  document.getElementById('mn').style.display='flex';
+  const em=CU?.email||'—';
+  document.getElementById('sf-em').textContent=em;
+  document.getElementById('av-i').textContent=em.substring(0,2).toUpperCase();
+  await loadAll();
+  // Restore last state from cookie
+  try{
+    const lastProj=getCK('bd_proj');
+    const lastPage=getCK('bd_page')||'dashboard';
+    const lastTheme=getCK('bd_theme');
+    if(lastTheme==='light'){
+      document.body.classList.add('light');
+      const di=document.getElementById('theme-icon-dark');
+      const li=document.getElementById('theme-icon-light');
+      if(di)di.style.display='none';
+      if(li)li.style.display='block';
+    }
+    if(lastProj){
+      const p=PR.find(x=>x.id===lastProj);
+      if(p){
+        CPId=p.id;
+        document.getElementById('tb-pn').textContent=p.nummer+' · '+p.name;
+        document.getElementById('proj-pdot').style.background=p.status==='active'?'var(--gn)':'var(--ac)';
+      }
+    }
+    sp(lastPage);
+  }catch(e){renderDashboard();}
+}
+
+async function loadAll(){await Promise.all([loadPR(),loadBE(),loadMG(),loadKO(),loadMA(),loadKT(),loadBS()]);}
+async function loadPR(){
+  const{data}=await sb.from('projekte').select('*').order('created_at',{ascending:false});
+  PR=data||[];
+  PR.forEach(p=>p._logoSigned=p.logo_url||'');
+  document.getElementById('nbp').textContent=PR.length;
+  if(PR.length&&!CPId){CPId=PR[0].id;document.getElementById('tb-pn').textContent=PR[0].nummer+' · '+PR[0].name;}
+}
+async function loadBE(){const{data}=await sb.from('bautagesberichte').select('*').order('datum',{ascending:false});BE=data||[];document.getElementById('nbb').textContent=BE.length;}
+async function loadMG(){const{data}=await sb.from('maengel').select('*').order('created_at',{ascending:false});MG=data||[];document.getElementById('nbm').textContent=MG.filter(m=>m.status!=='erledigt').length;}
+async function loadKO(){const{data}=await sb.from('kosten').select('*').order('created_at',{ascending:false});KO=data||[];}
+async function loadMA(){const{data}=await sb.from('materialien').select('*').order('created_at',{ascending:false});MA=data||[];}
+async function loadKT(){
+  const{data}=await sb.from('kontakte').select('*').order('nachname');
+  KT=data||[];
+  // Load projektteam for current project
+  PT=new Set();
+  if(CPId){
+    const{data:ptData}=await sb.from('projektteam').select('kontakt_id').eq('projekt_id',CPId);
+    (ptData||[]).forEach(r=>PT.add(r.kontakt_id));
+  }
+  // Sync aktiv flag based on PT
+  KT.forEach(k=>k._imTeam=PT.has(k.id));
+}
+async function loadBS(){const{data}=await sb.from('baubesprechungen').select('*').order('datum',{ascending:false});BS=data||[];document.getElementById('nbbs').textContent=BS.length;}
+
+// ── KONTAKTE ──────────────────────────────────────────────────────────────
+let _kSearch='';
+
+function rKT(){
+  const g=document.getElementById('kgl');
+  if(!g)return;
+  let arr=KT.filter(k=>{
+    if(_kf==='firma'&&k.typ!=='firma')return false;
+    if(_kf==='mitarbeiter'&&k.typ!=='mitarbeiter')return false;
+    if(_kSearch){
+      const q=_kSearch.toLowerCase();
+      return (k.nachname||'').toLowerCase().includes(q)
+          ||(k.vorname||'').toLowerCase().includes(q)
+          ||(k.gewerk||'').toLowerCase().includes(q);
+    }
+    return true;
+  });
+  if(!arr.length){g.innerHTML=emp('Keine Firmen gefunden.');return;}
+
+  // Group by first letter of nachname
+  const groups={};
+  arr.forEach(k=>{
+    const letter=(k.nachname||'?')[0].toUpperCase();
+    if(!groups[letter])groups[letter]=[];
+    groups[letter].push(k);
+  });
+
+  // Header row
+  let html=`<div style="display:grid;grid-template-columns:56px 1fr 1fr;padding:9px 16px;background:var(--bg3);border-bottom:1px solid var(--brd);">
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);">Projekt</div>
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);">Meine Firma</div>
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);">Gewerke</div>
+  </div>`;
+
+  Object.keys(groups).sort().forEach(letter=>{
+    // Letter divider
+    html+=`<div style="padding:5px 16px 3px;background:var(--bg3);border-bottom:1px solid var(--brd);">
+      <span style="font-size:12px;font-weight:700;color:var(--tx2);">${letter}</span>
+    </div>`;
+
+    groups[letter].forEach(k=>{
+      const imTeam=k._imTeam||false;
+      const gewerke=(k.gewerk||'').split(',').map(g=>g.trim()).filter(Boolean);
+      const anzAP=k._ansprechpartner?k._ansprechpartner.length:0;
+
+      html+=`<div style="display:grid;grid-template-columns:56px 1fr 1fr;align-items:center;padding:11px 16px;border-bottom:1px solid var(--brd);transition:background var(--tr);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''">
+        <div>
+          <div onclick="event.stopPropagation();toggleKTeam('${k.id}',${!imTeam})"
+            style="width:36px;height:20px;border-radius:20px;background:${imTeam?'var(--ac)':'var(--bg4)'};position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;"
+            title="${imTeam?'Im Projektteam':'Nicht im Team'}">
+            <div style="position:absolute;top:2px;${imTeam?'right:2px':'left:2px'};width:16px;height:16px;border-radius:50%;background:#fff;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="openFirmaDetail('${k.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;color:var(--tx3);flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+          <div>
+            <div style="font-size:14px;font-weight:500;">${k.nachname||''}${k.vorname&&k.vorname!=='—'?' '+k.vorname:''}${anzAP?` <span style="background:var(--bg4);border-radius:20px;padding:1px 7px;font-size:11px;color:var(--tx3);margin-left:4px;">${anzAP}</span>`:''}</div>
+            ${k.rolle?`<div style="font-size:11.5px;color:var(--tx3);">${k.rolle}</div>`:''}
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--tx2);">${gewerke.join(', ')||'—'}</div>
+      </div>`;
+    });
+  });
+
+  g.innerHTML=html;
+}
+
+function fK(t,el){
+  _kf=t;
+  document.querySelectorAll('#pg-kontakte .tab2').forEach(x=>x.classList.remove('act'));
+  el.classList.add('act');
+  rKT();
+}
+
+function fKS(v){_kSearch=v;rKT();}
+
+async function toggleKTeam(id, val){
+  if(!CPId){toast('Bitte zuerst ein Projekt auswählen.',false);return;}
+  if(val){
+    // Add to projektteam
+    await sb.from('projektteam').upsert({projekt_id:CPId,kontakt_id:id,user_id:CU.id},{onConflict:'projekt_id,kontakt_id'});
+  } else {
+    // Remove from projektteam
+    await sb.from('projektteam').delete().eq('projekt_id',CPId).eq('kontakt_id',id);
+  }
+  await loadKT();
+  rKT();
+}
+
+function openKontaktModal(){
+  // Reset form
+  const ids=['kt-nn','kt-tel','kt-em','kt-fax','kt-str','kt-hn','kt-plz','kt-ort','kt-not'];
+  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const land=document.getElementById('kt-land');if(land)land.value='Österreich';
+  const typ=document.getElementById('kt-typ');if(typ)typ.value='firma';
+  // Reset gewerk dropdown
+  resetGWDrop('kt');
+  // Set projekt name
+  const p=PR.find(x=>x.id===CPId);
+  const pnm=document.getElementById('kt-proj-nm');
+  if(pnm)pnm.textContent=p?p.name:'—';
+  // Set "Im Projekt" checkbox checked by default if project selected
+  const imP=document.getElementById('kt-im-projekt');
+  if(imP)imP.checked=!!CPId;
+  om('m-kt');
+}
+
+async function saveKontakt(){
+  const nn=document.getElementById('kt-nn').value.trim();
+  if(!nn){toast('Firmenname erforderlich.',false);return;}
+  const gewerk=document.getElementById('kt-gw')?.value||'';
+  const{data,error}=await sb.from('kontakte').insert({
+    user_id:CU.id,
+    typ:document.getElementById('kt-typ')?.value||'firma',
+    vorname:document.getElementById('kt-vn')?.value||'—',
+    nachname:nn,
+    gewerk,
+    telefon:document.getElementById('kt-tel')?.value||'',
+    email:document.getElementById('kt-em')?.value||'',
+    fax:document.getElementById('kt-fax')?.value||'',
+    strasse:document.getElementById('kt-str')?.value||'',
+    hausnummer:document.getElementById('kt-hn')?.value||'',
+    plz:document.getElementById('kt-plz')?.value||'',
+    ort:document.getElementById('kt-ort')?.value||'',
+    land:document.getElementById('kt-land')?.value||'Österreich',
+    notiz:document.getElementById('kt-not')?.value||'',
+    aktiv:true
+  }).select().single();
+  if(error){toast('Fehler: '+error.message,false);console.error(error);return;}
+  // Add to projektteam if checkbox checked
+  const imP=document.getElementById('kt-im-projekt');
+  if(imP&&imP.checked&&CPId&&data){
+    await sb.from('projektteam').upsert({projekt_id:CPId,kontakt_id:data.id,user_id:CU.id},{onConflict:'projekt_id,kontakt_id'});
+  }
+  cm('m-kt');
+  await loadKT();
+  rKT();
+  toast('Firma "'+nn+'" gespeichert!');
+}
+
+function openFirmaDetail(id){
+  const k=KT.find(x=>x.id===id);
+  if(!k)return;
+  om('m-fd');
+  // populate detail modal
+  const t=document.getElementById('fd-title');
+  if(t)t.textContent=k.nachname||k.vorname||'Firma';
+  // fill fields if they exist
+  const fields={
+    'fd-nn':k.nachname,'fd-gw':k.gewerk,'fd-tel':k.telefon,
+    'fd-em':k.email,'fd-fax':k.fax,'fd-str':k.strasse,
+    'fd-hn':k.hausnummer,'fd-plz':k.plz,'fd-ort':k.ort,
+    'fd-not':k.notiz
+  };
+  Object.entries(fields).forEach(([id,val])=>{
+    const el=document.getElementById(id);
+    if(el)el.value=val||'';
+  });
+  // store ID for save
+  const saveBtn=document.getElementById('fd-save-btn');
+  if(saveBtn)saveBtn.setAttribute('data-id',k.id);
+  // load Ansprechpartner
+  loadAnsprechpartner(k.id);
+}
+
+async function loadAnsprechpartner(kontaktId){
+  const list=document.getElementById('fd-ap-list');
+  if(!list)return;
+  list.innerHTML='<div style="padding:10px;color:var(--tx3);font-size:12px;">Lädt …</div>';
+  const{data}=await sb.from('ansprechpartner').select('*').eq('kontakt_id',kontaktId).order('nachname');
+  const ap=data||[];
+  if(!ap.length){
+    list.innerHTML='<div style="padding:14px;text-align:center;color:var(--tx3);font-size:12.5px;">Kein Ansprechpartner erfasst.</div>';
+    return;
+  }
+  list.innerHTML=ap.map(a=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--brd);">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--adm);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--ac);flex-shrink:0;">${(a.vorname||'?')[0]}${(a.nachname||'?')[0]}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:500;">${a.vorname||''} ${a.nachname||''}</div>
+        <div style="font-size:11.5px;color:var(--tx3);">${a.rolle||''} ${a.telefon?'· '+a.telefon:''} ${a.email?'· '+a.email:''}</div>
+      </div>
+    </div>`).join('');
+}
+// ─────────────────────────────────────────────────────────────────────────
+
+const PG={dashboard:{t:'Dashboard',b:null},projekte:{t:'Projekte',b:'+ Neues Projekt'},berichte:{t:'Bautagesberichte',b:'+ Neuer Bericht'},besprechungen:{t:'Protokolle',b:'+ Neues Protokoll'},maengel:{t:'Mängelverwaltung',b:'+ Mangel erfassen'},bauzeitplan:{t:'Bauzeitplan',b:null},kontakte:{t:'Kontakte',b:'+ Neue Firma'},kosten:{t:'Kosten & Rechnungen',b:'+ Kostenposition'},material:{t:'Materialliste',b:'+ Material'}};
+
+function sp(id){
+  try{setCK('bd_page',id);}catch(e){}
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('act'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));
+  document.getElementById('pg-'+id)?.classList.add('act');
+  document.querySelectorAll('.ni').forEach(n=>{if(n.getAttribute('onclick')?.includes("'"+id+"'"))n.classList.add('act');});
+  const c=PG[id]||{t:id,b:null};
+  document.getElementById('tb-t').textContent=c.t;
+  const btn=document.getElementById('tb-btn');
+  if(c.b){btn.style.display='flex';document.getElementById('tb-bt').textContent=c.b;}
+  else btn.style.display='none';
+  if(id==='projekte'){loadPR().then(()=>rPR());}
+  if(id==='berichte')rBE();
+  if(id==='maengel')rMG();
+  if(id==='bauzeitplan')rGantt();
+  if(id==='kontakte')rKT();
+  if(id==='kosten')rKO();
+  if(id==='material')rMA();
+  if(id==='besprechungen'){loadBS().then(()=>rBS());}
+  if(id==='dashboard')renderDashboard();
+}
+function handleBtn(){
+  const a=document.querySelector('.pg.act')?.id.replace('pg-','');
+  const mp={projekte:'m-p',maengel:'m-mn',kosten:'m-k',material:'m-mt'};
+  if(a==='berichte')openBericht();
+  else if(a==='besprechungen')openBS();
+  else if(a==='kontakte')openKontaktModal();
+  else if(mp[a])om(mp[a]);
+}
+function om(id){document.getElementById(id).classList.add('open');}
+function cm(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+function toast(msg,ok=true){
+  const t=document.getElementById('toast'),d=document.getElementById('tdot');
+  document.getElementById('tmsg').textContent=msg;
+  d.style.background=ok?'var(--gn)':'var(--rd)';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+// WETTER
+function ladeWetter(){
+  const wb=document.getElementById('wb');
+  wb.innerHTML='<div class="spin"></div> Lade …';
+  navigator.geolocation?.getCurrentPosition(async p=>{
+    try{
+      const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true&timezone=auto`);
+      const d=await r.json();const cw=d.current_weather;
+      const wc=cw.weathercode||0;
+      const ic=wc<=1?'☀️':wc<=3?'⛅':wc<=49?'🌫️':wc<=67?'🌧️':wc<=77?'❄️':'⛈️';
+      const wt=wc<=1?'☀️ Sonnig':wc<=3?'⛅ Bewölkt':wc<=49?'🌫️ Nebel':wc<=67?'🌧️ Regnerisch':wc<=77?'❄️ Schnee':'⛈️ Gewitter';
+      const ws=cw.windspeed,wnd=ws<5?'Windstill':ws<20?'Schwach':ws<40?'Mäßig':ws<60?'Stark':'Sturm';
+      document.getElementById('b-we').value=wt;
+      document.getElementById('b-tp').value=Math.round(cw.temperature);
+      document.getElementById('b-wi').value=wnd;
+      document.getElementById('wl-i').textContent=ic;
+      document.getElementById('wl-m').textContent=`${wt} · ${Math.round(cw.temperature)}°C`;
+      document.getElementById('wl-s').textContent=`Wind: ${wnd} (${Math.round(ws)} km/h)`;
+      document.getElementById('wlv').style.display='flex';
+      wb.style.display='none';toast('Wetterdaten geladen!');
+    }catch{wb.innerHTML='⚡ Wetter laden (GPS)';toast('API nicht erreichbar.',false);}
+  },()=>{wb.innerHTML='⚡ Wetter laden (GPS)';toast('Standortzugriff verweigert.',false);});
+}
+
+// FOTOS
+function handlePF(inp){Array.from(inp.files).forEach(f=>{const rd=new FileReader();rd.onload=e=>{PP.push({name:f.name,data:e.target.result,file:f});rPP();};rd.readAsDataURL(f);});}
+function rPP(){document.getElementById('ppv').innerHTML=PP.map((p,i)=>`<div class="pth"><img src="${p.data}"><button class="pdl" onclick="PP.splice(${i},1);rPP()">✕</button></div>`).join('');}
+
+async function uploadFotos(bid,pid){
+  for(const p of PP){
+    const path=`${CU.id}/${pid}/${bid}/${Date.now()}_${p.name}`;
+    const{error}=await sb.storage.from('baudoku-fotos').upload(path,p.file);
+    if(!error)await sb.from('bericht_fotos').insert({bericht_id:bid,projekt_id:pid,dateiname:p.name,storage_pfad:path,groesse_bytes:p.file.size});
+  }
+}
+
+// HELPERS
+function fd(d){if(!d)return'—';const[y,m,dd]=d.substring(0,10).split('-');return`${dd}.${m}.${y}`;}
+function sBg(s){const m={active:'bgg',paused:'bga',done:'bgp'};const l={active:'Aktiv',paused:'Pausiert',done:'Fertig'};return`<span class="badge ${m[s]||'bbb'}">${l[s]||s}</span>`;}
+function pC(p){return{kritisch:'var(--rd)',hoch:'var(--or)',mittel:'var(--ac)',niedrig:'var(--gn)'}[p]||'var(--tx3)';}
+function pB(p){return{kritisch:'bgr',hoch:'bga',mittel:'bga',niedrig:'bgg'}[p]||'bbb';}
+const mSB={offen:'bgr',bearbeitung:'bga',erledigt:'bgt'};
+const mSL={offen:'Offen',bearbeitung:'In Bearb.',erledigt:'Erledigt'};
+const mSC={bestellt:'tab',geliefert:'tbl',verbaut:'tgg',fehlend:'tog'};
+const kC={Material:'tbl',Lohnkosten:'tgg',Fremdleistung:'tog',Geräte:'tab',Sonstiges:'tab'};
+const avC=['#3b82f6','#f5a623','#22c55e','#a78bfa','#2dd4bf','#f97316'];
+function emp(msg){return`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:30px;height:30px;opacity:.3;"><circle cx="12" cy="12" r="10"/></svg><div style="font-size:13px;font-weight:500;color:var(--tx2);">${msg}</div></div>`;}
+
+// RENDERS
+function renderDashboard(){
+  document.getElementById('ds-p').textContent=PR.filter(p=>p.status==='active').length;
+  document.getElementById('ds-b').textContent=BE.length;
+  document.getElementById('ds-m').textContent=MG.filter(m=>m.status!=='erledigt').length;
+  document.getElementById('ds-bs').textContent=BS.length;
+  document.getElementById('ds-pgr').innerHTML=PR.slice(0,4).map(pcH).join('')||emp('Noch keine Projekte.');
+  const bl=document.getElementById('ds-bl');
+  bl.innerHTML=BE.slice(0,5).map(brH).join('')||emp('Noch keine Berichte.');
+}
+
+function pcH(p){
+  const bc=BE.filter(b=>b.projekt_id===p.id).length;
+  return`<div class="pc" data-id="${p.id}" onclick="selP('${p.id}','${p.nummer}','${escQ(p.name)}')">
+    <div class="pc-top"><div class="pc-nr">${p.nummer}</div>${sBg(p.status)}</div>
+    <div class="pc-n">${p.name}</div>
+    <div class="pc-a">${p.strasse||''} ${p.hausnummer||''}, ${p.plz||''} ${p.ort||''}</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+      <div><div style="font-size:10px;color:var(--tx4);text-transform:uppercase;">Beginn</div><div style="font-size:11.5px;font-weight:500;color:var(--tx2);">${fd(p.beginn)}</div></div>
+      <div><div style="font-size:10px;color:var(--tx4);text-transform:uppercase;">Ende</div><div style="font-size:11.5px;font-weight:500;color:var(--tx2);">${fd(p.ende)}</div></div>
+      <div><div style="font-size:10px;color:var(--tx4);text-transform:uppercase;">Berichte</div><div style="font-size:11.5px;font-weight:500;color:var(--tx2);">${bc}</div></div>
+    </div>
+    <div class="pbar"><div class="pfill" style="width:${p.fortschritt||0}%"></div></div>
+    <div class="ptxt"><span>Fortschritt</span><span>${p.fortschritt||0}%</span></div>
+  </div>`;
+}
+function escQ(s){return(s||'').replace(/'/g,"\\'")}
+let _pGrp='active',_pSel=null,_pf='';
+
+function setPGrp(g){
+  _pGrp=g;_pSel=null;
+  document.querySelectorAll('.pg-grp').forEach(el=>el.classList.remove('act'));
+  document.getElementById('grp-'+g)?.classList.add('act');
+  rPR();
+  document.getElementById('p-detail').innerHTML=`<div class="empty" style="margin-top:60px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px;height:36px;opacity:.25;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><div style="font-size:13px;color:var(--tx3);">Projekt auswählen</div></div>`;
+}
+
+function rPR(){
+  const g=document.getElementById('pgl');
+  const active=PR.filter(p=>p.status==='active'||p.status==='paused');
+  const done=PR.filter(p=>p.status==='done');
+  document.getElementById('grp-nb-active').textContent=active.length;
+  document.getElementById('grp-nb-done').textContent=done.length;
+  const base=_pGrp==='active'?active:done;
+  const arr=base.filter(p=>!_pf||p.name.toLowerCase().includes(_pf.toLowerCase())||p.nummer.toLowerCase().includes(_pf.toLowerCase()));
+  g.innerHTML=arr.length?arr.map(p=>`
+    <div class="pkl${_pSel===p.id?' act':''}" onclick="selPDet('${p.id}')" data-id="${p.id}">
+      <div class="pkl-img">${p._logoSigned
+        ?`<img src="${p._logoSigned}" alt="" onerror="this.parentElement.innerHTML='<svg viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'1.5\' style=\'width:22px;height:22px;opacity:.3;\'><path d=\'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\'/></svg>'">`
+        :`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:22px;height:22px;opacity:.3;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div class="pkl-nr">${p.nummer}</div>
+        <div class="pkl-nm">${p.name}</div>
+        <div class="pkl-sz">${fd(p.beginn)||'—'} – ${fd(p.ende)||'—'}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;">
+        <div style="width:8px;height:8px;border-radius:50%;background:${p.status==='active'?'var(--gn)':p.status==='paused'?'var(--ac)':'var(--tx3)'};box-shadow:0 0 6px ${p.status==='active'?'rgba(34,197,94,.5)':p.status==='paused'?'rgba(245,166,35,.5)':'none'};"></div>
+      </div>
+    </div>`).join(''):emp('Keine Projekte gefunden.');
+}
+
+function fP(v){_pf=v;rPR();}
+function fPS(s,el){}// legacy stub
+
+function selPDet(id){
+  _pSel=id;
+  document.querySelectorAll('.pkl').forEach(el=>el.classList.toggle('act',el.dataset.id===id));
+  const p=PR.find(x=>x.id===id);
+  if(!p)return;
+  document.getElementById('p-detail').innerHTML=`
+    <div class="det-actions">
+      <button class="btn bp" onclick="saveDetProjekt('${p.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:13px;height:13px;"><polyline points="20 6 9 17 4 12"/></svg>Speichern</button>
+      <button class="btn bg" onclick="delProjekt('${p.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>Löschen</button>
+      <button class="btn bg" onclick="archProjekt('${p.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>Archivieren</button>
+    </div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:16px;letter-spacing:-.3px;">Projektinformation "${p.name}"</div>
+    <!-- PROJEKTBILD -->
+    <div style="margin-bottom:20px;">
+      <div class="dfl" style="margin-bottom:8px;">Projektbild / Logo</div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div id="proj-img-preview" style="width:80px;height:80px;border-radius:10px;background:var(--bg3);border:1px solid var(--brd);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          ${p._logoSigned
+            ? `<img src="${p._logoSigned}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">`
+            : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:28px;height:28px;opacity:.3;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`}
+        </div>
+        <div>
+          <button class="btn bg" onclick="document.getElementById('proj-img-inp').click()" style="font-size:12px;margin-bottom:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Bild hochladen
+          </button>
+          <input type="file" id="proj-img-inp" accept="image/*" style="display:none" onchange="uploadProjektBild('${p.id}',this)">
+          ${p.logo_url ? `<button class="btn bg" onclick="removeProjektBild('${p.id}')" style="font-size:12px;color:var(--rd);">Entfernen</button>` : ''}
+          <div style="font-size:11px;color:var(--tx3);margin-top:4px;">JPG, PNG · max. 5 MB</div>
+        </div>
+      </div>
+    </div>
+    <div class="det-grid">
+      <div class="fg" style="margin-bottom:14px;"><div class="dfl">Projektnummer *</div><input class="dfv" id="det-nr" value="${p.nummer||''}" style="border-bottom:1px solid var(--brd);padding:6px 0;"></div>
+      <div class="fg" style="margin-bottom:14px;"><div class="dfl">Status</div>
+        <select class="dfv" id="det-st" style="border-bottom:1px solid var(--brd);padding:6px 0;">
+          <option value="active"${p.status==='active'?' selected':''}>Aktiv</option>
+          <option value="paused"${p.status==='paused'?' selected':''}>Pausiert</option>
+          <option value="done"${p.status==='done'?' selected':''}>Fertig</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg" style="margin-bottom:14px;"><div class="dfl">Projektname *</div><input class="dfv" id="det-nm" value="${p.name||''}" style="border-bottom:1px solid var(--brd);padding:6px 0;"></div>
+    <div class="fg" style="margin-bottom:14px;"><div class="dfl">Beschreibung</div><textarea class="dfv" id="det-desc" style="border-bottom:1px solid var(--brd);padding:6px 0;resize:none;min-height:60px;">${p.beschreibung||''}</textarea></div>
+    <div class="det-grid">
+      <div class="fg" style="margin-bottom:14px;"><div class="dfl">Projektbeginn</div><input type="date" class="dfv" id="det-bg" value="${p.beginn||''}" style="border-bottom:1px solid var(--brd);padding:6px 0;"></div>
+      <div class="fg" style="margin-bottom:14px;"><div class="dfl">Projektende</div><input type="date" class="dfv" id="det-en" value="${p.ende||''}" style="border-bottom:1px solid var(--brd);padding:6px 0;"></div>
+    </div>
+    <div class="fg" style="margin-bottom:14px;"><div class="dfl">Fortschritt %</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="range" id="det-fp" min="0" max="100" value="${p.fortschritt||0}" style="flex:1;accent-color:var(--ac);" oninput="document.getElementById('det-fpv').textContent=this.value+'%'">
+        <span id="det-fpv" style="font-family:var(--mo);font-size:13px;color:var(--ac);min-width:36px;">${p.fortschritt||0}%</span>
+      </div>
+    </div>
+    <div class="det-sec">Projektadresse</div>
+    <div style="font-size:12px;color:var(--tx3);margin-bottom:14px;">Diese Adresse wird für Wetterdaten und PDF-Protokolle verwendet.</div>
+    <div class="det-grid">
+      <div class="fg" style="margin-bottom:14px;"><div class="dfl">Straße</div><input class="dfv" id="det-str" value="${p.strasse||''}" style="border-bottom:1px solid var(--brd);padding:6px 0;"></div>
+      <div class="fg" style="margin-bottom:14px;"><div class="dfl">Nummer</div><input class="dfv" id="det-hn" value="${p.hausnummer||''}" style="border-bottom:1px solid var(--brd);padding:6px 0;"></div>
+      <div class="fg" style="margin-bottom:14px;"><div class="dfl">PLZ</div><input class="dfv" id="det-plz" value="${p.plz||''}" style="border-bottom:1px solid var(--brd);padding:6px 0;"></div>
+      <div class="fg" style="margin-bottom:14px;"><div class="dfl">Ort</div><input class="dfv" id="det-ort" value="${p.ort||''}" style="border-bottom:1px solid var(--brd);padding:6px 0;"></div>
+    </div>`;
+  // update topbar
+  document.getElementById('tb-pn').textContent=p.nummer+' · '+p.name;CPId=p.id;
+}
+
+async function saveDetProjekt(id){
+  const{error}=await sb.from('projekte').update({
+    nummer:document.getElementById('det-nr').value,
+    name:document.getElementById('det-nm').value,
+    beschreibung:document.getElementById('det-desc').value,
+    status:document.getElementById('det-st').value,
+    beginn:document.getElementById('det-bg').value||null,
+    ende:document.getElementById('det-en').value||null,
+    fortschritt:parseInt(document.getElementById('det-fp').value)||0,
+    strasse:document.getElementById('det-str').value,
+    hausnummer:document.getElementById('det-hn').value,
+    plz:document.getElementById('det-plz').value,
+    ort:document.getElementById('det-ort').value,
+    aktualisiert_am:new Date().toISOString()
+  }).eq('id',id);
+  if(error){toast('Fehler: '+error.message,false);return;}
+  await loadPR();rPR();renderDashboard();
+  // re-select to refresh detail
+  selPDet(id);
+  toast('Projekt gespeichert!');
+}
+
+async function delProjekt(id){
+  if(!confirm('Projekt wirklich löschen? Alle zugehörigen Daten werden gelöscht.'))return;
+  await sb.from('projekte').delete().eq('id',id);
+  _pSel=null;
+  document.getElementById('p-detail').innerHTML=`<div class="empty" style="margin-top:60px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px;height:36px;opacity:.25;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><div style="font-size:13px;color:var(--tx3);">Projekt auswählen</div></div>`;
+  await loadPR();rPR();renderDashboard();toast('Projekt gelöscht.');
+}
+
+async function archProjekt(id){
+  await sb.from('projekte').update({status:'done'}).eq('id',id);
+  await loadPR();rPR();selPDet(id);toast('Projekt archiviert.');
+}
+
+function selP(id,nr,nm){CPId=id;document.getElementById('tb-pn').textContent=nr+' · '+nm;}
+
+function toggleProjPicker(){
+  const picker=document.getElementById('proj-picker');
+  if(picker.style.display==='none'){
+    const list=document.getElementById('proj-picker-list');
+    list.innerHTML='';
+    if(!PR.length){
+      list.innerHTML='<div style="padding:16px;text-align:center;font-size:12.5px;color:var(--tx3);">Noch keine Projekte</div>';
+    } else {
+      PR.forEach(p=>{
+        const div=document.createElement('div');
+        div.style.cssText='display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;border-bottom:1px solid var(--brd);';
+        div.innerHTML='<div style="width:7px;height:7px;border-radius:50%;background:'+(p.status==='active'?'var(--gn)':'var(--tx3)')+';flex-shrink:0;"></div><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:500;">'+p.name+'</div><div style="font-size:11px;color:var(--tx3);">'+p.nummer+'</div></div>'+(p.id===CPId?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px;color:var(--ac);"><polyline points="20 6 9 17 4 12"/></svg>':'');
+        div.onmouseover=()=>div.style.background='var(--bg3)';
+        div.onmouseout=()=>div.style.background='';
+        div.onclick=(e)=>{e.stopPropagation();selectProjGlobal(p.id);};
+        list.appendChild(div);
+      });
+    }
+    picker.style.display='block';
+    setTimeout(()=>document.addEventListener('click',closeProjPicker,{once:true}),10);
+  } else {
+    picker.style.display='none';
+  }
+}
+
+function closeProjPicker(e){
+  const picker=document.getElementById('proj-picker');
+  const pill=document.getElementById('proj-pill');
+  if(!picker.contains(e.target)&&!pill.contains(e.target)){
+    picker.style.display='none';
+  }
+}
+
+async function selectProjGlobal(id){
+  CPId=id;
+  try{setCK('bd_proj',id);}catch(e){}
+  const p=PR.find(x=>x.id===id);
+  if(p){
+    document.getElementById('tb-pn').textContent=p.nummer+' · '+p.name;
+    document.getElementById('proj-pdot').style.background=p.status==='active'?'var(--gn)':'var(--ac)';
+  }
+  document.getElementById('proj-picker').style.display='none';
+  // Reload data for this project
+  await Promise.all([loadBE(),loadMG(),loadKO(),loadMA(),loadKT(),loadBS()]);
+  // Re-render current page
+  const active=document.querySelector('.pg.act')?.id.replace('pg-','');
+  if(active==='berichte')rBE();
+  if(active==='maengel')rMG();
+  if(active==='kosten')rKO();
+  if(active==='material')rMA();
+  if(active==='kontakte')rKT();
+  if(active==='besprechungen')rBS();
+  if(active==='dashboard')renderDashboard();
+  toast('Projekt: '+p?.name);
+}
+
+async function uploadProjektBild(projId, inp) {
+  const file = inp.files[0];
+  if (!file) return;
+  if (file.size > 5*1024*1024) { toast('Bild zu groß (max. 5 MB)', false); return; }
+  toast('Wird hochgeladen …');
+  const ext = file.name.split('.').pop().toLowerCase();
+  const path = `${CU.id}/projekte/${projId}/logo.${ext}`;
+  const {error} = await sb.storage.from('baudoku-fotos').upload(path, file, {upsert:true, cacheControl:'3600'});
+  if (error) { toast('Upload Fehler: '+error.message, false); return; }
+  const {data} = sb.storage.from('baudoku-fotos').getPublicUrl(path);
+  const logoUrl = data.publicUrl + '?v=' + Date.now();
+  await sb.from('projekte').update({logo_url: logoUrl}).eq('id', projId);
+  const prev = document.getElementById('proj-img-preview');
+  if (prev) prev.innerHTML = `<img src="${logoUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+  await loadPR(); rPR();
+  toast('Projektbild gespeichert!');
+}
+
+async function removeProjektBild(projId) {
+  await sb.from('projekte').update({logo_url: null}).eq('id', projId);
+  const prev = document.getElementById('proj-img-preview');
+  if (prev) prev.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:28px;height:28px;opacity:.3;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+  await loadPR(); rPR();
+  toast('Bild entfernt.');
+}
+
+function brH(b){
+  const p=PR.find(x=>x.id===b.projekt_id);
+  const tags=(b.gewerke||[]).slice(0,3).map(g=>`<span class="tag tbl">${g}</span>`).join('');
+  const more=b.gewerke&&b.gewerke.length>3?`<span class="tag tab">+${b.gewerke.length-3}</span>`:'';
+  return`<div class="br" onclick="showDet('${b.id}')">
+    <div class="bd">${fd(b.datum)}</div>
+    <div class="bi"><div class="bt2">${(b.taetigkeiten||'—').substring(0,60)}${(b.taetigkeiten||'').length>60?'…':''}</div>
+    <div class="bs2">${p?p.name+' · ':''}${b.nummer||''} · ${b.arbeiter||0} Pers. · ${b.stunden||0} Std. · ${b.wetter||''}</div></div>
+    <div class="bm">${tags}${more}</div>
+  </div>`;
+}
+function rBE(){const l=document.getElementById('bl');const arr=BE.filter(b=>(!_bf||(b.taetigkeiten||'').toLowerCase().includes(_bf.toLowerCase()))&&(!_bpf||b.projekt_id===_bpf));l.innerHTML=arr.length?arr.map(brH).join(''):emp('Keine Berichte gefunden.');const sel=document.getElementById('bpsel');if(sel&&sel.options.length===1)PR.forEach(p=>sel.add(new Option(p.nummer+' · '+p.name,p.id)));}
+function fB(v){_bf=v;rBE();}
+function fBP(v){_bpf=v;rBE();}
+
+async function showDet(id){
+  const b=BE.find(x=>x.id===id);if(!b)return;
+  const p=PR.find(x=>x.id===b.projekt_id);
+  document.getElementById('dt-t').textContent='Bautagesbericht '+(b.nummer||'');
+  document.getElementById('dt-s').textContent=(p?p.name+' · ':'')+fd(b.datum);
+  const{data:fs}=await sb.from('bericht_fotos').select('*').eq('bericht_id',id);
+  let fHTML='';
+  if(fs&&fs.length){
+    const urls=fs.map(f=>sb.storage.from('baudoku-fotos').getPublicUrl(f.storage_pfad).data?.publicUrl||'');
+    fHTML=`<div class="fg" style="margin-top:10px;"><div class="fl">Fotos (${fs.length})</div><div class="pgr">${urls.map(u=>`<div class="pth"><img src="${u}" alt="Foto"></div>`).join('')}</div></div>`;
+  }
+  document.getElementById('dt-body').innerHTML=`
+    <div class="dg">
+      <div class="di"><div class="dl">Datum</div><div class="dv">${fd(b.datum)}</div></div>
+      <div class="di"><div class="dl">Projekt</div><div class="dv">${p?p.name:'—'}</div></div>
+      <div class="di"><div class="dl">Wetter</div><div class="dv">${b.wetter||'—'} · ${b.temperatur||'—'}°C · ${b.wind||'—'}</div></div>
+      <div class="di"><div class="dl">Arbeitskräfte</div><div class="dv">${b.arbeiter||0} Pers. / ${b.stunden||0} Std.</div></div>
+    </div>
+    <div style="margin-bottom:12px;"><div class="fl" style="margin-bottom:6px;">Gewerke</div><div class="cr">${(b.gewerke||[]).map(g=>`<div class="chip sel" style="pointer-events:none;">${g}</div>`).join('')}</div></div>
+    <div class="fg" style="margin-bottom:11px;"><div class="fl">Ausgeführte Arbeiten</div><div class="dbl">${b.taetigkeiten||'—'}</div></div>
+    ${b.lieferungen?`<div class="fg" style="margin-bottom:11px;"><div class="fl">Lieferungen</div><div class="dbl">${b.lieferungen}</div></div>`:''}
+    ${b.probleme?`<div class="fg" style="margin-bottom:11px;"><div class="fl">Besonderheiten</div><div class="dbl warn">${b.probleme}</div></div>`:''}
+    ${b.bemerkungen?`<div class="fg" style="margin-bottom:11px;"><div class="fl">Bemerkungen</div><div class="dbl">${b.bemerkungen}</div></div>`:''}
+    ${fHTML}`;
+  om('m-dt');
+}
+
+let _pArt='all', _curProtoId=null, _curEintragId=null;
+let PE=[]; // Eintraege des aktuellen Protokolls
+
+function setPArt(art,el){
+  _pArt=art;
+  document.querySelectorAll('.proto-art').forEach(x=>x.classList.remove('act'));
+  el.classList.add('act');
+  rBS();
+}
+
+function rBS(){
+  const l=document.getElementById('bsl');
+  const artMap={BB:0,BE:0,AK:0,AB:0,CL:0};
+  BS.forEach(b=>{const k=(b.titel||'').split('-')[0];if(artMap[k]!==undefined)artMap[k]++;});
+  document.getElementById('pa-all-nb').textContent=BS.length;
+  ['BB','BE','AK','AB','CL'].forEach(k=>{
+    const el=document.getElementById('pa-'+k.toLowerCase()+'-nb');
+    if(el)el.textContent=artMap[k];
+  });
+  let arr=BS;
+  if(_pArt!=='all')arr=BS.filter(b=>(b.titel||'').startsWith(_pArt+'-'));
+  if(!arr.length){l.innerHTML=emp('Keine Protokolle.');return;}
+  l.innerHTML=arr.map(b=>{
+    const art=(b.titel||'BB').split('-')[0];
+    const colors={BB:'var(--bl)',BE:'var(--gn)',AK:'var(--ac)',AB:'var(--pu)',CL:'var(--tl)'};
+    const bgs={BB:'var(--bldm)',BE:'var(--gndm)',AK:'var(--adm)',AB:'var(--pudm)',CL:'var(--tldm)'};
+    const c=colors[art]||'var(--bl)',bg=bgs[art]||'var(--bldm)';
+    const isSel=_curProtoId===b.id;
+    return `<div style="padding:12px 14px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background var(--tr);background:${isSel?'var(--adm)':''};" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='${isSel?'var(--adm)':''}'" onclick="showProtoDet('${b.id}')">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+        <span style="font-size:10px;font-weight:700;color:${c};background:${bg};padding:1px 5px;border-radius:3px;">${b.titel||'BB-01'}</span>
+        <span style="font-size:10px;color:var(--tx3);">${b.abgeschlossen?'✓ Abgeschlossen':'Offen'}</span>
+        <div style="margin-left:auto;color:${b.abgeschlossen?'var(--ac)':'var(--tx4)'};">
+          <svg viewBox="0 0 24 24" fill="${b.abgeschlossen?'currentColor':'none'}" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="${b.abgeschlossen?'M7 11V7a5 5 0 0 1 10 0v4':'M7 11V7a5 5 0 0 1 10 0v4'}"/></svg>
+        </div>
+      </div>
+      <div style="font-size:13px;font-weight:500;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.ort||'Baubesprechung'}</div>
+      <div style="font-size:11px;color:var(--tx3);">${fd(b.datum)}</div>
+    </div>`;
+  }).join('');
+}
+
+async function showProtoDet(id){
+  _curProtoId=id;
+  _curEintragId=null;
+  rBS(); // refresh to show selection
+  const b=BS.find(x=>x.id===id);
+  if(!b)return;
+  const p=PR.find(x=>x.id===b.projekt_id);
+  // Header
+  const hdr=document.getElementById('proto-header');
+  hdr.innerHTML=`
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:15px;font-weight:700;">${b.titel||'Protokoll'}</span>
+        ${b.abgeschlossen?'<span style="background:var(--adm);color:var(--ac);font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;">Abgeschlossen</span>':''}
+      </div>
+      <div style="font-size:11.5px;color:var(--tx3);">${p?p.name+' · ':''}${fd(b.datum)}${b.ort?' · '+b.ort:''}</div>
+    </div>
+    <div style="display:flex;gap:7px;">
+      ${!b.abgeschlossen?`<button class="btn bg" onclick="schliesseProtokoll('${b.id}')" style="font-size:12px;gap:5px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:12px;height:12px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Abschließen</button>`:''}
+      ${b.abgeschlossen?`<button class="btn bg" onclick="oeffneProtokoll('${b.id}')" style="font-size:12px;color:var(--ac);">🔓 Entsperren</button>`:''}
+    </div>`;
+  // Show add button only if not locked
+  document.getElementById('btn-add-eintrag').style.display=b.abgeschlossen?'none':'flex';
+  document.getElementById('eintrag-det').innerHTML='<div class="empty" style="margin-top:60px;"><div style="font-size:13px;color:var(--tx3);">Eintrag auswählen</div></div>';
+  // Load eintraege
+  await loadEintraege(id);
+}
+
+async function loadEintraege(bId){
+  const{data}=await sb.from('protokoll_eintraege').select('*').eq('besprechung_id',bId).order('created_at');
+  PE=data||[];
+  renderEintraege();
+}
+
+function renderEintraege(){
+  const l=document.getElementById('eintraege-list');
+  if(!PE.length){l.innerHTML=emp('Noch keine Einträge. Klicke auf + Eintrag.');return;}
+  const typCol={zu_erledigen:'var(--rd)',offen:'var(--ac)',info:'var(--bl)',erledigt:'var(--gn)'};
+  const typLbl={zu_erledigen:'Zu erledigen',offen:'Offen',info:'Info',erledigt:'Erledigt'};
+  l.innerHTML=PE.map(e=>{
+    const isSel=_curEintragId===e.id;
+    return `<div style="padding:12px 14px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background var(--tr);background:${isSel?'var(--adm)':''};" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='${isSel?'var(--adm)':''}'" onclick="showEintrag('${e.id}')">
+      <div style="display:flex;align-items:flex-start;gap:8px;">
+        <div onclick="event.stopPropagation();toggleEintragErledigt('${e.id}',${!e.erledigt})" style="margin-top:2px;flex-shrink:0;">
+          <div style="width:16px;height:16px;border-radius:4px;border:2px solid ${e.erledigt?'var(--gn)':'var(--brd2)'};background:${e.erledigt?'var(--gn)':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;">
+            ${e.erledigt?'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" style="width:10px;height:10px;"><polyline points="20 6 9 17 4 12"/></svg>':''}
+          </div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:500;${e.erledigt?'text-decoration:line-through;color:var(--tx3);':''}white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.titel}</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;">
+            ${e.firma?`<span>${e.firma}</span>`:''}
+            ${e.gewerk?`<span>⚙ ${e.gewerk}</span>`:''}
+            ${e.faellig_bis?`<span>bis ${fd(e.faellig_bis)}</span>`:''}
+          </div>
+        </div>
+        <div style="flex-shrink:0;">
+          <span style="font-size:10px;font-weight:600;color:${typCol[e.typ]||'var(--tx3)'};background:${typCol[e.typ]||'var(--tx3)'}22;padding:2px 6px;border-radius:20px;">${typLbl[e.typ]||e.typ}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showEintrag(id){
+  _curEintragId=id;
+  renderEintraege();
+  const e=PE.find(x=>x.id===id);
+  if(!e)return;
+  const priCol={keine:'var(--tx3)',niedrig:'var(--gn)',mittel:'var(--ac)',hoch:'var(--or)',kritisch:'var(--rd)'};
+  const priLbl={keine:'Keine Priorität',niedrig:'Niedrig',mittel:'Mittel',hoch:'Hoch',kritisch:'Kritisch'};
+  const typLbl={zu_erledigen:'Zu erledigen',offen:'Offen',info:'Info',erledigt:'Erledigt'};
+  document.getElementById('eintrag-det').innerHTML=`
+    <div style="padding:16px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:11px;color:var(--tx3);">Eintrag ${e.nummer||''}</div>
+      <div style="display:flex;gap:7px;">
+        <button class="btn bg" onclick="deleteEintrag('${e.id}')" style="font-size:11.5px;color:var(--rd);">Löschen</button>
+        <button class="btn bp" onclick="toggleEintragErledigt('${e.id}',${!e.erledigt})" style="font-size:11.5px;">${e.erledigt?'🔓 Wieder öffnen':'✓ Erledigt'}</button>
+      </div>
+    </div>
+    <div style="padding:18px 20px;">
+      <div style="font-size:17px;font-weight:700;margin-bottom:10px;letter-spacing:-.3px;${e.erledigt?'text-decoration:line-through;color:var(--tx3);':''}">${e.titel}</div>
+      ${e.langtext?`<div style="font-size:13.5px;line-height:1.7;color:var(--tx2);margin-bottom:16px;white-space:pre-wrap;">${e.langtext}</div>`:''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        ${e.firma?`<div class="di"><div class="dl">Firma</div><div class="dv">${e.firma}</div></div>`:''}
+        ${e.zustaendig?`<div class="di"><div class="dl">Zuständig</div><div class="dv">${e.zustaendig}</div></div>`:''}
+        <div class="di"><div class="dl">Typ</div><div class="dv">${typLbl[e.typ]||e.typ}</div></div>
+        <div class="di"><div class="dl">Priorität</div><div class="dv" style="color:${priCol[e.prioritaet]||'var(--tx)'};">${priLbl[e.prioritaet]||e.prioritaet}</div></div>
+        ${e.gewerk?`<div class="di"><div class="dl">Gewerk</div><div class="dv">${e.gewerk}</div></div>`:''}
+        ${e.lage?`<div class="di"><div class="dl">Lage</div><div class="dv">${e.lage}</div></div>`:''}
+        ${e.faellig_von?`<div class="di"><div class="dl">Von</div><div class="dv">${fd(e.faellig_von)}</div></div>`:''}
+        ${e.faellig_bis?`<div class="di"><div class="dl">Bis</div><div class="dv" style="color:var(--rd);">${fd(e.faellig_bis)}</div></div>`:''}
+        ${e.kosten?`<div class="di"><div class="dl">Kosten exkl. MwSt.</div><div class="dv">€ ${parseFloat(e.kosten).toFixed(2)}</div></div>`:''}
+      </div>
+    </div>`;
+}
+
+async function toggleEintragErledigt(id,val){
+  const upd={erledigt:val};
+  if(val)upd.erledigt_am=new Date().toISOString();
+  else upd.erledigt_am=null;
+  await sb.from('protokoll_eintraege').update(upd).eq('id',id);
+  await loadEintraege(_curProtoId);
+  if(_curEintragId===id)showEintrag(id);
+  toast(val?'✓ Erledigt!':'Wieder geöffnet.');
+}
+
+async function deleteEintrag(id){
+  if(!confirm('Eintrag wirklich löschen?'))return;
+  await sb.from('protokoll_eintraege').delete().eq('id',id);
+  _curEintragId=null;
+  document.getElementById('eintrag-det').innerHTML='<div class="empty" style="margin-top:60px;"><div style="font-size:13px;color:var(--tx3);">Eintrag auswählen</div></div>';
+  await loadEintraege(_curProtoId);
+  toast('Eintrag gelöscht.');
+}
+
+function openEintragModal(){
+  if(!_curProtoId){toast('Bitte zuerst ein Protokoll auswählen!',false);return;}
+  const b=BS.find(x=>x.id===_curProtoId);
+  document.getElementById('pe-proto-nm').textContent=b?b.titel+' · '+fd(b.datum):'';
+  const cnt=PE.length+1;
+  document.getElementById('pe-title').textContent='Neuer Eintrag '+( b?b.titel.split('-')[0]:'')+'-'+String(cnt).padStart(3,'0');
+  // Fill firma dropdown from KT
+  const sel=document.getElementById('pe-fi');
+  sel.innerHTML='<option value="">— keine —</option>'+KT.filter(k=>k.typ==='firma').map(k=>`<option value="${k.nachname}">${k.nachname}</option>`).join('');
+  ['pe-ti','pe-lt','pe-zu','pe-gw','pe-la','pe-fv','pe-fb','pe-ko'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('pe-typ').value='zu_erledigen';
+  document.getElementById('pe-pri').value='keine';
+  om('m-pe');
+}
+
+async function saveEintrag(){
+  const ti=document.getElementById('pe-ti').value.trim();
+  if(!ti){toast('Titel erforderlich.',false);return;}
+  const cnt=PE.length+1;
+  const b=BS.find(x=>x.id===_curProtoId);
+  const nr=(b?b.titel.split('-')[0]:'BB')+'-'+String(cnt).padStart(3,'0');
+  const{error}=await sb.from('protokoll_eintraege').insert({
+    user_id:CU.id, besprechung_id:_curProtoId, projekt_id:CPId,
+    nummer:nr, titel:ti,
+    langtext:document.getElementById('pe-lt').value,
+    firma:document.getElementById('pe-fi').value,
+    zustaendig:document.getElementById('pe-zu').value,
+    typ:document.getElementById('pe-typ').value,
+    prioritaet:document.getElementById('pe-pri').value,
+    gewerk:document.getElementById('pe-gw').value,
+    lage:document.getElementById('pe-la').value,
+    faellig_von:document.getElementById('pe-fv').value||null,
+    faellig_bis:document.getElementById('pe-fb').value||null,
+    kosten:parseFloat(document.getElementById('pe-ko').value)||null
+  });
+  if(error){toast('Fehler: '+error.message,false);return;}
+  cm('m-pe');
+  await loadEintraege(_curProtoId);
+  toast('Eintrag gespeichert!');
+}
+
+async function openBS(){
+  if(!CPId){toast('Bitte zuerst ein Projekt auswählen!',false);return;}
+  const p=PR.find(x=>x.id===CPId);
+  document.getElementById('bs-proj-nm').textContent=p?p.nummer+' · '+p.name:'';
+  document.getElementById('bs-d').value=new Date().toISOString().split('T')[0];
+  const typ=_pArt==='all'?'BB':_pArt;
+  document.getElementById('bs-typ').value=typ;
+  updateBsNr();
+  ['bs-u','bs-o','bs-l','bs-th','bs-be','bs-ns','bs-nt'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  om('m-bs');
+  await loadTeilnehmerListe();
+}
+
+function updateBsNr(){
+  const typ=document.getElementById('bs-typ').value;
+  const cnt=BS.filter(b=>(b.titel||'').startsWith(typ+'-')).length+1;
+  document.getElementById('bs-nr').value=typ+'-'+String(cnt).padStart(2,'0');
+  const titles={BB:'Baubesprechungsprotokoll',BE:'Besprechungsprotokoll',AK:'Aktennotiz',AB:'Abnahmeprotokoll',CL:'Checkliste'};
+  document.getElementById('bs-title').textContent='Neues '+titles[typ];
+}
+
+async function loadTeilnehmerListe(){
+  const list=document.getElementById('bs-tn-list');
+  if(!list)return;
+  // Get projektteam
+  const{data:ptData}=await sb.from('projektteam').select('kontakt_id').eq('projekt_id',CPId);
+  const ptIds=(ptData||[]).map(x=>x.kontakt_id);
+  const teamFirmen=KT.filter(k=>ptIds.includes(k.id));
+  if(!teamFirmen.length){
+    list.innerHTML='<div style="padding:14px;text-align:center;color:var(--tx3);font-size:12.5px;">Kein Projektteam definiert.</div>';
+    return;
+  }
+  // Load ansprechpartner
+  const firmaIds=teamFirmen.map(k=>k.id);
+  const{data:apData}=await sb.from('ansprechpartner').select('*').in('firma_id',firmaIds).order('nachname');
+  const apByFirma={};
+  (apData||[]).forEach(ap=>{if(!apByFirma[ap.firma_id])apByFirma[ap.firma_id]=[];apByFirma[ap.firma_id].push(ap);});
+  let html='';
+  teamFirmen.forEach(firma=>{
+    const aps=apByFirma[firma.id]||[];
+    html+=`<div style="display:grid;grid-template-columns:1fr 120px 80px 80px;padding:8px 10px;background:var(--bg3);border-bottom:1px solid var(--brd);">
+      <div style="font-size:13px;font-weight:600;">${firma.nachname}</div>
+      <div style="font-size:11.5px;color:var(--tx3);">${firma.gewerk||''}</div>
+      <div></div><div></div>
+    </div>`;
+    if(aps.length){
+      aps.forEach(ap=>{
+        html+=`<div style="display:grid;grid-template-columns:1fr 120px 80px 80px;padding:8px 10px 8px 20px;border-bottom:1px solid var(--brd);align-items:center;">
+          <div>
+            <div style="font-size:12.5px;">${ap.vorname} ${ap.nachname}</div>
+            ${ap.telefon?`<div style="font-size:11px;color:var(--tx3);">${ap.telefon}</div>`:''}
+            ${ap.email?`<div style="font-size:11px;color:var(--bl);">${ap.email}</div>`:''}
+          </div>
+          <div style="font-size:11.5px;color:var(--tx3);">${ap.gewerk||firma.gewerk||''}</div>
+          <div style="text-align:center;"><input type="checkbox" data-apid="${ap.id}" data-fid="${firma.id}" data-typ="vert" style="width:16px;height:16px;accent-color:var(--ac);cursor:pointer;"></div>
+          <div style="text-align:center;"><input type="checkbox" data-apid="${ap.id}" data-fid="${firma.id}" data-typ="teil" style="width:16px;height:16px;accent-color:var(--ac);cursor:pointer;"></div>
+        </div>`;
+      });
+    } else {
+      // firma without ansprechpartner
+      html+=`<div style="display:grid;grid-template-columns:1fr 120px 80px 80px;padding:8px 10px 8px 20px;border-bottom:1px solid var(--brd);align-items:center;">
+        <div style="font-size:12px;color:var(--tx3);">— kein Ansprechpartner —</div>
+        <div></div>
+        <div style="text-align:center;"><input type="checkbox" data-fid="${firma.id}" data-typ="vert" style="width:16px;height:16px;accent-color:var(--ac);cursor:pointer;"></div>
+        <div style="text-align:center;"><input type="checkbox" data-fid="${firma.id}" data-typ="teil" style="width:16px;height:16px;accent-color:var(--ac);cursor:pointer;"></div>
+      </div>`;
+    }
+  });
+  list.innerHTML=html;
+}
+
+async function saveBesprechung(){
+  const datum=document.getElementById('bs-d').value;
+  const themen=document.getElementById('bs-th').value.trim();
+  if(!datum||!themen){toast('Datum und Themen erforderlich.',false);return;}
+  if(!CPId){toast('Kein Projekt ausgewählt!',false);return;}
+  const nr=document.getElementById('bs-nr').value;
+  // Collect checked teilnehmer names for legacy field
+  const checkedNames=[];
+  document.querySelectorAll('#bs-tn-list input[type=checkbox]:checked').forEach(cb=>{
+    const row=cb.closest('div[style*="grid"]');
+    if(row){const nm=row.querySelector('div:first-child div:first-child');if(nm)checkedNames.push(nm.textContent.trim());}
+  });
+  const{data,error}=await sb.from('baubesprechungen').insert({
+    user_id:CU.id, projekt_id:CPId, titel:nr, datum,
+    uhrzeit:document.getElementById('bs-u').value||null,
+    ort:document.getElementById('bs-o').value,
+    leitung:document.getElementById('bs-l').value,
+    teilnehmer:checkedNames,
+    tagesordnung:themen,
+    protokoll:document.getElementById('bs-be').value,
+    massnahmen:document.getElementById('bs-ns').value,
+    naechste_besprechung:document.getElementById('bs-nt').value||null
+  }).select().single();
+  if(error){toast('Fehler: '+error.message,false);return;}
+  // Save teilnehmer details
+  if(data){
+    const inserts=[];
+    document.querySelectorAll('#bs-tn-list input[type=checkbox]').forEach(cb=>{
+      const apid=cb.dataset.apid;
+      const fid=cb.dataset.fid;
+      const typ=cb.dataset.typ;
+      const key=apid||('firma-'+fid);
+      if(!inserts.find(x=>x._key===key)){
+        inserts.push({_key:key,user_id:CU.id,besprechung_id:data.id,
+          kontakt_id:fid,
+          ansprechpartner_id:apid||null,
+          vertreten:false,teilgenommen:false});
+      }
+      const item=inserts.find(x=>x._key===key);
+      if(item){if(typ==='vert')item.vertreten=cb.checked;if(typ==='teil')item.teilgenommen=cb.checked;}
+    });
+    const toSave=inserts.filter(x=>x.vertreten||x.teilgenommen).map(({_key,...rest})=>rest);
+    if(toSave.length)await sb.from('protokoll_teilnehmer').insert(toSave);
+  }
+  cm('m-bs');
+  await loadBS();
+  rBS();
+  renderDashboard();
+  toast(nr+' gespeichert! Jetzt Einträge hinzufügen.');
+  // Open the new protokoll directly
+  if(data){
+    setTimeout(()=>showProtoDet(data.id),300);
+  }
+}
+
+async function schliesseProtokoll(id){
+  if(!confirm('Protokoll wirklich abschließen?'))return;
+  await sb.from('baubesprechungen').update({abgeschlossen:true}).eq('id',id);
+  await loadBS();rBS();showProtoDet(id);
+  toast('Protokoll abgeschlossen! 🔒');
+}
+async function oeffneProtokoll(id){
+  await sb.from('baubesprechungen').update({abgeschlossen:false}).eq('id',id);
+  await loadBS();rBS();showProtoDet(id);
+  toast('Protokoll entsperrt.');
+}
+
+</script>
+</body>
+</html>
