@@ -239,8 +239,12 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
 .gz-bar-date{font-size:9px;color:var(--tx3);position:absolute;right:calc(100% + 4px);white-space:nowrap;}
 .gz-bar.gz-parent{height:6px;top:12px;border-radius:2px;background:var(--tx4);}
 .gz-bar.gz-mile{width:10px!important;height:10px!important;top:10px;border-radius:2px;transform:rotate(45deg);}
-.gz-bar-wrap{z-index:1;cursor:grab;}
-.gz-bar-wrap:hover{outline:1.5px solid rgba(255,255,255,.3);outline-offset:-1px;border-radius:3px;}
+.gz-bar-wrap{z-index:1;cursor:grab;overflow:visible;}
+.gz-bar-wrap::before,.gz-bar-wrap::after{content:'';position:absolute;top:50%;width:5px;height:18px;border-radius:3px;background:var(--ac);transform:translateY(-50%) scaleX(0);transition:transform .15s,opacity .15s;opacity:0;z-index:3;pointer-events:none;}
+.gz-bar-wrap::before{left:-2px;}
+.gz-bar-wrap::after{right:-2px;}
+.gz-bar-wrap:hover::before,.gz-bar-wrap:hover::after{transform:translateY(-50%) scaleX(1);opacity:.8;}
+.gz-drag-tip{position:absolute;top:-22px;padding:2px 6px;background:var(--bg1);border:1px solid var(--ac);border-radius:4px;font-size:10px;font-weight:600;color:var(--ac);white-space:nowrap;pointer-events:none;z-index:10;}
 .gz-today{position:absolute;top:0;bottom:0;width:1.5px;background:var(--rd);z-index:1;pointer-events:none;}
 .gz-today::before{content:'Heute';position:absolute;top:-14px;left:2px;font-size:8px;color:var(--rd);font-weight:600;}
 .gz-col{border-right:1px solid var(--brd);height:100%;}
@@ -2497,9 +2501,11 @@ function initBarDrag(wrap,e){
   e.preventDefault();
   e.stopPropagation();
   var id=wrap.dataset.bpid;
+  var b=BP.find(function(x){return x.id===id;});
+  if(!b||!b.start_datum||!b.ende_datum)return;
   var rect=wrap.getBoundingClientRect();
   var clickX=e.clientX-rect.left;
-  var edgeZone=Math.max(10, rect.width*0.2); // 20% or 10px, whichever is bigger
+  var edgeZone=Math.max(10, rect.width*0.2);
   var mode='move';
   if(clickX<=edgeZone) mode='resize-l';
   else if(clickX>=rect.width-edgeZone) mode='resize-r';
@@ -2508,9 +2514,37 @@ function initBarDrag(wrap,e){
   var origW=wrap.offsetWidth;
   var origL=parseFloat(wrap.style.left)||0;
   var dx=0;
-  var innerBar=wrap.firstElementChild;
+  var dayW=5;
   document.body.style.cursor=mode==='move'?'grabbing':mode==='resize-l'?'w-resize':'e-resize';
   document.body.style.userSelect='none';
+
+  // Datum-Tooltip erstellen
+  var tip=document.createElement('div');
+  tip.className='gz-drag-tip';
+  wrap.appendChild(tip);
+  tip.style.display='none';
+
+  function calcDates(){
+    var dm=Math.round(dx/dayW);
+    var nsd=b.start_datum, ned=b.ende_datum;
+    if(mode==='move'){
+      var ns=new Date(b.start_datum);ns.setDate(ns.getDate()+dm);
+      var ne=new Date(b.ende_datum);ne.setDate(ne.getDate()+dm);
+      nsd=ns.toISOString().split('T')[0];
+      ned=ne.toISOString().split('T')[0];
+    } else if(mode==='resize-l'){
+      var ns2=new Date(b.start_datum);ns2.setDate(ns2.getDate()+dm);
+      nsd=ns2.toISOString().split('T')[0];
+      if(nsd>ned)nsd=ned;
+    } else {
+      var ne2=new Date(b.ende_datum);ne2.setDate(ne2.getDate()+dm);
+      ned=ne2.toISOString().split('T')[0];
+      if(ned<nsd)ned=nsd;
+    }
+    return {s:nsd,e:ned,d:daysBetween(nsd,ned)};
+  }
+
+  function fmtD(iso){var p=iso.split('-');return p[2]+'.'+p[1]+'.'+p[0].slice(2);}
 
   function onMove(ev){
     dx=ev.clientX-startX;
@@ -2523,6 +2557,21 @@ function initBarDrag(wrap,e){
     } else {
       wrap.style.width=Math.max(origW+dx,6)+'px';
     }
+    // Tooltip mit aktuellem Datum anzeigen
+    if(Math.abs(dx)>=3){
+      var dt=calcDates();
+      tip.style.display='block';
+      if(mode==='resize-l'){
+        tip.textContent=fmtD(dt.s)+' ('+dt.d+'T)';
+        tip.style.left='0';tip.style.right='auto';
+      } else if(mode==='resize-r'){
+        tip.textContent=fmtD(dt.e)+' ('+dt.d+'T)';
+        tip.style.right='0';tip.style.left='auto';
+      } else {
+        tip.textContent=fmtD(dt.s)+' - '+fmtD(dt.e);
+        tip.style.left='50%';tip.style.right='auto';tip.style.transform='translateX(-50%)';
+      }
+    }
   }
   function onUp(){
     document.removeEventListener('mousemove',onMove);
@@ -2530,28 +2579,10 @@ function initBarDrag(wrap,e){
     document.body.style.cursor='';
     document.body.style.userSelect='';
     wrap.style.transform='';
+    if(tip.parentNode)tip.remove();
     if(Math.abs(dx)<3)return;
-    var dayW=5;
-    var daysMoved=Math.round(dx/dayW);
-    var b=BP.find(function(x){return x.id===id;});
-    if(!b||!b.start_datum||!b.ende_datum)return;
-    var nsd=b.start_datum, ned=b.ende_datum;
-    if(mode==='move'){
-      var ns=new Date(b.start_datum);ns.setDate(ns.getDate()+daysMoved);
-      var ne=new Date(b.ende_datum);ne.setDate(ne.getDate()+daysMoved);
-      nsd=ns.toISOString().split('T')[0];
-      ned=ne.toISOString().split('T')[0];
-    } else if(mode==='resize-l'){
-      var ns2=new Date(b.start_datum);ns2.setDate(ns2.getDate()+daysMoved);
-      nsd=ns2.toISOString().split('T')[0];
-      if(nsd>ned)nsd=ned;
-    } else {
-      var ne2=new Date(b.ende_datum);ne2.setDate(ne2.getDate()+daysMoved);
-      ned=ne2.toISOString().split('T')[0];
-      if(ned<nsd)ned=nsd;
-    }
-    var dur=daysBetween(nsd,ned);
-    sb.from('bauphasen').update({start_datum:nsd,ende_datum:ned,dauer_tage:dur}).eq('id',id).then(function(){
+    var dt=calcDates();
+    sb.from('bauphasen').update({start_datum:dt.s,ende_datum:dt.e,dauer_tage:dt.d}).eq('id',id).then(function(){
       loadBP().then(function(){rGantt();});
     });
   }
