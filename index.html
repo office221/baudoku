@@ -239,6 +239,8 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
 .gz-bar-date{font-size:9px;color:var(--tx3);position:absolute;right:calc(100% + 4px);white-space:nowrap;}
 .gz-bar.gz-parent{height:6px;top:12px;border-radius:2px;background:var(--tx4);}
 .gz-bar.gz-mile{width:10px!important;height:10px!important;top:10px;border-radius:2px;transform:rotate(45deg);}
+.gz-bar-wrap{z-index:1;cursor:grab;}
+.gz-bar-wrap:hover{outline:1.5px solid rgba(255,255,255,.3);outline-offset:-1px;border-radius:3px;}
 .gz-today{position:absolute;top:0;bottom:0;width:1.5px;background:var(--rd);z-index:1;pointer-events:none;}
 .gz-today::before{content:'Heute';position:absolute;top:-14px;left:2px;font-size:8px;color:var(--rd);font-weight:600;}
 .gz-col{border-right:1px solid var(--brd);height:100%;}
@@ -538,7 +540,7 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
             </div>
           </div>
         </div>
-        <div class="fr fr2">
+        <div class="fr fr2" id="bp-dates-row">
           <div class="fg"><label class="fl">Datum</label><input type="date" class="fi" id="bp-sd"></div>
           <div class="fg"><label class="fl">&nbsp;</label><input type="date" class="fi" id="bp-ed"></div>
         </div>
@@ -2169,6 +2171,9 @@ document.addEventListener('click',e=>{if(!e.target.closest('#bp-gew-wrap'))docum
 function bpTypChanged(){
   const t=document.getElementById('bp-typ').value;
   document.getElementById('bp-mtit').textContent=t==='phase'?'Bauphase':t==='vorgang'?'Vorgang':'Meilenstein';
+  // Phase: keine Datums-Eingabe (wird aus Vorgängen berechnet)
+  const dateRow=document.getElementById('bp-dates-row');
+  if(dateRow)dateRow.style.display=t==='phase'?'none':'grid';
 }
 
 function openBPModal(parentId){
@@ -2187,6 +2192,7 @@ function openBPModal(parentId){
   sel.innerHTML='<option value="">— Keine (Hauptphase) —</option>';
   BP.filter(b=>b.typ==='phase').forEach(b=>{sel.innerHTML+=`<option value="${b.id}">${b.nummer||''} ${b.bezeichnung}</option>`;});
   if(parentId)sel.value=parentId;
+  bpTypChanged();
   om('m-bp');
 }
 
@@ -2206,15 +2212,17 @@ function editBP(id){
   sel.innerHTML='<option value="">— Keine (Hauptphase) —</option>';
   BP.filter(p=>p.typ==='phase'&&p.id!==id).forEach(p=>{sel.innerHTML+=`<option value="${p.id}">${p.nummer||''} ${p.bezeichnung}</option>`;});
   sel.value=b.parent_id||'';
+  bpTypChanged();
   om('m-bp');
 }
 
 async function saveBauphase(){
   const bez=document.getElementById('bp-bez').value.trim();
+  const typ=document.getElementById('bp-typ').value;
   const sd=document.getElementById('bp-sd').value;
   const ed=document.getElementById('bp-ed').value;
   if(!bez){toast('Name ist Pflichtfeld.',false);return;}
-  if(!sd||!ed){toast('Start- und Enddatum sind Pflichtfelder.',false);return;}
+  if(typ!=='phase'&&(!sd||!ed)){toast('Start- und Enddatum sind Pflichtfelder.',false);return;}
   const dur=daysBetween(sd,ed);
   const parentId=document.getElementById('bp-parent').value||null;
   // Auto-number
@@ -2231,11 +2239,11 @@ async function saveBauphase(){
   }
   const obj={
     bezeichnung:bez,
-    typ:document.getElementById('bp-typ').value,
+    typ:typ,
     status:document.getElementById('bp-stat').value,
     gewerk:document.getElementById('bp-gew').value.trim()||null,
-    start_datum:sd,ende_datum:ed,
-    start_tag:1,dauer_tage:Math.max(dur,0),
+    start_datum:typ==='phase'?null:sd,ende_datum:typ==='phase'?null:ed,
+    start_tag:1,dauer_tage:typ==='phase'?0:Math.max(dur,0),
     farbe:document.getElementById('bp-farbe').value,
     abgeschlossen:document.getElementById('bp-fix').checked,
     parent_id:parentId
@@ -2278,11 +2286,23 @@ function buildTree(items){
   return flat;
 }
 
+// Auto-calculate phase dates from children
+function calcPhaseDates(){
+  BP.filter(b=>b.typ==='phase').forEach(p=>{
+    const kids=BP.filter(c=>c.parent_id===p.id&&c.start_datum&&c.ende_datum);
+    if(!kids.length)return;
+    p.start_datum=kids.reduce((min,c)=>!min||c.start_datum<min?c.start_datum:min,null);
+    p.ende_datum=kids.reduce((max,c)=>!max||c.ende_datum>max?c.ende_datum:max,null);
+    p.dauer_tage=daysBetween(p.start_datum,p.ende_datum);
+  });
+}
+
 function rGantt(){
   const g=document.getElementById('gnt');
   if(!g)return;
   if(!BP.length){g.innerHTML='<div class="empty" style="padding:60px 20px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;opacity:.3;"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg><div style="font-size:13px;color:var(--tx3);">Keine Einträge — klicke "Neu"</div></div>';return;}
 
+  calcPhaseDates();
   const tree=buildTree(BP);
   // Find date range
   const allDates=BP.filter(b=>b.start_datum&&b.ende_datum);
@@ -2391,20 +2411,24 @@ function rGantt(){
 
       if(b.typ==='phase'){
         // Thin dark bar with down-arrows at ends
-        chart+=`<div onmousedown="barDragStart(event,'${b.id}')" style="position:absolute;left:${left}px;width:${width}px;top:8px;height:10px;background:#555;border-radius:1px;opacity:${opacity};cursor:ew-resize;"></div>`;
-        chart+=`<div style="position:absolute;left:${left}px;top:15px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #555;"></div>`;
-        chart+=`<div style="position:absolute;left:${left+width-8}px;top:15px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #555;"></div>`;
-        chart+=`<span style="position:absolute;left:${afterBar}px;top:7px;font-size:10px;font-weight:600;color:var(--tx);white-space:nowrap;">Bauphase: ${esc(b.bezeichnung)}</span>`;
+        chart+=`<div class="gz-bar-wrap" data-bpid="${b.id}" onmousedown="initBarDrag(this,event)" style="position:absolute;left:${left}px;width:${width}px;top:3px;height:24px;">`;
+        chart+=`<div style="position:absolute;left:0;top:5px;width:100%;height:10px;background:#555;border-radius:1px;opacity:${opacity};pointer-events:none;"></div>`;
+        chart+=`</div>`;
+        chart+=`<div style="position:absolute;left:${left}px;top:15px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #555;pointer-events:none;"></div>`;
+        chart+=`<div style="position:absolute;left:${left+width-8}px;top:15px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #555;pointer-events:none;"></div>`;
+        chart+=`<span style="position:absolute;left:${afterBar}px;top:7px;font-size:10px;font-weight:600;color:var(--tx);white-space:nowrap;pointer-events:none;">Bauphase: ${esc(b.bezeichnung)}</span>`;
       } else if(b.typ==='meilenstein'){
         // Diamond shape
         chart+=`<div style="position:absolute;left:${left-6}px;top:9px;width:12px;height:12px;background:${color};border-radius:2px;transform:rotate(45deg);opacity:${opacity};"></div>`;
         chart+=`<span style="position:absolute;left:${left-4}px;top:7px;font-size:9px;color:var(--tx3);transform:translateX(-100%);white-space:nowrap;">${dateLbl}</span>`;
         chart+=`<span style="position:absolute;left:${left+14}px;top:9px;font-size:10px;font-weight:500;color:var(--tx);white-space:nowrap;">${esc(b.bezeichnung)}</span>`;
       } else {
-        // Regular bar
-        chart+=`<div onmousedown="barDragStart(event,'${b.id}')" style="position:absolute;left:${left}px;width:${width}px;top:8px;height:14px;background:${color};border-radius:3px;opacity:${opacity};cursor:ew-resize;"></div>`;
-        chart+=`<span style="position:absolute;left:${left-4}px;top:9px;font-size:9px;color:var(--tx3);transform:translateX(-100%);white-space:nowrap;">${dateLbl}</span>`;
-        chart+=`<span style="position:absolute;left:${afterBar}px;top:9px;font-size:10px;font-weight:500;color:var(--tx);white-space:nowrap;">${esc(b.bezeichnung)}</span>`;
+        // Regular bar with resize handles
+        chart+=`<div class="gz-bar-wrap" data-bpid="${b.id}" onmousedown="initBarDrag(this,event)" style="position:absolute;left:${left}px;width:${width}px;top:3px;height:24px;">`;
+        chart+=`<div style="position:absolute;left:0;top:4px;width:100%;height:14px;background:${color};border-radius:3px;opacity:${opacity};pointer-events:none;"></div>`;
+        chart+=`</div>`;
+        chart+=`<span style="position:absolute;left:${left-4}px;top:9px;font-size:9px;color:var(--tx3);transform:translateX(-100%);white-space:nowrap;pointer-events:none;">${dateLbl}</span>`;
+        chart+=`<span style="position:absolute;left:${afterBar}px;top:9px;font-size:10px;font-weight:500;color:var(--tx);white-space:nowrap;pointer-events:none;">${esc(b.bezeichnung)}</span>`;
       }
     }
     chart+='</div>';
@@ -2468,34 +2492,69 @@ async function bpDrop(e,targetId){
   _dragBPId=null;
 }
 
-// Bar dragging in Gantt chart
-let _barDrag=null;
-function barDragStart(e,id){
+// Bar dragging & resizing in Gantt chart
+function initBarDrag(wrap,e){
+  e.preventDefault();
   e.stopPropagation();
-  _barDrag={id,startX:e.clientX};
-  const bar=e.target;
-  const onMove=ev=>{
-    const dx=ev.clientX-_barDrag.startX;
-    bar.style.transform=`translateX(${dx}px)`;
-    bar._dx=dx;
-  };
-  const onUp=async ev=>{
+  var id=wrap.dataset.bpid;
+  var rect=wrap.getBoundingClientRect();
+  var clickX=e.clientX-rect.left;
+  var edgeZone=Math.max(10, rect.width*0.2); // 20% or 10px, whichever is bigger
+  var mode='move';
+  if(clickX<=edgeZone) mode='resize-l';
+  else if(clickX>=rect.width-edgeZone) mode='resize-r';
+
+  var startX=e.clientX;
+  var origW=wrap.offsetWidth;
+  var origL=parseFloat(wrap.style.left)||0;
+  var dx=0;
+  var innerBar=wrap.firstElementChild;
+  document.body.style.cursor=mode==='move'?'grabbing':mode==='resize-l'?'w-resize':'e-resize';
+  document.body.style.userSelect='none';
+
+  function onMove(ev){
+    dx=ev.clientX-startX;
+    if(mode==='move'){
+      wrap.style.transform='translateX('+dx+'px)';
+    } else if(mode==='resize-l'){
+      var cDx=Math.min(dx,origW-6);
+      wrap.style.left=(origL+cDx)+'px';
+      wrap.style.width=Math.max(origW-cDx,6)+'px';
+    } else {
+      wrap.style.width=Math.max(origW+dx,6)+'px';
+    }
+  }
+  function onUp(){
     document.removeEventListener('mousemove',onMove);
     document.removeEventListener('mouseup',onUp);
-    bar.style.transform='';
-    const dx=bar._dx||0;
-    if(Math.abs(dx)<5){_barDrag=null;return;}
-    const daysMoved=Math.round(dx/5); // 5px per day (dayW)
-    const b=BP.find(x=>x.id===id);
-    if(!b||!b.start_datum||!b.ende_datum){_barDrag=null;return;}
-    const ns=new Date(b.start_datum);ns.setDate(ns.getDate()+daysMoved);
-    const ne=new Date(b.ende_datum);ne.setDate(ne.getDate()+daysMoved);
-    const nsd=ns.toISOString().split('T')[0];
-    const ned=ne.toISOString().split('T')[0];
-    await sb.from('bauphasen').update({start_datum:nsd,ende_datum:ned}).eq('id',id);
-    await loadBP();rGantt();
-    _barDrag=null;
-  };
+    document.body.style.cursor='';
+    document.body.style.userSelect='';
+    wrap.style.transform='';
+    if(Math.abs(dx)<3)return;
+    var dayW=5;
+    var daysMoved=Math.round(dx/dayW);
+    var b=BP.find(function(x){return x.id===id;});
+    if(!b||!b.start_datum||!b.ende_datum)return;
+    var nsd=b.start_datum, ned=b.ende_datum;
+    if(mode==='move'){
+      var ns=new Date(b.start_datum);ns.setDate(ns.getDate()+daysMoved);
+      var ne=new Date(b.ende_datum);ne.setDate(ne.getDate()+daysMoved);
+      nsd=ns.toISOString().split('T')[0];
+      ned=ne.toISOString().split('T')[0];
+    } else if(mode==='resize-l'){
+      var ns2=new Date(b.start_datum);ns2.setDate(ns2.getDate()+daysMoved);
+      nsd=ns2.toISOString().split('T')[0];
+      if(nsd>ned)nsd=ned;
+    } else {
+      var ne2=new Date(b.ende_datum);ne2.setDate(ne2.getDate()+daysMoved);
+      ned=ne2.toISOString().split('T')[0];
+      if(ned<nsd)ned=nsd;
+    }
+    var dur=daysBetween(nsd,ned);
+    sb.from('bauphasen').update({start_datum:nsd,ende_datum:ned,dauer_tage:dur}).eq('id',id).then(function(){
+      loadBP().then(function(){rGantt();});
+    });
+  }
   document.addEventListener('mousemove',onMove);
   document.addEventListener('mouseup',onUp);
 }
