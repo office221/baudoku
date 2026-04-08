@@ -233,7 +233,7 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
 .gz-mhdr{display:flex;position:sticky;top:0;z-index:2;background:var(--bg2);border-bottom:2px solid var(--brd);}
 .gz-mhdr-q{text-align:center;font-size:10px;font-weight:600;color:var(--tx3);border-bottom:1px solid var(--brd);padding:2px 0;}
 .gz-mhdr-m{text-align:center;font-size:10px;font-weight:500;color:var(--tx3);padding:4px 0;border-right:1px solid var(--brd);}
-.gz-row{display:flex;align-items:center;height:30px;border-bottom:1px solid var(--brd);position:relative;}
+.gz-row{display:flex;align-items:center;height:30px;box-sizing:border-box;border-bottom:1px solid var(--brd);position:relative;}
 .gz-bar{position:absolute;height:14px;border-radius:3px;top:8px;display:flex;align-items:center;overflow:visible;white-space:nowrap;}
 .gz-bar-lbl{font-size:9.5px;color:var(--tx);margin-left:4px;font-weight:500;white-space:nowrap;}
 .gz-bar-date{font-size:9px;color:var(--tx3);position:absolute;right:calc(100% + 4px);white-space:nowrap;}
@@ -2352,7 +2352,7 @@ function rGantt(){
   const rowH=30;
 
   // TABLE (left side)
-  let tbl='<table><thead><tr><th colspan="8" style="padding:3px 10px;border-bottom:1px solid var(--brd);font-size:10px;">&nbsp;</th></tr><tr>';
+  let tbl='<table><thead><tr>';
   tbl+='<th style="min-width:50px;">Nr</th><th style="min-width:140px;">Name</th><th style="min-width:55px;">Status</th>';
   tbl+='<th style="min-width:80px;">Gewerk</th><th style="min-width:78px;">Start</th><th style="min-width:78px;">Ende</th>';
   tbl+='<th style="min-width:40px;">Tage</th><th style="width:70px;text-align:center;">+</th>';
@@ -2383,7 +2383,7 @@ function rGantt(){
   // CHART (right side)
   let chart=`<div class="gz-chart-inner" style="width:${chartTotalW}px;">`;
   // Quarter + Month header
-  chart+='<div style="position:sticky;top:0;z-index:2;background:var(--bg2);">';
+  chart+='<div class="gz-chart-hdr" style="position:sticky;top:0;z-index:2;background:var(--bg2);">';
   chart+='<div class="gz-mhdr" style="border-bottom:1px solid var(--brd);">';
   quarters.forEach(q=>{
     let qDays=0;
@@ -2453,9 +2453,23 @@ function rGantt(){
 
   g.innerHTML=`<div class="gz-table">${tbl}</div><div class="gz-chart">${chart}</div>`;
 
-  // Sync scroll
+  // Sync header heights between table and chart
   const tableEl=g.querySelector('.gz-table');
   const chartEl=g.querySelector('.gz-chart');
+  const thead=tableEl.querySelector('thead');
+  const chartHdr=chartEl.querySelector('.gz-chart-hdr');
+  if(thead&&chartHdr){
+    requestAnimationFrame(()=>{
+      const th=thead.getBoundingClientRect().height;
+      const ch=chartHdr.getBoundingClientRect().height;
+      if(th<ch){
+        const thRow=thead.querySelector('tr');
+        if(thRow) thRow.style.height=ch+'px';
+      } else if(ch<th){
+        chartHdr.style.height=th+'px';
+      }
+    });
+  }
   tableEl.addEventListener('scroll',()=>{chartEl.scrollTop=tableEl.scrollTop;});
   chartEl.addEventListener('scroll',()=>{tableEl.scrollTop=chartEl.scrollTop;});
 
