@@ -210,9 +210,9 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
 .gz-wrap{display:flex;height:100%;overflow:hidden;}
 .gz-table{flex-shrink:0;overflow-y:auto;overflow-x:auto;border-right:2px solid var(--brd2);}
 .gz-chart{flex:1;overflow:auto;}
-.gz-table table{border-collapse:collapse;font-size:12px;white-space:nowrap;}
+.gz-table table{border-collapse:separate;border-spacing:0;font-size:12px;white-space:nowrap;}
 .gz-table th{position:sticky;top:0;z-index:2;background:var(--bg2);padding:6px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:2px solid var(--brd);}
-.gz-table td{padding:0 10px;border-bottom:1px solid var(--brd);font-size:12px;height:30px;line-height:30px;}
+.gz-table td{padding:0 10px;border-bottom:1px solid var(--brd);font-size:12px;height:30px;line-height:30px;box-sizing:border-box;}
 .gz-table tr:hover{background:var(--bg3);}
 .gz-table tr.gz-phase td{font-weight:600;}
 .gz-table .gz-nm{max-width:160px;overflow:hidden;text-overflow:ellipsis;}
