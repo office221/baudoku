@@ -2492,13 +2492,18 @@ function drawLinks(container,tree,minD,dayW,rowH){
     var mx=(x1+x2)/2;
 
     // Rechtwinklige Verbindung wie BauMaster:
-    // Ende Balken1 → 5px rechts → runter → waagerecht → hoch/runter zum Start Balken2 → Pfeil
     var linkColor='#991b1b';
-    var gap=6;
-    // x1 = Ende von Balken1, x2 = Start von Balken2
-    // y1 = Mitte Reihe von, y2 = Mitte Reihe nach
-    var turnX=x1+gap; // erst kurz rechts vom Ende
-    var d='M'+x1+','+y1+' L'+turnX+','+y1+' L'+turnX+','+y2+' L'+x2+','+y2;
+    var gap=8;
+    // x1 = Ende Balken1, x2 = Start Balken2
+    // Senkrechte Linie muss LINKS vom zweiten Balken bleiben
+    var turnX=Math.min(x1+gap, x2-gap);
+    // Falls Balken2 vor Balken1 endet, Umweg nach links
+    if(x2<=x1){turnX=x2-gap;}
+    var d='M'+x1+','+y1+' L'+x1+','+y1+' L'+(x1+gap)+','+y1+' L'+(x1+gap)+','+y2+' L'+x2+','+y2;
+    // Wenn die senkrechte Linie durch Balken2 gehen würde, Umweg links herum
+    if(x1+gap>=x2){
+      d='M'+x1+','+y1+' L'+(x1+gap)+','+y1+' L'+(x1+gap)+','+(y2+(y2>y1?-rowH/2:rowH/2))+' L'+(x2-gap)+','+(y2+(y2>y1?-rowH/2:rowH/2))+' L'+(x2-gap)+','+y2+' L'+x2+','+y2;
+    }
 
     var path=document.createElementNS('http://www.w3.org/2000/svg','path');
     path.setAttribute('d',d);
