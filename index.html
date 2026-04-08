@@ -2426,7 +2426,7 @@ function rGantt(){
         chart+=`</div>`;
         chart+=`<div style="position:absolute;left:${left}px;top:15px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #555;pointer-events:none;"></div>`;
         chart+=`<div style="position:absolute;left:${left+width-8}px;top:15px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #555;pointer-events:none;"></div>`;
-        chart+=`<span style="position:absolute;left:${afterBar}px;top:7px;font-size:10px;font-weight:600;color:var(--tx);white-space:nowrap;pointer-events:none;">Bauphase: ${esc(b.bezeichnung)}</span>`;
+        chart+=`<span style="position:absolute;left:${afterBar}px;top:7px;font-size:10px;color:var(--tx);white-space:nowrap;pointer-events:none;">Bauphase: <b>${esc(b.bezeichnung)}</b></span>`;
       } else if(b.typ==='meilenstein'){
         // Diamond shape
         chart+=`<div style="position:absolute;left:${left-6}px;top:9px;width:12px;height:12px;background:${color};border-radius:2px;transform:rotate(45deg);opacity:${opacity};"></div>`;
