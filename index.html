@@ -514,6 +514,7 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
     <div class="pg" id="pg-bauzeitplan">
       <div style="display:flex;gap:8px;padding:12px 16px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--brd);flex-shrink:0;">
         <button class="btn bp" onclick="openBPModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:13px;height:13px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Neu</button>
+        <button class="btn bg" id="btn-link" onclick="toggleLinkMode()" title="Balken verbinden: Klick auf ersten, dann zweiten Balken"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Verbinden</button>
         <div class="sp"></div>
         <select class="fs" id="pdf-size" style="width:auto;padding:5px 10px;">
           <option value="a4">A4</option>
@@ -1188,6 +1189,8 @@ async function loadBP(){
   if(!CPId)return;
   const{data}=await sb.from('bauphasen').select('*').eq('projekt_id',CPId).order('reihenfolge');
   BP=data||[];
+  const{data:v}=await sb.from('bp_verbindungen').select('*').eq('projekt_id',CPId);
+  BPV=v||[];
 }
 async function loadPR(){
   const{data}=await sb.from('projekte').select('*').order('created_at',{ascending:false});
@@ -2150,6 +2153,8 @@ async function oeffneProtokoll(id){
 
 // ── BAUZEITPLAN / GANTT ──────────────────────────────────────────────────
 let _editBP=null;
+let BPV=[]; // Verbindungen zwischen Balken
+let _linkFrom=null; // ID des ersten Balkens beim Verbinden
 const GEWERKE=['Abbruch','Abdichtungsarbeiten','Alarmanlage','Allgemein','Alu-Portale','Anrainer','Architektur','Asphaltierung',
 'Aufzug','Baumeister','Bauphysik','Baureinigung','Bewehrung','Blitzschutz','Bodenleger','Dachdecker','Elektriker',
 'Estrich','Fassade','Fenster','Fliesen','Garten','Gas/Wasser','Geometer','Gerüstbau','Glaserei','Hafner','Heizung',
@@ -2453,6 +2458,76 @@ function rGantt(){
   const chartEl=g.querySelector('.gz-chart');
   tableEl.addEventListener('scroll',()=>{chartEl.scrollTop=tableEl.scrollTop;});
   chartEl.addEventListener('scroll',()=>{tableEl.scrollTop=chartEl.scrollTop;});
+
+  // Verbindungslinien zeichnen
+  drawLinks(g.querySelector('.gz-chart-inner'),tree,minD,dayW,rowH);
+}
+
+function drawLinks(container,tree,minD,dayW,rowH){
+  if(!container||!BPV.length)return;
+  var old=container.querySelector('.gz-links-svg');
+  if(old)old.remove();
+  var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','gz-links-svg');
+  svg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;overflow:visible;';
+  var idxMap={};
+  tree.forEach(function(b,i){idxMap[b.id]=i;});
+
+  BPV.forEach(function(v){
+    var von=BP.find(function(x){return x.id===v.von_id;});
+    var nach=BP.find(function(x){return x.id===v.nach_id;});
+    if(!von||!nach||!von.ende_datum||!nach.start_datum)return;
+    var vonIdx=idxMap[v.von_id]; var nachIdx=idxMap[v.nach_id];
+    if(vonIdx===undefined||nachIdx===undefined)return;
+
+    var x1=(daysBetween(minD.toISOString(),von.ende_datum))*dayW;
+    var y1=vonIdx*rowH+rowH/2;
+    var x2=(daysBetween(minD.toISOString(),nach.start_datum))*dayW;
+    var y2=nachIdx*rowH+rowH/2;
+    var mx=(x1+x2)/2;
+
+    // Sichtbare Linie
+    var path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d','M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2);
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke','var(--ac)');
+    path.setAttribute('stroke-width','2');
+    path.setAttribute('stroke-dasharray','4,3');
+    path.setAttribute('opacity','0.7');
+
+    // Pfeilspitze
+    var arrow=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    var ax=x2,ay=y2;
+    arrow.setAttribute('points',(ax-6)+','+(ay-4)+' '+ax+','+ay+' '+(ax-6)+','+(ay+4));
+    arrow.setAttribute('fill','var(--ac)');
+    arrow.setAttribute('opacity','0.7');
+
+    // Unsichtbarer dicker Klick-Bereich
+    var hit=document.createElementNS('http://www.w3.org/2000/svg','path');
+    hit.setAttribute('d','M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2);
+    hit.setAttribute('fill','none');
+    hit.setAttribute('stroke','transparent');
+    hit.setAttribute('stroke-width','14');
+    hit.style.pointerEvents='stroke';
+    hit.style.cursor='pointer';
+    hit.setAttribute('data-vid',v.id);
+    hit.addEventListener('click',function(e){
+      e.stopPropagation();
+      if(confirm('Verbindung lösen?')){
+        sb.from('bp_verbindungen').delete().eq('id',v.id).then(function(){
+          loadBP().then(function(){rGantt();});
+        });
+      }
+    });
+    // Hover-Effekt
+    hit.addEventListener('mouseenter',function(){path.setAttribute('stroke','#ef4444');path.setAttribute('opacity','1');arrow.setAttribute('fill','#ef4444');});
+    hit.addEventListener('mouseleave',function(){path.setAttribute('stroke','var(--ac)');path.setAttribute('opacity','0.7');arrow.setAttribute('fill','var(--ac)');});
+
+    svg.appendChild(path);
+    svg.appendChild(arrow);
+    svg.appendChild(hit);
+  });
+  container.appendChild(svg);
 }
 
 // Auto-renumber all entries based on tree order
@@ -2496,11 +2571,74 @@ async function bpDrop(e,targetId){
   _dragBPId=null;
 }
 
+// Verbinden-Modus
+function toggleLinkMode(){
+  var btn=document.getElementById('btn-link');
+  if(_linkFrom!==null){
+    _linkFrom=null;
+    btn.classList.remove('bp');btn.classList.add('bg');
+    document.querySelectorAll('.gz-bar-wrap').forEach(function(w){w.style.outline='';});
+    toast('Verbinden abgebrochen.');
+    return;
+  }
+  _linkFrom='waiting';
+  btn.classList.remove('bg');btn.classList.add('bp');
+  toast('Klicke auf den ersten Balken...');
+}
+
+function barLinkClick(id){
+  if(_linkFrom===null||_linkFrom===undefined)return false;
+  if(_linkFrom==='waiting'){
+    _linkFrom=id;
+    // Ersten Balken markieren
+    var w=document.querySelector('.gz-bar-wrap[data-bpid="'+id+'"]');
+    if(w)w.style.outline='2px solid var(--ac)';
+    toast('Jetzt den zweiten Balken klicken...');
+    return true;
+  }
+  if(_linkFrom===id){toast('Gleicher Balken — wähle einen anderen.');return true;}
+  // Prüfe ob Verbindung schon existiert
+  var exists=BPV.some(function(v){return (v.von_id===_linkFrom&&v.nach_id===id)||(v.von_id===id&&v.nach_id===_linkFrom);});
+  if(exists){toast('Bereits verbunden!',false);_linkFrom=null;toggleLinkMode();return true;}
+  // Verbindung erstellen
+  var vonId=_linkFrom;
+  sb.from('bp_verbindungen').insert({projekt_id:CPId,von_id:vonId,nach_id:id}).then(function(){
+    loadBP().then(function(){rGantt();toast('Verbunden!');});
+  });
+  _linkFrom=null;
+  var btn=document.getElementById('btn-link');
+  btn.classList.remove('bp');btn.classList.add('bg');
+  return true;
+}
+
+// Alle verbundenen IDs finden (rekursiv)
+function getLinkedIds(startId){
+  var ids=new Set();
+  function walk(id){
+    if(ids.has(id))return;
+    ids.add(id);
+    BPV.forEach(function(v){
+      if(v.von_id===id)walk(v.nach_id);
+      if(v.nach_id===id)walk(v.von_id);
+    });
+  }
+  walk(startId);
+  ids.delete(startId);
+  return Array.from(ids);
+}
+
 // Bar dragging & resizing in Gantt chart
 function initBarDrag(wrap,e){
   e.preventDefault();
   e.stopPropagation();
   var id=wrap.dataset.bpid;
+
+  // Im Verbinden-Modus: Balken verlinken statt ziehen
+  if(_linkFrom!==null&&_linkFrom!==undefined){
+    barLinkClick(id);
+    return;
+  }
+
   var b=BP.find(function(x){return x.id===id;});
   if(!b||!b.start_datum||!b.ende_datum)return;
   var rect=wrap.getBoundingClientRect();
@@ -2517,6 +2655,16 @@ function initBarDrag(wrap,e){
   var dayW=5;
   document.body.style.cursor=mode==='move'?'grabbing':mode==='resize-l'?'w-resize':'e-resize';
   document.body.style.userSelect='none';
+
+  // Verbundene Balken-Elemente sammeln (nur bei move)
+  var linkedWraps=[];
+  if(mode==='move'){
+    var linkedIds=getLinkedIds(id);
+    linkedIds.forEach(function(lid){
+      var lw=document.querySelector('.gz-bar-wrap[data-bpid="'+lid+'"]');
+      if(lw)linkedWraps.push(lw);
+    });
+  }
 
   // Datum-Tooltip erstellen
   var tip=document.createElement('div');
@@ -2550,6 +2698,7 @@ function initBarDrag(wrap,e){
     dx=ev.clientX-startX;
     if(mode==='move'){
       wrap.style.transform='translateX('+dx+'px)';
+      linkedWraps.forEach(function(lw){lw.style.transform='translateX('+dx+'px)';});
     } else if(mode==='resize-l'){
       var cDx=Math.min(dx,origW-6);
       wrap.style.left=(origL+cDx)+'px';
@@ -2579,10 +2728,25 @@ function initBarDrag(wrap,e){
     document.body.style.cursor='';
     document.body.style.userSelect='';
     wrap.style.transform='';
+    linkedWraps.forEach(function(lw){lw.style.transform='';});
     if(tip.parentNode)tip.remove();
     if(Math.abs(dx)<3)return;
     var dt=calcDates();
-    sb.from('bauphasen').update({start_datum:dt.s,ende_datum:dt.e,dauer_tage:dt.d}).eq('id',id).then(function(){
+    var updates=[sb.from('bauphasen').update({start_datum:dt.s,ende_datum:dt.e,dauer_tage:dt.d}).eq('id',id)];
+    // Verbundene Balken auch verschieben
+    if(mode==='move'){
+      var dm=Math.round(dx/dayW);
+      getLinkedIds(id).forEach(function(lid){
+        var lb=BP.find(function(x){return x.id===lid;});
+        if(!lb||!lb.start_datum||!lb.ende_datum)return;
+        var ls=new Date(lb.start_datum);ls.setDate(ls.getDate()+dm);
+        var le=new Date(lb.ende_datum);le.setDate(le.getDate()+dm);
+        var lsd=ls.toISOString().split('T')[0];
+        var led=le.toISOString().split('T')[0];
+        updates.push(sb.from('bauphasen').update({start_datum:lsd,ende_datum:led,dauer_tage:daysBetween(lsd,led)}).eq('id',lid));
+      });
+    }
+    Promise.all(updates).then(function(){
       loadBP().then(function(){rGantt();});
     });
   }
