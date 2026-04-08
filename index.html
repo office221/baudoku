@@ -2486,10 +2486,14 @@ function drawLinks(container,tree,minD,dayW,rowH){
     var y2=nachIdx*rowH+rowH/2;
     var mx=(x1+x2)/2;
 
-    // Rechtwinklige Verbindung: Ende Balken1 → runter → rechts → Start Balken2
+    // Rechtwinklige Verbindung wie BauMaster:
+    // Ende Balken1 → 5px rechts → runter → waagerecht → hoch/runter zum Start Balken2 → Pfeil
     var linkColor='#991b1b';
-    var midY=y1+(y2-y1)/2;
-    var d='M'+x1+','+y1+' L'+x1+','+midY+' L'+x2+','+midY+' L'+x2+','+y2;
+    var gap=6;
+    // x1 = Ende von Balken1, x2 = Start von Balken2
+    // y1 = Mitte Reihe von, y2 = Mitte Reihe nach
+    var turnX=x1+gap; // erst kurz rechts vom Ende
+    var d='M'+x1+','+y1+' L'+turnX+','+y1+' L'+turnX+','+y2+' L'+x2+','+y2;
 
     var path=document.createElementNS('http://www.w3.org/2000/svg','path');
     path.setAttribute('d',d);
@@ -2498,11 +2502,9 @@ function drawLinks(container,tree,minD,dayW,rowH){
     path.setAttribute('stroke-width','2');
     path.setAttribute('stroke-linejoin','round');
 
-    // Pfeilspitze
+    // Pfeilspitze nach rechts
     var arrow=document.createElementNS('http://www.w3.org/2000/svg','polygon');
-    var ay=y2>y1?y2:y2;
-    var dir=y2>y1?1:-1;
-    arrow.setAttribute('points',(x2-4)+','+(y2-6*dir)+' '+(x2+4)+','+(y2-6*dir)+' '+x2+','+y2);
+    arrow.setAttribute('points',(x2-7)+','+(y2-4)+' '+x2+','+y2+' '+(x2-7)+','+(y2+4));
     arrow.setAttribute('fill',linkColor);
 
     // Unsichtbarer dicker Klick-Bereich
