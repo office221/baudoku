@@ -2487,30 +2487,33 @@ function drawLinks(container,tree,minD,dayW,rowH){
     var mx=(x1+x2)/2;
 
     // Sichtbare Linie
+    var linkColor='#3b82f6';
     var path=document.createElementNS('http://www.w3.org/2000/svg','path');
     path.setAttribute('d','M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2);
     path.setAttribute('fill','none');
-    path.setAttribute('stroke','var(--ac)');
-    path.setAttribute('stroke-width','2');
-    path.setAttribute('stroke-dasharray','4,3');
-    path.setAttribute('opacity','0.7');
+    path.setAttribute('stroke',linkColor);
+    path.setAttribute('stroke-width','2.5');
+    path.setAttribute('stroke-dasharray','6,4');
 
     // Pfeilspitze
     var arrow=document.createElementNS('http://www.w3.org/2000/svg','polygon');
     var ax=x2,ay=y2;
-    arrow.setAttribute('points',(ax-6)+','+(ay-4)+' '+ax+','+ay+' '+(ax-6)+','+(ay+4));
-    arrow.setAttribute('fill','var(--ac)');
-    arrow.setAttribute('opacity','0.7');
+    arrow.setAttribute('points',(ax-8)+','+(ay-5)+' '+ax+','+ay+' '+(ax-8)+','+(ay+5));
+    arrow.setAttribute('fill',linkColor);
+
+    // Kreis am Start
+    var dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('cx',x1);dot.setAttribute('cy',y1);dot.setAttribute('r','4');
+    dot.setAttribute('fill',linkColor);
 
     // Unsichtbarer dicker Klick-Bereich
     var hit=document.createElementNS('http://www.w3.org/2000/svg','path');
     hit.setAttribute('d','M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2);
     hit.setAttribute('fill','none');
     hit.setAttribute('stroke','transparent');
-    hit.setAttribute('stroke-width','14');
+    hit.setAttribute('stroke-width','16');
     hit.style.pointerEvents='stroke';
     hit.style.cursor='pointer';
-    hit.setAttribute('data-vid',v.id);
     hit.addEventListener('click',function(e){
       e.stopPropagation();
       if(confirm('Verbindung lösen?')){
@@ -2519,11 +2522,11 @@ function drawLinks(container,tree,minD,dayW,rowH){
         });
       }
     });
-    // Hover-Effekt
-    hit.addEventListener('mouseenter',function(){path.setAttribute('stroke','#ef4444');path.setAttribute('opacity','1');arrow.setAttribute('fill','#ef4444');});
-    hit.addEventListener('mouseleave',function(){path.setAttribute('stroke','var(--ac)');path.setAttribute('opacity','0.7');arrow.setAttribute('fill','var(--ac)');});
+    hit.addEventListener('mouseenter',function(){path.setAttribute('stroke','#ef4444');arrow.setAttribute('fill','#ef4444');dot.setAttribute('fill','#ef4444');});
+    hit.addEventListener('mouseleave',function(){path.setAttribute('stroke',linkColor);arrow.setAttribute('fill',linkColor);dot.setAttribute('fill',linkColor);});
 
     svg.appendChild(path);
+    svg.appendChild(dot);
     svg.appendChild(arrow);
     svg.appendChild(hit);
   });
@@ -2577,37 +2580,40 @@ function toggleLinkMode(){
   if(_linkFrom!==null){
     _linkFrom=null;
     btn.classList.remove('bp');btn.classList.add('bg');
-    document.querySelectorAll('.gz-bar-wrap').forEach(function(w){w.style.outline='';});
-    toast('Verbinden abgebrochen.');
+    btn.style.outline='';
+    document.querySelectorAll('.gz-bar-wrap').forEach(function(w){w.style.outline='';w.style.cursor='grab';});
     return;
   }
   _linkFrom='waiting';
   btn.classList.remove('bg');btn.classList.add('bp');
-  toast('Klicke auf den ersten Balken...');
+  btn.style.outline='2px solid var(--ac)';
+  toast('1. Balken anklicken...');
+  // Alle Balken als klickbar markieren
+  document.querySelectorAll('.gz-bar-wrap').forEach(function(w){w.style.cursor='crosshair';});
 }
 
 function barLinkClick(id){
   if(_linkFrom===null||_linkFrom===undefined)return false;
   if(_linkFrom==='waiting'){
     _linkFrom=id;
-    // Ersten Balken markieren
     var w=document.querySelector('.gz-bar-wrap[data-bpid="'+id+'"]');
-    if(w)w.style.outline='2px solid var(--ac)';
-    toast('Jetzt den zweiten Balken klicken...');
+    if(w)w.style.outline='3px solid var(--ac)';
+    toast('2. Balken anklicken...');
     return true;
   }
-  if(_linkFrom===id){toast('Gleicher Balken — wähle einen anderen.');return true;}
-  // Prüfe ob Verbindung schon existiert
+  if(_linkFrom===id){toast('Gleicher Balken!',false);return true;}
   var exists=BPV.some(function(v){return (v.von_id===_linkFrom&&v.nach_id===id)||(v.von_id===id&&v.nach_id===_linkFrom);});
   if(exists){toast('Bereits verbunden!',false);_linkFrom=null;toggleLinkMode();return true;}
-  // Verbindung erstellen
   var vonId=_linkFrom;
-  sb.from('bp_verbindungen').insert({projekt_id:CPId,von_id:vonId,nach_id:id}).then(function(){
-    loadBP().then(function(){rGantt();toast('Verbunden!');});
-  });
   _linkFrom=null;
   var btn=document.getElementById('btn-link');
   btn.classList.remove('bp');btn.classList.add('bg');
+  btn.style.outline='';
+  document.querySelectorAll('.gz-bar-wrap').forEach(function(w){w.style.outline='';w.style.cursor='grab';});
+  sb.from('bp_verbindungen').insert({projekt_id:CPId,von_id:vonId,nach_id:id}).then(function(res){
+    if(res.error){toast('Fehler: '+res.error.message,false);return;}
+    loadBP().then(function(){rGantt();toast('Verbunden!');});
+  });
   return true;
 }
 
