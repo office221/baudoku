@@ -2922,6 +2922,45 @@ function exportGanttPDF(){
     doc.line(tx,topY,tx,y);
   }
 
+  // Verbindungslinien im PDF
+  if(BPV.length){
+    var idxMap={};
+    tree.forEach(function(b,i){idxMap[b.id]=i;});
+    doc.setDrawColor(153,27,27);doc.setLineWidth(0.3);
+    BPV.forEach(function(v){
+      var von=BP.find(function(x){return x.id===v.von_id;});
+      var nach=BP.find(function(x){return x.id===v.nach_id;});
+      if(!von||!nach||!von.start_datum||!von.ende_datum||!nach.start_datum||!nach.ende_datum)return;
+      var vi=idxMap[v.von_id],ni=idxMap[v.nach_id];
+      if(vi===undefined||ni===undefined)return;
+      var vonSeite=v.von_seite||'end';
+      var nachSeite=v.nach_seite||'start';
+      var vonDatum=vonSeite==='start'?von.start_datum:von.ende_datum;
+      var nachDatum=nachSeite==='start'?nach.start_datum:nach.ende_datum;
+      var px1=chartX+(daysBetween(minD.toISOString(),vonDatum)/totalDays)*chartW;
+      var py1=topY+3+vi*rowH+rowH/2;
+      var px2=chartX+(daysBetween(minD.toISOString(),nachDatum)/totalDays)*chartW;
+      var py2=topY+3+ni*rowH+rowH/2;
+      var gp=1.5;
+      var exitX=vonSeite==='end'?px1+gp:px1-gp;
+      var entryX=nachSeite==='start'?px2-gp:px2+gp;
+      var midY=ni>vi?topY+3+(vi+1)*rowH:topY+3+vi*rowH;
+      // Pfad zeichnen
+      doc.line(px1,py1,exitX,py1);
+      doc.line(exitX,py1,exitX,midY);
+      doc.line(exitX,midY,entryX,midY);
+      doc.line(entryX,midY,entryX,py2);
+      doc.line(entryX,py2,px2,py2);
+      // Pfeilspitze
+      doc.setFillColor(153,27,27);
+      if(nachSeite==='start'){
+        doc.triangle(px2,py2,px2-1.2,py2-0.8,px2-1.2,py2+0.8,'F');
+      } else {
+        doc.triangle(px2,py2,px2+1.2,py2-0.8,px2+1.2,py2+0.8,'F');
+      }
+    });
+  }
+
   // Footer
   doc.setFontSize(6);doc.setTextColor(150);
   doc.text(`BauDoku Pro — ${proj.nummer} ${proj.name}`,m,ph-m+4);
