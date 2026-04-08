@@ -2486,29 +2486,28 @@ function drawLinks(container,tree,minD,dayW,rowH){
     var y2=nachIdx*rowH+rowH/2;
     var mx=(x1+x2)/2;
 
-    // Sichtbare Linie
-    var linkColor='#3b82f6';
+    // Rechtwinklige Verbindung: Ende Balken1 → runter → rechts → Start Balken2
+    var linkColor='#991b1b';
+    var midY=y1+(y2-y1)/2;
+    var d='M'+x1+','+y1+' L'+x1+','+midY+' L'+x2+','+midY+' L'+x2+','+y2;
+
     var path=document.createElementNS('http://www.w3.org/2000/svg','path');
-    path.setAttribute('d','M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2);
+    path.setAttribute('d',d);
     path.setAttribute('fill','none');
     path.setAttribute('stroke',linkColor);
-    path.setAttribute('stroke-width','2.5');
-    path.setAttribute('stroke-dasharray','6,4');
+    path.setAttribute('stroke-width','2');
+    path.setAttribute('stroke-linejoin','round');
 
     // Pfeilspitze
     var arrow=document.createElementNS('http://www.w3.org/2000/svg','polygon');
-    var ax=x2,ay=y2;
-    arrow.setAttribute('points',(ax-8)+','+(ay-5)+' '+ax+','+ay+' '+(ax-8)+','+(ay+5));
+    var ay=y2>y1?y2:y2;
+    var dir=y2>y1?1:-1;
+    arrow.setAttribute('points',(x2-4)+','+(y2-6*dir)+' '+(x2+4)+','+(y2-6*dir)+' '+x2+','+y2);
     arrow.setAttribute('fill',linkColor);
-
-    // Kreis am Start
-    var dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
-    dot.setAttribute('cx',x1);dot.setAttribute('cy',y1);dot.setAttribute('r','4');
-    dot.setAttribute('fill',linkColor);
 
     // Unsichtbarer dicker Klick-Bereich
     var hit=document.createElementNS('http://www.w3.org/2000/svg','path');
-    hit.setAttribute('d','M'+x1+','+y1+' C'+mx+','+y1+' '+mx+','+y2+' '+x2+','+y2);
+    hit.setAttribute('d',d);
     hit.setAttribute('fill','none');
     hit.setAttribute('stroke','transparent');
     hit.setAttribute('stroke-width','16');
@@ -2522,11 +2521,10 @@ function drawLinks(container,tree,minD,dayW,rowH){
         });
       }
     });
-    hit.addEventListener('mouseenter',function(){path.setAttribute('stroke','#ef4444');arrow.setAttribute('fill','#ef4444');dot.setAttribute('fill','#ef4444');});
-    hit.addEventListener('mouseleave',function(){path.setAttribute('stroke',linkColor);arrow.setAttribute('fill',linkColor);dot.setAttribute('fill',linkColor);});
+    hit.addEventListener('mouseenter',function(){path.setAttribute('stroke','#ef4444');arrow.setAttribute('fill','#ef4444');});
+    hit.addEventListener('mouseleave',function(){path.setAttribute('stroke',linkColor);arrow.setAttribute('fill',linkColor);});
 
     svg.appendChild(path);
-    svg.appendChild(dot);
     svg.appendChild(arrow);
     svg.appendChild(hit);
   });
