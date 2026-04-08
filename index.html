@@ -2467,6 +2467,11 @@ function drawLinks(container,tree,minD,dayW,rowH){
   if(!container||!BPV.length)return;
   var old=container.querySelector('.gz-links-svg');
   if(old)old.remove();
+
+  // Header-Höhe messen (Quarter + Month Zeilen)
+  var hdr=container.querySelector('[style*="sticky"]');
+  var headerH=hdr?hdr.offsetHeight:0;
+
   var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('class','gz-links-svg');
   svg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;overflow:visible;';
@@ -2481,9 +2486,9 @@ function drawLinks(container,tree,minD,dayW,rowH){
     if(vonIdx===undefined||nachIdx===undefined)return;
 
     var x1=(daysBetween(minD.toISOString(),von.ende_datum))*dayW;
-    var y1=vonIdx*rowH+rowH/2;
+    var y1=headerH+vonIdx*rowH+rowH/2;
     var x2=(daysBetween(minD.toISOString(),nach.start_datum))*dayW;
-    var y2=nachIdx*rowH+rowH/2;
+    var y2=headerH+nachIdx*rowH+rowH/2;
     var mx=(x1+x2)/2;
 
     // Rechtwinklige Verbindung wie BauMaster:
