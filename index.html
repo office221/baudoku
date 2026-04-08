@@ -2505,31 +2505,28 @@ function drawLinks(container,tree,minD,dayW,rowH){
 
     var vonSeite=v.von_seite||'end';
     var nachSeite=v.nach_seite||'start';
-    // X-Position je nach Seite
-    var x1=vonSeite==='start'
-      ?(daysBetween(minD.toISOString(),von.start_datum))*dayW
-      :(daysBetween(minD.toISOString(),von.ende_datum))*dayW;
+    // X-Position: Balkenrand je nach Seite
+    var vonStartX=(daysBetween(minD.toISOString(),von.start_datum))*dayW;
+    var vonEndX=(daysBetween(minD.toISOString(),von.ende_datum))*dayW;
+    var nachStartX=(daysBetween(minD.toISOString(),nach.start_datum))*dayW;
+    var nachEndX=(daysBetween(minD.toISOString(),nach.ende_datum))*dayW;
+    var x1=vonSeite==='start'?vonStartX:vonEndX;
+    var x2=nachSeite==='start'?nachStartX:nachEndX;
     var y1=headerH+vonIdx*rowH+rowH/2;
-    var x2=nachSeite==='start'
-      ?(daysBetween(minD.toISOString(),nach.start_datum))*dayW
-      :(daysBetween(minD.toISOString(),nach.ende_datum))*dayW;
     var y2=headerH+nachIdx*rowH+rowH/2;
 
     var linkColor='#991b1b';
-    var gap=8;
-    var startY=y1+7;
-    var endY=y2;
-    var betweenY;
-    if(nachIdx>vonIdx) betweenY=headerH+(vonIdx+1)*rowH;
-    else betweenY=headerH+vonIdx*rowH;
-    // turnX: gap vor dem Zielpunkt
-    var turnX=nachSeite==='start'?x2-gap:x2+gap;
-    var d;
-    if(nachIdx>vonIdx){
-      d='M'+x1+','+startY+' L'+x1+','+betweenY+' L'+turnX+','+betweenY+' L'+turnX+','+endY+' L'+x2+','+endY;
-    } else {
-      d='M'+x1+','+(y1-7)+' L'+x1+','+betweenY+' L'+turnX+','+betweenY+' L'+turnX+','+endY+' L'+x2+','+endY;
-    }
+    var gap=10;
+    // Austritt: horizontal vom Balkenrand weg
+    var exitX=vonSeite==='end'?x1+gap:x1-gap;
+    // Eintritt: horizontal zum Balkenrand hin
+    var entryX=nachSeite==='start'?x2-gap:x2+gap;
+    // Vertikale Zwischenlinie: zwischen den Zeilen
+    var midY;
+    if(nachIdx>vonIdx) midY=headerH+(vonIdx+1)*rowH;
+    else midY=headerH+vonIdx*rowH;
+    // Pfad: horizontal raus → runter zur Zwischenzeile → horizontal zum Eintritt → runter/rauf zum Ziel → horizontal rein
+    var d='M'+x1+','+y1+' L'+exitX+','+y1+' L'+exitX+','+midY+' L'+entryX+','+midY+' L'+entryX+','+y2+' L'+x2+','+y2;
 
     var path=document.createElementNS('http://www.w3.org/2000/svg','path');
     path.setAttribute('d',d);
