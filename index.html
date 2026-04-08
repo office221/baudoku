@@ -2951,12 +2951,14 @@ function exportGanttPDF(){
       doc.line(exitX,midY,entryX,midY);
       doc.line(entryX,midY,entryX,py2);
       doc.line(entryX,py2,px2,py2);
-      // Pfeilspitze
-      doc.setFillColor(153,27,27);
+      // Pfeilspitze als Linien
+      var as=1.2;
       if(nachSeite==='start'){
-        doc.triangle(px2,py2,px2-1.2,py2-0.8,px2-1.2,py2+0.8,'F');
+        doc.line(px2-as,py2-as,px2,py2);
+        doc.line(px2-as,py2+as,px2,py2);
       } else {
-        doc.triangle(px2,py2,px2+1.2,py2-0.8,px2+1.2,py2+0.8,'F');
+        doc.line(px2+as,py2-as,px2,py2);
+        doc.line(px2+as,py2+as,px2,py2);
       }
     });
   }
