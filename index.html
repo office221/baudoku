@@ -2155,6 +2155,7 @@ async function oeffneProtokoll(id){
 let _editBP=null;
 let BPV=[]; // Verbindungen zwischen Balken
 let _linkFrom=null; // ID des ersten Balkens beim Verbinden
+let _linkFromSide=null; // 'start' oder 'end' (links/rechts)
 const GEWERKE=['Abbruch','Abdichtungsarbeiten','Alarmanlage','Allgemein','Alu-Portale','Anrainer','Architektur','Asphaltierung',
 'Aufzug','Baumeister','Bauphysik','Baureinigung','Bewehrung','Blitzschutz','Bodenleger','Dachdecker','Elektriker',
 'Estrich','Fassade','Fenster','Fliesen','Garten','Gas/Wasser','Geometer','Gerüstbau','Glaserei','Hafner','Heizung',
@@ -2502,32 +2503,31 @@ function drawLinks(container,tree,minD,dayW,rowH){
     var vonIdx=idxMap[v.von_id]; var nachIdx=idxMap[v.nach_id];
     if(vonIdx===undefined||nachIdx===undefined)return;
 
-    var x1=(daysBetween(minD.toISOString(),von.ende_datum))*dayW;
+    var vonSeite=v.von_seite||'end';
+    var nachSeite=v.nach_seite||'start';
+    // X-Position je nach Seite
+    var x1=vonSeite==='start'
+      ?(daysBetween(minD.toISOString(),von.start_datum))*dayW
+      :(daysBetween(minD.toISOString(),von.ende_datum))*dayW;
     var y1=headerH+vonIdx*rowH+rowH/2;
-    var x2=(daysBetween(minD.toISOString(),nach.start_datum))*dayW;
+    var x2=nachSeite==='start'
+      ?(daysBetween(minD.toISOString(),nach.start_datum))*dayW
+      :(daysBetween(minD.toISOString(),nach.ende_datum))*dayW;
     var y2=headerH+nachIdx*rowH+rowH/2;
-    var mx=(x1+x2)/2;
 
-    // Rechtwinklige Verbindung wie BauMaster:
-    // Vom Ende Balken1 runter zum Zwischenraum, dann waagerecht, dann runter/rauf zu Balken2
     var linkColor='#991b1b';
     var gap=8;
-    // Balken-Positionen: y1/y2 = Zeilenmitte, Balken ist bei y ± ~7px
-    // Endpunkt unten am ersten Balken
-    var startY=y1+7; // unterer Rand Balken1
-    var endY=y2; // Mitte Balken2
-    // Senkrechte Linie zwischen den Zeilen (Zeilen-Grenze = nächste Zeile oben)
-    var betweenY=headerH+(Math.min(vonIdx,nachIdx)+1)*rowH; // Zeilen-Grenze
-    if(nachIdx>vonIdx) betweenY=headerH+(vonIdx+1)*rowH; // direkt unter Balken1
-    else betweenY=headerH+vonIdx*rowH; // direkt über Balken1
-    // turnX: links neben Balken2
-    var turnX=x2-gap;
+    var startY=y1+7;
+    var endY=y2;
+    var betweenY;
+    if(nachIdx>vonIdx) betweenY=headerH+(vonIdx+1)*rowH;
+    else betweenY=headerH+vonIdx*rowH;
+    // turnX: gap vor dem Zielpunkt
+    var turnX=nachSeite==='start'?x2-gap:x2+gap;
     var d;
     if(nachIdx>vonIdx){
-      // Balken2 ist UNTER Balken1
       d='M'+x1+','+startY+' L'+x1+','+betweenY+' L'+turnX+','+betweenY+' L'+turnX+','+endY+' L'+x2+','+endY;
     } else {
-      // Balken2 ist ÜBER Balken1
       d='M'+x1+','+(y1-7)+' L'+x1+','+betweenY+' L'+turnX+','+betweenY+' L'+turnX+','+endY+' L'+x2+','+endY;
     }
 
@@ -2538,9 +2538,13 @@ function drawLinks(container,tree,minD,dayW,rowH){
     path.setAttribute('stroke-width','2');
     path.setAttribute('stroke-linejoin','round');
 
-    // Pfeilspitze nach rechts
+    // Pfeilspitze: Richtung je nach Zielseite
     var arrow=document.createElementNS('http://www.w3.org/2000/svg','polygon');
-    arrow.setAttribute('points',(x2-7)+','+(y2-4)+' '+x2+','+y2+' '+(x2-7)+','+(y2+4));
+    if(nachSeite==='start'){
+      arrow.setAttribute('points',(x2-7)+','+(y2-4)+' '+x2+','+y2+' '+(x2-7)+','+(y2+4));
+    } else {
+      arrow.setAttribute('points',(x2+7)+','+(y2-4)+' '+x2+','+y2+' '+(x2+7)+','+(y2+4));
+    }
     arrow.setAttribute('fill',linkColor);
 
     // Unsichtbarer dicker Klick-Bereich
@@ -2628,10 +2632,11 @@ function toggleLinkMode(){
   document.querySelectorAll('.gz-bar-wrap').forEach(function(w){w.style.cursor='crosshair';});
 }
 
-function barLinkClick(id){
+function barLinkClick(id,side){
   if(_linkFrom===null||_linkFrom===undefined)return false;
   if(_linkFrom==='waiting'){
     _linkFrom=id;
+    _linkFromSide=side||'end';
     var w=document.querySelector('.gz-bar-wrap[data-bpid="'+id+'"]');
     if(w)w.style.outline='3px solid var(--ac)';
     toast('2. Balken anklicken...');
@@ -2639,14 +2644,17 @@ function barLinkClick(id){
   }
   if(_linkFrom===id){toast('Gleicher Balken!',false);return true;}
   var exists=BPV.some(function(v){return (v.von_id===_linkFrom&&v.nach_id===id)||(v.von_id===id&&v.nach_id===_linkFrom);});
-  if(exists){toast('Bereits verbunden!',false);_linkFrom=null;toggleLinkMode();return true;}
+  if(exists){toast('Bereits verbunden!',false);_linkFrom=null;_linkFromSide=null;toggleLinkMode();return true;}
   var vonId=_linkFrom;
+  var vonSeite=_linkFromSide||'end';
+  var nachSeite=side||'start';
   _linkFrom=null;
+  _linkFromSide=null;
   var btn=document.getElementById('btn-link');
   btn.classList.remove('bp');btn.classList.add('bg');
   btn.style.outline='';
   document.querySelectorAll('.gz-bar-wrap').forEach(function(w){w.style.outline='';w.style.cursor='grab';});
-  sb.from('bp_verbindungen').insert({projekt_id:CPId,von_id:vonId,nach_id:id}).then(function(res){
+  sb.from('bp_verbindungen').insert({projekt_id:CPId,von_id:vonId,nach_id:id,von_seite:vonSeite,nach_seite:nachSeite}).then(function(res){
     if(res.error){toast('Fehler: '+res.error.message,false);return;}
     loadBP().then(function(){rGantt();toast('Verbunden!');});
   });
@@ -2677,7 +2685,9 @@ function initBarDrag(wrap,e){
 
   // Im Verbinden-Modus: Balken verlinken statt ziehen
   if(_linkFrom!==null&&_linkFrom!==undefined){
-    barLinkClick(id);
+    var rect2=wrap.getBoundingClientRect();
+    var clickSide=(e.clientX-rect2.left)<rect2.width/2?'start':'end';
+    barLinkClick(id,clickSide);
     return;
   }
 
