@@ -2453,23 +2453,26 @@ function rGantt(){
 
   g.innerHTML=`<div class="gz-table">${tbl}</div><div class="gz-chart">${chart}</div>`;
 
-  // Sync header heights between table and chart
   const tableEl=g.querySelector('.gz-table');
   const chartEl=g.querySelector('.gz-chart');
-  const thead=tableEl.querySelector('thead');
-  const chartHdr=chartEl.querySelector('.gz-chart-hdr');
-  if(thead&&chartHdr){
-    requestAnimationFrame(()=>{
+  // Sync row heights: measure each table row and apply to chart row
+  requestAnimationFrame(()=>{
+    const thead=tableEl.querySelector('thead');
+    const chartHdr=chartEl.querySelector('.gz-chart-hdr');
+    if(thead&&chartHdr){
       const th=thead.getBoundingClientRect().height;
       const ch=chartHdr.getBoundingClientRect().height;
-      if(th<ch){
-        const thRow=thead.querySelector('tr');
-        if(thRow) thRow.style.height=ch+'px';
-      } else if(ch<th){
-        chartHdr.style.height=th+'px';
-      }
-    });
-  }
+      const maxH=Math.max(th,ch);
+      thead.style.height=maxH+'px';
+      chartHdr.style.height=maxH+'px';
+    }
+    const tRows=tableEl.querySelectorAll('tbody tr');
+    const cRows=chartEl.querySelectorAll('.gz-row');
+    for(let i=0;i<tRows.length&&i<cRows.length;i++){
+      const h=tRows[i].getBoundingClientRect().height;
+      cRows[i].style.height=h+'px';
+    }
+  });
   tableEl.addEventListener('scroll',()=>{chartEl.scrollTop=tableEl.scrollTop;});
   chartEl.addEventListener('scroll',()=>{tableEl.scrollTop=chartEl.scrollTop;});
 
