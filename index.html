@@ -212,7 +212,7 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
 .gz-chart{flex:1;overflow:auto;}
 .gz-table table{border-collapse:collapse;font-size:12px;white-space:nowrap;}
 .gz-table th{position:sticky;top:0;z-index:2;background:var(--bg2);padding:6px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:2px solid var(--brd);}
-.gz-table td{padding:5px 10px;border-bottom:1px solid var(--brd);font-size:12px;}
+.gz-table td{padding:0 10px;border-bottom:1px solid var(--brd);font-size:12px;height:30px;line-height:30px;}
 .gz-table tr:hover{background:var(--bg3);}
 .gz-table tr.gz-phase td{font-weight:600;}
 .gz-table .gz-nm{max-width:160px;overflow:hidden;text-overflow:ellipsis;}
@@ -2492,17 +2492,26 @@ function drawLinks(container,tree,minD,dayW,rowH){
     var mx=(x1+x2)/2;
 
     // Rechtwinklige Verbindung wie BauMaster:
+    // Vom Ende Balken1 runter zum Zwischenraum, dann waagerecht, dann runter/rauf zu Balken2
     var linkColor='#991b1b';
     var gap=8;
-    // x1 = Ende Balken1, x2 = Start Balken2
-    // Senkrechte Linie muss LINKS vom zweiten Balken bleiben
-    var turnX=Math.min(x1+gap, x2-gap);
-    // Falls Balken2 vor Balken1 endet, Umweg nach links
-    if(x2<=x1){turnX=x2-gap;}
-    var d='M'+x1+','+y1+' L'+x1+','+y1+' L'+(x1+gap)+','+y1+' L'+(x1+gap)+','+y2+' L'+x2+','+y2;
-    // Wenn die senkrechte Linie durch Balken2 gehen würde, Umweg links herum
-    if(x1+gap>=x2){
-      d='M'+x1+','+y1+' L'+(x1+gap)+','+y1+' L'+(x1+gap)+','+(y2+(y2>y1?-rowH/2:rowH/2))+' L'+(x2-gap)+','+(y2+(y2>y1?-rowH/2:rowH/2))+' L'+(x2-gap)+','+y2+' L'+x2+','+y2;
+    // Balken-Positionen: y1/y2 = Zeilenmitte, Balken ist bei y ± ~7px
+    // Endpunkt unten am ersten Balken
+    var startY=y1+7; // unterer Rand Balken1
+    var endY=y2; // Mitte Balken2
+    // Senkrechte Linie zwischen den Zeilen (Zeilen-Grenze = nächste Zeile oben)
+    var betweenY=headerH+(Math.min(vonIdx,nachIdx)+1)*rowH; // Zeilen-Grenze
+    if(nachIdx>vonIdx) betweenY=headerH+(vonIdx+1)*rowH; // direkt unter Balken1
+    else betweenY=headerH+vonIdx*rowH; // direkt über Balken1
+    // turnX: links neben Balken2
+    var turnX=x2-gap;
+    var d;
+    if(nachIdx>vonIdx){
+      // Balken2 ist UNTER Balken1
+      d='M'+x1+','+startY+' L'+x1+','+betweenY+' L'+turnX+','+betweenY+' L'+turnX+','+endY+' L'+x2+','+endY;
+    } else {
+      // Balken2 ist ÜBER Balken1
+      d='M'+x1+','+(y1-7)+' L'+x1+','+betweenY+' L'+turnX+','+betweenY+' L'+turnX+','+endY+' L'+x2+','+endY;
     }
 
     var path=document.createElementNS('http://www.w3.org/2000/svg','path');
