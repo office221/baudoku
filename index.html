@@ -2804,6 +2804,7 @@ function initBarDrag(wrap,e){
 }
 
 function exportGanttPDF(){
+  try{
   const proj=PR.find(p=>p.id===CPId);
   if(!proj||!BP.length){toast('Keine Daten für PDF.',false);return;}
 
@@ -2923,14 +2924,17 @@ function exportGanttPDF(){
   }
 
   // Verbindungslinien im PDF
-  if(BPV.length){
+  try{
+  if(BPV&&BPV.length){
     var idxMap={};
     tree.forEach(function(b,i){idxMap[b.id]=i;});
     doc.setDrawColor(153,27,27);doc.setLineWidth(0.3);
     BPV.forEach(function(v){
+      try{
       var von=BP.find(function(x){return x.id===v.von_id;});
       var nach=BP.find(function(x){return x.id===v.nach_id;});
-      if(!von||!nach||!von.start_datum||!von.ende_datum||!nach.start_datum||!nach.ende_datum)return;
+      if(!von||!nach)return;
+      if(!von.start_datum||!von.ende_datum||!nach.start_datum||!nach.ende_datum)return;
       var vi=idxMap[v.von_id],ni=idxMap[v.nach_id];
       if(vi===undefined||ni===undefined)return;
       var vonSeite=v.von_seite||'end';
@@ -2945,13 +2949,11 @@ function exportGanttPDF(){
       var exitX=vonSeite==='end'?px1+gp:px1-gp;
       var entryX=nachSeite==='start'?px2-gp:px2+gp;
       var midY=ni>vi?topY+3+(vi+1)*rowH:topY+3+vi*rowH;
-      // Pfad zeichnen
       doc.line(px1,py1,exitX,py1);
       doc.line(exitX,py1,exitX,midY);
       doc.line(exitX,midY,entryX,midY);
       doc.line(entryX,midY,entryX,py2);
       doc.line(entryX,py2,px2,py2);
-      // Pfeilspitze als Linien
       var as=1.2;
       if(nachSeite==='start'){
         doc.line(px2-as,py2-as,px2,py2);
@@ -2960,8 +2962,11 @@ function exportGanttPDF(){
         doc.line(px2+as,py2-as,px2,py2);
         doc.line(px2+as,py2+as,px2,py2);
       }
+      }catch(e2){console.warn('PDF link error:',e2);}
     });
+    doc.setDrawColor(0);
   }
+  }catch(ex){console.warn('PDF links error:',ex);}
 
   // Footer
   doc.setFontSize(6);doc.setTextColor(150);
@@ -2970,6 +2975,7 @@ function exportGanttPDF(){
 
   doc.save(`Bauzeitenplan_${proj.nummer}_${size.toUpperCase()}.pdf`);
   toast('PDF exportiert!');
+  }catch(err){console.error('PDF Export Fehler:',err);toast('PDF Fehler: '+err.message,false);}
 }
 
 </script>
