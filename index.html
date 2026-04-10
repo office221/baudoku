@@ -523,7 +523,8 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
           <option value="a1">A1</option>
           <option value="a0">A0</option>
         </select>
-        <button class="btn bg" onclick="exportGanttPDF()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button>
+        <button class="btn bg" onclick="exportGanttPDF(true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Vorschau</button>
+        <button class="btn bg" onclick="exportGanttPDF(false)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button>
       </div>
       <div style="flex:1;overflow:hidden;" id="gz-container">
         <div class="gz-wrap" id="gnt"></div>
@@ -2803,7 +2804,7 @@ function initBarDrag(wrap,e){
   document.addEventListener('mouseup',onUp);
 }
 
-function exportGanttPDF(){
+function exportGanttPDF(preview){
   try{
   const proj=PR.find(p=>p.id===CPId);
   if(!proj||!BP.length){toast('Keine Daten für PDF.',false);return;}
@@ -2973,8 +2974,30 @@ function exportGanttPDF(){
   doc.text(`BauDoku Pro — ${proj.nummer} ${proj.name}`,m,ph-m+4);
   doc.text(`${new Date().toLocaleDateString('de-DE')} ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`,pw-m,ph-m+4,{align:'right'});
 
-  doc.save(`Bauzeitenplan_${proj.nummer}_${size.toUpperCase()}.pdf`);
-  toast('PDF exportiert!');
+  if(preview){
+    // Vorschau im Modal
+    var blobUrl=doc.output('bloburl');
+    var md=document.createElement('div');
+    md.id='pdf-preview-modal';
+    md.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
+    md.innerHTML=`<div style="background:var(--bg2);border-radius:12px;width:95%;max-width:1200px;height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--brd);">
+        <span style="font-weight:600;font-size:14px;color:var(--tx);">PDF Vorschau — ${size.toUpperCase()}</span>
+        <div style="display:flex;gap:8px;">
+          <button onclick="document.getElementById('pdf-preview-modal')._doc.save('Bauzeitenplan_${proj.nummer}_${size.toUpperCase()}.pdf');toast('PDF gespeichert!')" style="padding:6px 16px;background:var(--ac);color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;font-family:var(--fn);">Herunterladen</button>
+          <button onclick="var w=window.open('','_blank');w.document.write('<iframe src=\\''+document.getElementById('pdf-preview-modal')._blobUrl+'\\' style=\\'width:100%;height:100%;border:none;\\'></iframe>');w.document.title='Drucken';setTimeout(function(){w.print();},500);" style="padding:6px 16px;background:var(--bl);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;font-family:var(--fn);">Drucken</button>
+          <button onclick="URL.revokeObjectURL(document.getElementById('pdf-preview-modal')._blobUrl);document.getElementById('pdf-preview-modal').remove()" style="padding:6px 16px;background:var(--bg3);color:var(--tx2);border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--fn);">Schliessen</button>
+        </div>
+      </div>
+      <iframe src="${blobUrl}" style="flex:1;border:none;background:#fff;"></iframe>
+    </div>`;
+    document.body.appendChild(md);
+    md._doc=doc;
+    md._blobUrl=blobUrl;
+  } else {
+    doc.save(`Bauzeitenplan_${proj.nummer}_${size.toUpperCase()}.pdf`);
+    toast('PDF exportiert!');
+  }
   }catch(err){console.error('PDF Export Fehler:',err);toast('PDF Fehler: '+err.message,false);}
 }
 
