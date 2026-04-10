@@ -2804,35 +2804,33 @@ function initBarDrag(wrap,e){
   document.addEventListener('mouseup',onUp);
 }
 
-function exportGanttPDF(preview){
-  try{
+function _buildPDF(size,orient){
   const proj=PR.find(p=>p.id===CPId);
-  if(!proj||!BP.length){toast('Keine Daten für PDF.',false);return;}
-
+  if(!proj||!BP.length)return null;
   const tree=buildTree(BP);
   const allDates=BP.filter(b=>b.start_datum&&b.ende_datum);
-  if(!allDates.length){toast('Bitte Datum bei Einträgen setzen.',false);return;}
+  if(!allDates.length)return null;
   const minD=new Date(Math.min(...allDates.map(b=>new Date(b.start_datum))));
   const maxD=new Date(Math.max(...allDates.map(b=>new Date(b.ende_datum))));
   minD.setDate(1);maxD.setMonth(maxD.getMonth()+2);maxD.setDate(0);
   const totalDays=Math.max(daysBetween(minD.toISOString(),maxD.toISOString()),30);
 
-  const size=document.getElementById('pdf-size').value;
   const sizes={a4:[297,210],a3:[420,297],a2:[594,420],a1:[841,594],a0:[1189,841]};
-  const[pw,ph]=sizes[size];
+  var pw,ph;
+  if(orient==='landscape'){pw=sizes[size][0];ph=sizes[size][1];}
+  else{pw=sizes[size][1];ph=sizes[size][0];}
 
   const{jsPDF}=window.jspdf;
-  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:size});
+  const doc=new jsPDF({orientation:orient,unit:'mm',format:size});
 
   const m=12;
   const usableW=pw-2*m;
   const usableH=ph-2*m;
 
-  // Title
   doc.setFontSize(14);doc.setFont(undefined,'bold');
   doc.text(`Bauzeitenplan: ${proj.nummer} — ${proj.name}`,m,m+5);
   doc.setFontSize(8);doc.setFont(undefined,'normal');doc.setTextColor(120);
-  doc.text(`Stand: ${new Date().toLocaleDateString('de-DE')} | Format: ${size.toUpperCase()}`,m,m+10);
+  doc.text(`Stand: ${new Date().toLocaleDateString('de-DE')} | Format: ${size.toUpperCase()} ${orient==='landscape'?'Querformat':'Hochformat'}`,m,m+10);
   doc.setTextColor(0);
 
   const topY=m+16;
@@ -2841,7 +2839,6 @@ function exportGanttPDF(preview){
   const chartX=m+tblW+2;
   const chartW=usableW-tblW-2;
 
-  // Table header
   doc.setFontSize(6);doc.setFont(undefined,'bold');doc.setTextColor(100);
   let hx=m;
   ['Nr','Name','Gewerk','Start','Ende','Tage'].forEach((h,i)=>{
@@ -2849,7 +2846,6 @@ function exportGanttPDF(preview){
     doc.text(h,hx+1,topY);hx+=w;
   });
 
-  // Month headers
   let mx=chartX;
   let curM=new Date(minD);
   while(curM<maxD){
@@ -2865,7 +2861,6 @@ function exportGanttPDF(preview){
     curM=new Date(curM.getFullYear(),curM.getMonth()+1,1);
   }
 
-  // Rows
   const rowH=Math.min(6,Math.max(3.5,(usableH-24)/tree.length));
   let y=topY+3;
   doc.setTextColor(0);
@@ -2887,7 +2882,6 @@ function exportGanttPDF(preview){
     doc.text(String(daysBetween(b.start_datum,b.ende_datum)),cx+1,y+rowH*0.6);
     doc.setTextColor(0);
 
-    // Bar
     if(b.start_datum&&b.ende_datum){
       const bOff=daysBetween(minD.toISOString(),b.start_datum);
       const bDur=Math.max(daysBetween(b.start_datum,b.ende_datum),0);
@@ -2895,7 +2889,6 @@ function exportGanttPDF(preview){
       const barW=Math.max((bDur/totalDays)*chartW,0.5);
       const hex=b.farbe||'#3b82f6';
       const r=parseInt(hex.slice(1,3),16),g2=parseInt(hex.slice(3,5),16),bl=parseInt(hex.slice(5,7),16);
-
       if(b.typ==='phase'){
         doc.setFillColor(80,80,80);
         doc.rect(barX,y+rowH*0.35,barW,rowH*0.2,'F');
@@ -2907,7 +2900,6 @@ function exportGanttPDF(preview){
         doc.setFillColor(r,g2,bl);
         doc.roundedRect(barX,y+rowH*0.2,barW,rowH*0.5,0.5,0.5,'F');
       }
-      // Label after bar
       doc.setFontSize(4.5);doc.setTextColor(100);
       doc.text(b.bezeichnung.substring(0,20),barX+barW+1,y+rowH*0.6);
       doc.setTextColor(0);
@@ -2916,7 +2908,6 @@ function exportGanttPDF(preview){
     y+=rowH;
   });
 
-  // Today line
   const todayOff=daysBetween(minD.toISOString(),new Date().toISOString());
   if(todayOff>=0&&todayOff<=totalDays){
     const tx=chartX+(todayOff/totalDays)*chartW;
@@ -2924,7 +2915,6 @@ function exportGanttPDF(preview){
     doc.line(tx,topY,tx,y);
   }
 
-  // Verbindungslinien im PDF
   try{
   if(BPV&&BPV.length){
     var idxMap={};
@@ -2963,39 +2953,91 @@ function exportGanttPDF(preview){
         doc.line(px2+as,py2-as,px2,py2);
         doc.line(px2+as,py2+as,px2,py2);
       }
-      }catch(e2){console.warn('PDF link error:',e2);}
+      }catch(e2){}
     });
     doc.setDrawColor(0);
   }
-  }catch(ex){console.warn('PDF links error:',ex);}
+  }catch(ex){}
 
-  // Footer
   doc.setFontSize(6);doc.setTextColor(150);
   doc.text(`BauDoku Pro — ${proj.nummer} ${proj.name}`,m,ph-m+4);
   doc.text(`${new Date().toLocaleDateString('de-DE')} ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`,pw-m,ph-m+4,{align:'right'});
 
+  return {doc:doc,proj:proj};
+}
+
+function exportGanttPDF(preview){
+  try{
+  if(!PR.find(p=>p.id===CPId)||!BP.length){toast('Keine Daten für PDF.',false);return;}
+  if(!window.jspdf||!window.jspdf.jsPDF){toast('PDF-Bibliothek nicht geladen. Seite neu laden.',false);return;}
+
   if(preview){
-    // Vorschau im Modal
-    var blobUrl=doc.output('bloburl');
+    // Vorschau-Modal mit Einstellungen
+    var initSize=document.getElementById('pdf-size').value||'a4';
+    var initOrient='landscape';
+    var old=document.getElementById('pdf-preview-modal');
+    if(old)old.remove();
+
     var md=document.createElement('div');
     md.id='pdf-preview-modal';
     md.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;';
     md.innerHTML=`<div style="background:var(--bg2);border-radius:12px;width:95%;max-width:1200px;height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--brd);">
-        <span style="font-weight:600;font-size:14px;color:var(--tx);">PDF Vorschau — ${size.toUpperCase()}</span>
-        <div style="display:flex;gap:8px;">
-          <button onclick="document.getElementById('pdf-preview-modal')._doc.save('Bauzeitenplan_${proj.nummer}_${size.toUpperCase()}.pdf');toast('PDF gespeichert!')" style="padding:6px 16px;background:var(--ac);color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;font-family:var(--fn);">Herunterladen</button>
-          <button onclick="var w=window.open('','_blank');w.document.write('<iframe src=\\''+document.getElementById('pdf-preview-modal')._blobUrl+'\\' style=\\'width:100%;height:100%;border:none;\\'></iframe>');w.document.title='Drucken';setTimeout(function(){w.print();},500);" style="padding:6px 16px;background:var(--bl);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;font-family:var(--fn);">Drucken</button>
-          <button onclick="URL.revokeObjectURL(document.getElementById('pdf-preview-modal')._blobUrl);document.getElementById('pdf-preview-modal').remove()" style="padding:6px 16px;background:var(--bg3);color:var(--tx2);border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--fn);">Schliessen</button>
-        </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--brd);flex-wrap:wrap;">
+        <span style="font-weight:600;font-size:14px;color:var(--tx);">PDF Vorschau</span>
+        <select id="pv-size" style="padding:5px 10px;border-radius:6px;border:1px solid var(--brd2);background:var(--bg3);color:var(--tx);font-size:12px;font-family:var(--fn);">
+          <option value="a4"${initSize==='a4'?' selected':''}>A4</option>
+          <option value="a3"${initSize==='a3'?' selected':''}>A3</option>
+          <option value="a2"${initSize==='a2'?' selected':''}>A2</option>
+          <option value="a1"${initSize==='a1'?' selected':''}>A1</option>
+          <option value="a0"${initSize==='a0'?' selected':''}>A0</option>
+        </select>
+        <select id="pv-orient" style="padding:5px 10px;border-radius:6px;border:1px solid var(--brd2);background:var(--bg3);color:var(--tx);font-size:12px;font-family:var(--fn);">
+          <option value="landscape" selected>Querformat</option>
+          <option value="portrait">Hochformat</option>
+        </select>
+        <div style="flex:1;"></div>
+        <button id="pv-download" style="padding:6px 16px;background:var(--ac);color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;font-family:var(--fn);">Herunterladen</button>
+        <button id="pv-print" style="padding:6px 16px;background:var(--bl);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;font-family:var(--fn);">Drucken</button>
+        <button id="pv-close" style="padding:6px 16px;background:var(--bg3);color:var(--tx2);border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--fn);">Schliessen</button>
       </div>
-      <iframe src="${blobUrl}" style="flex:1;border:none;background:#fff;"></iframe>
+      <iframe id="pv-frame" style="flex:1;border:none;background:#fff;"></iframe>
     </div>`;
     document.body.appendChild(md);
-    md._doc=doc;
-    md._blobUrl=blobUrl;
+
+    function refreshPreview(){
+      var sz=document.getElementById('pv-size').value;
+      var or=document.getElementById('pv-orient').value;
+      var result=_buildPDF(sz,or);
+      if(!result){toast('PDF Fehler',false);return;}
+      var oldUrl=md._blobUrl;
+      if(oldUrl)URL.revokeObjectURL(oldUrl);
+      md._blobUrl=result.doc.output('bloburl');
+      md._doc=result.doc;
+      md._proj=result.proj;
+      document.getElementById('pv-frame').src=md._blobUrl;
+    }
+
+    document.getElementById('pv-size').onchange=refreshPreview;
+    document.getElementById('pv-orient').onchange=refreshPreview;
+    document.getElementById('pv-download').onclick=function(){
+      var sz=document.getElementById('pv-size').value.toUpperCase();
+      md._doc.save('Bauzeitenplan_'+md._proj.nummer+'_'+sz+'.pdf');
+      toast('PDF gespeichert!');
+    };
+    document.getElementById('pv-print').onclick=function(){
+      var w=window.open(md._blobUrl,'_blank');
+      if(w)setTimeout(function(){w.print();},600);
+    };
+    document.getElementById('pv-close').onclick=function(){
+      if(md._blobUrl)URL.revokeObjectURL(md._blobUrl);
+      md.remove();
+    };
+    refreshPreview();
   } else {
-    doc.save(`Bauzeitenplan_${proj.nummer}_${size.toUpperCase()}.pdf`);
+    var size=document.getElementById('pdf-size').value;
+    var result=_buildPDF(size,'landscape');
+    if(!result){toast('Keine Daten für PDF.',false);return;}
+    result.doc.save('Bauzeitenplan_'+result.proj.nummer+'_'+size.toUpperCase()+'.pdf');
     toast('PDF exportiert!');
   }
   }catch(err){console.error('PDF Export Fehler:',err);toast('PDF Fehler: '+err.message,false);}
