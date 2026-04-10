@@ -2805,6 +2805,7 @@ function initBarDrag(wrap,e){
 }
 
 function _buildPDF(size,orient){
+  try{
   const proj=PR.find(p=>p.id===CPId);
   if(!proj||!BP.length)return null;
   const tree=buildTree(BP);
@@ -2964,6 +2965,7 @@ function _buildPDF(size,orient){
   doc.text(`${new Date().toLocaleDateString('de-DE')} ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`,pw-m,ph-m+4,{align:'right'});
 
   return {doc:doc,proj:proj};
+  }catch(err){console.error('_buildPDF error:',err);toast('PDF Fehler: '+err.message,false);return null;}
 }
 
 function exportGanttPDF(preview){
@@ -3036,16 +3038,18 @@ function exportGanttPDF(preview){
     requestAnimationFrame(function(){requestAnimationFrame(function(){md.classList.add('pv-open');});});
 
     function refreshPreview(){
-      var sz=document.getElementById('pv-size').value;
-      var or=document.getElementById('pv-orient').value;
-      var result=_buildPDF(sz,or);
-      if(!result){toast('PDF Fehler',false);return;}
-      var oldUrl=md._blobUrl;
-      if(oldUrl)URL.revokeObjectURL(oldUrl);
-      md._blobUrl=result.doc.output('bloburl');
-      md._doc=result.doc;
-      md._proj=result.proj;
-      document.getElementById('pv-frame').src=md._blobUrl;
+      try{
+        var sz=document.getElementById('pv-size').value;
+        var or2=document.getElementById('pv-orient').value;
+        var result=_buildPDF(sz,or2);
+        if(!result){toast('PDF konnte nicht erstellt werden',false);return;}
+        var oldUrl=md._blobUrl;
+        if(oldUrl)URL.revokeObjectURL(oldUrl);
+        md._blobUrl=result.doc.output('bloburl');
+        md._doc=result.doc;
+        md._proj=result.proj;
+        document.getElementById('pv-frame').src=md._blobUrl;
+      }catch(e){console.error('refreshPreview error:',e);toast('Vorschau Fehler: '+e.message,false);}
     }
 
     document.getElementById('pv-size').onchange=refreshPreview;
