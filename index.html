@@ -3034,7 +3034,6 @@ function exportGanttPDF(preview){
     </div>`;
     document.body.appendChild(md);
     requestAnimationFrame(function(){requestAnimationFrame(function(){md.classList.add('pv-open');});});
-    document.body.appendChild(md);
 
     function refreshPreview(){
       var sz=document.getElementById('pv-size').value;
