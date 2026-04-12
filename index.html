@@ -2861,7 +2861,6 @@ function drawLinks(container,tree,minD,dayW,rowH){
 
     var vonSeite=v.von_seite||'end';
     var nachSeite=v.nach_seite||'start';
-    // X-Position: Balkenrand je nach Seite
     var vonStartX=(daysBetween(minD.toISOString(),von.start_datum))*dayW;
     var vonEndX=(daysBetween(minD.toISOString(),von.ende_datum))*dayW;
     var nachStartX=(daysBetween(minD.toISOString(),nach.start_datum))*dayW;
@@ -2871,41 +2870,67 @@ function drawLinks(container,tree,minD,dayW,rowH){
     var y1=headerH+vonIdx*rowH+rowH/2;
     var y2=headerH+nachIdx*rowH+rowH/2;
 
-    var linkColor='#991b1b';
-    var gap=10;
-    // Austritt: horizontal vom Balkenrand weg
+    var linkColor='#6b7280';
+    var linkHover='#ef4444';
+    var gap=12;
+    var r=5; // Eckenradius
     var exitX=vonSeite==='end'?x1+gap:x1-gap;
-    // Eintritt: horizontal zum Balkenrand hin
     var entryX=nachSeite==='start'?x2-gap:x2+gap;
-    // Vertikale Zwischenlinie: zwischen den Zeilen
     var midY;
     if(nachIdx>vonIdx) midY=headerH+(vonIdx+1)*rowH;
     else midY=headerH+vonIdx*rowH;
-    // Pfad: horizontal raus → runter zur Zwischenzeile → horizontal zum Eintritt → runter/rauf zum Ziel → horizontal rein
-    var d='M'+x1+','+y1+' L'+exitX+','+y1+' L'+exitX+','+midY+' L'+entryX+','+midY+' L'+entryX+','+y2+' L'+x2+','+y2;
+
+    // Pfad mit abgerundeten Ecken (arc statt scharfe Knicke)
+    var dirY=midY>y1?1:-1;
+    var dirX2=entryX>exitX?1:-1;
+    var dirY2=y2>midY?1:-1;
+    var d='M'+x1+','+y1+' L'+(exitX-r*(vonSeite==='end'?1:-1))+','+y1;
+    // Ecke 1: exitX, y1 → exitX, midY
+    d+=' Q'+exitX+','+y1+' '+exitX+','+(y1+r*dirY);
+    d+=' L'+exitX+','+(midY-r*dirY);
+    // Ecke 2: exitX, midY → entryX, midY
+    d+=' Q'+exitX+','+midY+' '+(exitX+r*dirX2)+','+midY;
+    d+=' L'+(entryX-r*dirX2)+','+midY;
+    // Ecke 3: entryX, midY → entryX, y2
+    d+=' Q'+entryX+','+midY+' '+entryX+','+(midY+r*dirY2);
+    d+=' L'+entryX+','+(y2-r*dirY2);
+    // Ecke 4: entryX, y2 → x2, y2
+    d+=' Q'+entryX+','+y2+' '+(entryX+r*(nachSeite==='start'?1:-1))+','+y2;
+    d+=' L'+x2+','+y2;
+
+    var g2=document.createElementNS('http://www.w3.org/2000/svg','g');
+    g2.style.transition='opacity .15s';
 
     var path=document.createElementNS('http://www.w3.org/2000/svg','path');
     path.setAttribute('d',d);
     path.setAttribute('fill','none');
     path.setAttribute('stroke',linkColor);
-    path.setAttribute('stroke-width','2');
+    path.setAttribute('stroke-width','1.5');
+    path.setAttribute('stroke-linecap','round');
     path.setAttribute('stroke-linejoin','round');
+    path.setAttribute('opacity','0.6');
 
-    // Pfeilspitze: Richtung je nach Zielseite
+    // Pfeilspitze: kleiner, eleganter
     var arrow=document.createElementNS('http://www.w3.org/2000/svg','polygon');
     if(nachSeite==='start'){
-      arrow.setAttribute('points',(x2-7)+','+(y2-4)+' '+x2+','+y2+' '+(x2-7)+','+(y2+4));
+      arrow.setAttribute('points',(x2-5)+','+(y2-3)+' '+x2+','+y2+' '+(x2-5)+','+(y2+3));
     } else {
-      arrow.setAttribute('points',(x2+7)+','+(y2-4)+' '+x2+','+y2+' '+(x2+7)+','+(y2+4));
+      arrow.setAttribute('points',(x2+5)+','+(y2-3)+' '+x2+','+y2+' '+(x2+5)+','+(y2+3));
     }
     arrow.setAttribute('fill',linkColor);
+    arrow.setAttribute('opacity','0.7');
 
-    // Unsichtbarer dicker Klick-Bereich
+    // Startpunkt-Kreis
+    var dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    dot.setAttribute('cx',x1);dot.setAttribute('cy',y1);dot.setAttribute('r','2.5');
+    dot.setAttribute('fill',linkColor);dot.setAttribute('opacity','0.5');
+
+    // Unsichtbarer Klick-Bereich
     var hit=document.createElementNS('http://www.w3.org/2000/svg','path');
     hit.setAttribute('d',d);
     hit.setAttribute('fill','none');
     hit.setAttribute('stroke','transparent');
-    hit.setAttribute('stroke-width','16');
+    hit.setAttribute('stroke-width','14');
     hit.style.pointerEvents='stroke';
     hit.style.cursor='pointer';
     hit.addEventListener('click',function(e){
@@ -2916,12 +2941,22 @@ function drawLinks(container,tree,minD,dayW,rowH){
         });
       }
     });
-    hit.addEventListener('mouseenter',function(){path.setAttribute('stroke','#ef4444');arrow.setAttribute('fill','#ef4444');});
-    hit.addEventListener('mouseleave',function(){path.setAttribute('stroke',linkColor);arrow.setAttribute('fill',linkColor);});
+    hit.addEventListener('mouseenter',function(){
+      path.setAttribute('stroke',linkHover);path.setAttribute('opacity','1');path.setAttribute('stroke-width','2');
+      arrow.setAttribute('fill',linkHover);arrow.setAttribute('opacity','1');
+      dot.setAttribute('fill',linkHover);dot.setAttribute('opacity','1');
+    });
+    hit.addEventListener('mouseleave',function(){
+      path.setAttribute('stroke',linkColor);path.setAttribute('opacity','0.6');path.setAttribute('stroke-width','1.5');
+      arrow.setAttribute('fill',linkColor);arrow.setAttribute('opacity','0.7');
+      dot.setAttribute('fill',linkColor);dot.setAttribute('opacity','0.5');
+    });
 
-    svg.appendChild(path);
-    svg.appendChild(arrow);
-    svg.appendChild(hit);
+    g2.appendChild(path);
+    g2.appendChild(dot);
+    g2.appendChild(arrow);
+    g2.appendChild(hit);
+    svg.appendChild(g2);
   });
   container.appendChild(svg);
 }
