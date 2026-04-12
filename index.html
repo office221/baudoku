@@ -2984,31 +2984,13 @@ function exportGanttPDF(preview){
     var md=document.createElement('div');
     md.id='pdf-preview-modal';
     md.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;transition:background .3s,opacity .3s;';
-    md.innerHTML=`
-    <style>
-      #pdf-preview-modal .pv-panel{background:var(--bg2);border-radius:var(--rl);width:95%;max-width:1200px;height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06);transform:scale(.97) translateY(12px);transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .3s;opacity:0;}
-      #pdf-preview-modal.pv-open{background:rgba(0,0,0,.65);opacity:1;}
-      #pdf-preview-modal.pv-open .pv-panel{transform:scale(1) translateY(0);opacity:1;}
-      #pdf-preview-modal .pv-toolbar{display:flex;align-items:center;gap:6px;padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--brd);}
-      #pdf-preview-modal .pv-title{font-weight:600;font-size:13px;color:var(--tx);margin-right:8px;letter-spacing:-.01em;}
-      #pdf-preview-modal .pv-sep{width:1px;height:20px;background:var(--brd2);margin:0 4px;}
-      #pdf-preview-modal .pv-label{font-size:10px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-right:4px;}
-      #pdf-preview-modal .pv-sel{padding:5px 8px;border-radius:6px;border:1px solid var(--brd2);background:var(--bg2);color:var(--tx);font-size:12px;font-family:var(--fn);cursor:pointer;transition:border-color var(--tr),box-shadow var(--tr);outline:none;-webkit-appearance:none;appearance:none;}
-      #pdf-preview-modal .pv-sel:hover{border-color:var(--ac);}
-      #pdf-preview-modal .pv-sel:focus{border-color:var(--ac);box-shadow:0 0 0 2px var(--adm);}
-      #pdf-preview-modal .pv-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border:none;border-radius:6px;cursor:pointer;font-weight:500;font-size:12px;font-family:var(--fn);transition:all var(--tr);outline:none;}
-      #pdf-preview-modal .pv-btn:active{transform:scale(.97);}
-      #pdf-preview-modal .pv-btn svg{width:14px;height:14px;flex-shrink:0;}
-      #pdf-preview-modal .pv-btn-primary{background:var(--ac);color:#000;}
-      #pdf-preview-modal .pv-btn-primary:hover{background:var(--ac2);box-shadow:0 2px 12px rgba(245,166,35,.25);}
-      #pdf-preview-modal .pv-btn-secondary{background:var(--bl);color:#fff;}
-      #pdf-preview-modal .pv-btn-secondary:hover{background:#2563eb;box-shadow:0 2px 12px rgba(59,130,246,.25);}
-      #pdf-preview-modal .pv-btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--brd2);}
-      #pdf-preview-modal .pv-btn-ghost:hover{background:var(--bg4);color:var(--tx);}
-      #pdf-preview-modal .pv-preview-area{flex:1;background:var(--bg);display:flex;align-items:stretch;padding:16px;overflow:hidden;}
-      #pdf-preview-modal .pv-preview-area iframe{flex:1;border:none;border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.04);}
-    </style>
-    <div class="pv-panel">
+    // CSS als StyleSheet einfügen (nicht innerHTML, da </style> im Template das Script bricht)
+    if(!document.getElementById('pv-styles')){
+      var st=document.createElement('style');st.id='pv-styles';
+      st.textContent='#pdf-preview-modal .pv-panel{background:var(--bg2);border-radius:var(--rl);width:95%;max-width:1200px;height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06);transform:scale(.97) translateY(12px);transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .3s;opacity:0;}#pdf-preview-modal.pv-open{background:rgba(0,0,0,.65);opacity:1;}#pdf-preview-modal.pv-open .pv-panel{transform:scale(1) translateY(0);opacity:1;}#pdf-preview-modal .pv-toolbar{display:flex;align-items:center;gap:6px;padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--brd);}#pdf-preview-modal .pv-title{font-weight:600;font-size:13px;color:var(--tx);margin-right:8px;letter-spacing:-.01em;}#pdf-preview-modal .pv-sep{width:1px;height:20px;background:var(--brd2);margin:0 4px;}#pdf-preview-modal .pv-label{font-size:10px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-right:4px;}#pdf-preview-modal .pv-sel{padding:5px 8px;border-radius:6px;border:1px solid var(--brd2);background:var(--bg2);color:var(--tx);font-size:12px;font-family:var(--fn);cursor:pointer;transition:border-color var(--tr),box-shadow var(--tr);outline:none;-webkit-appearance:none;appearance:none;}#pdf-preview-modal .pv-sel:hover{border-color:var(--ac);}#pdf-preview-modal .pv-sel:focus{border-color:var(--ac);box-shadow:0 0 0 2px var(--adm);}#pdf-preview-modal .pv-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border:none;border-radius:6px;cursor:pointer;font-weight:500;font-size:12px;font-family:var(--fn);transition:all var(--tr);outline:none;}#pdf-preview-modal .pv-btn:active{transform:scale(.97);}#pdf-preview-modal .pv-btn svg{width:14px;height:14px;flex-shrink:0;}#pdf-preview-modal .pv-btn-primary{background:var(--ac);color:#000;}#pdf-preview-modal .pv-btn-primary:hover{background:var(--ac2);box-shadow:0 2px 12px rgba(245,166,35,.25);}#pdf-preview-modal .pv-btn-secondary{background:var(--bl);color:#fff;}#pdf-preview-modal .pv-btn-secondary:hover{background:#2563eb;box-shadow:0 2px 12px rgba(59,130,246,.25);}#pdf-preview-modal .pv-btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--brd2);}#pdf-preview-modal .pv-btn-ghost:hover{background:var(--bg4);color:var(--tx);}#pdf-preview-modal .pv-preview-area{flex:1;background:var(--bg);display:flex;align-items:stretch;padding:16px;overflow:hidden;}#pdf-preview-modal .pv-preview-area iframe{flex:1;border:none;border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.04);}';
+      document.head.appendChild(st);
+    }
+    md.innerHTML=`<div class="pv-panel">
       <div class="pv-toolbar">
         <svg viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/></svg>
         <span class="pv-title">PDF Vorschau</span>
