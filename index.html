@@ -2803,7 +2803,7 @@ function initBarDrag(wrap,e){
   document.addEventListener('mouseup',onUp);
 }
 
-function _buildPDF(size,orient){
+function _buildPDF(size,orient,fitPage){
   try{
   const proj=PR.find(p=>p.id===CPId);
   if(!proj||!BP.length)return null;
@@ -2861,13 +2861,15 @@ function _buildPDF(size,orient){
     curM=new Date(curM.getFullYear(),curM.getMonth()+1,1);
   }
 
-  const rowH=Math.min(6,Math.max(3.5,(usableH-24)/tree.length));
+  const availH=ph-m-topY-3-8;
+  const rowH=fitPage?Math.max(2.5,availH/tree.length):Math.min(6,Math.max(3.5,(usableH-24)/tree.length));
+  const fScale=fitPage?Math.min(1,rowH/3.5):1;
   let y=topY+3;
   doc.setTextColor(0);
   tree.forEach((b,i)=>{
-    if(y+rowH>ph-m)return;
+    if(!fitPage&&y+rowH>ph-m)return;
     if(i%2===0){doc.setFillColor(250,250,250);doc.rect(m,y-0.5,usableW,rowH,'F');}
-    doc.setFontSize(5.5);
+    doc.setFontSize(5.5*fScale);
     const isPhase=b.typ==='phase';
     doc.setFont(undefined,isPhase?'bold':'normal');
     let cx=m;
@@ -2875,7 +2877,7 @@ function _buildPDF(size,orient){
     const icon=b.typ==='meilenstein'?'◇ ':b.typ==='phase'?'↔ ':'';
     const indent=b._depth?'  ':'';
     doc.text((indent+icon+b.bezeichnung).substring(0,22),cx+1,y+rowH*0.6);cx+=colNm;
-    doc.setFont(undefined,'normal');doc.setFontSize(5);doc.setTextColor(120);
+    doc.setFont(undefined,'normal');doc.setFontSize(5*fScale);doc.setTextColor(120);
     doc.text((b.gewerk||'').substring(0,12),cx+1,y+rowH*0.6);cx+=colGw;
     doc.text(fmtDt(b.start_datum),cx+1,y+rowH*0.6);cx+=colSt;
     doc.text(fmtDt(b.ende_datum),cx+1,y+rowH*0.6);cx+=colEn;
@@ -2900,7 +2902,7 @@ function _buildPDF(size,orient){
         doc.setFillColor(r,g2,bl);
         doc.roundedRect(barX,y+rowH*0.2,barW,rowH*0.5,0.5,0.5,'F');
       }
-      doc.setFontSize(4.5);doc.setTextColor(100);
+      doc.setFontSize(4.5*fScale);doc.setTextColor(100);
       doc.text(b.bezeichnung.substring(0,20),barX+barW+1,y+rowH*0.6);
       doc.setTextColor(0);
     }
@@ -2997,6 +2999,8 @@ function exportGanttPDF(preview){
       +'<option value="landscape" selected>Querformat</option>'
       +'<option value="portrait">Hochformat</option>'
       +'</select>'
+      +'<label style="display:flex;align-items:center;gap:4px;margin-left:8px;font-size:11px;color:var(--tx2);cursor:pointer;user-select:none;">'
+      +'<input type="checkbox" id="pv-fit" style="accent-color:var(--ac);cursor:pointer;"> Auf 1 Seite</label>'
       +'<div style="flex:1;"></div>'
       +'<button id="pv-download" style="padding:6px 14px;background:var(--ac);color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:500;font-size:12px;font-family:var(--fn);">Speichern</button>'
       +'<button id="pv-print" style="padding:6px 14px;background:var(--bl);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;font-size:12px;font-family:var(--fn);">Drucken</button>'
@@ -3012,7 +3016,8 @@ function exportGanttPDF(preview){
       try{
         var sz=document.getElementById('pv-size').value;
         var or2=document.getElementById('pv-orient').value;
-        var result=_buildPDF(sz,or2);
+        var fit=document.getElementById('pv-fit').checked;
+        var result=_buildPDF(sz,or2,fit);
         if(!result){toast('PDF konnte nicht erstellt werden',false);return;}
         var oldUrl=md._blobUrl;
         if(oldUrl)URL.revokeObjectURL(oldUrl);
@@ -3025,6 +3030,7 @@ function exportGanttPDF(preview){
 
     document.getElementById('pv-size').onchange=refreshPreview;
     document.getElementById('pv-orient').onchange=refreshPreview;
+    document.getElementById('pv-fit').onchange=refreshPreview;
     document.getElementById('pv-download').onclick=function(){
       var sz=document.getElementById('pv-size').value.toUpperCase();
       md._doc.save('Bauzeitenplan_'+md._proj.nummer+'_'+sz+'.pdf');
