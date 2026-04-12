@@ -772,9 +772,6 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
       <div style="padding:14px;text-align:center;color:var(--tx3);font-size:12.5px;">Projektteam wird geladen …</div>
     </div>
     <input type="hidden" id="bs-tn">
-    <input type="hidden" id="bs-th" value="Baubesprechung">
-    <input type="hidden" id="bs-be" value="">
-    <input type="hidden" id="bs-ns" value="">
   </div>
   <div class="mf">
     <button class="btn bg" onclick="cm('m-bs')">Abbrechen</button>
@@ -1317,7 +1314,7 @@ async function loadKT(){
   // Sync aktiv flag based on PT
   KT.forEach(k=>k._imTeam=PT.has(k.id));
 }
-async function loadBS(){const{data}=await sb.from('baubesprechungen').select('*').order('datum',{ascending:false});BS=data||[];document.getElementById('nbbs').textContent=BS.length;}
+async function loadBS(){if(!CPId){BS=[];document.getElementById('nbbs').textContent='0';return;}const{data}=await sb.from('baubesprechungen').select('*').eq('projekt_id',CPId).order('datum',{ascending:false});BS=data||[];document.getElementById('nbbs').textContent=BS.length;}
 
 // ── KONTAKTE ──────────────────────────────────────────────────────────────
 let _kSearch='';
@@ -2249,11 +2246,12 @@ async function loadTeilnehmerListe(){
 
 async function saveBesprechung(){
   const datum=document.getElementById('bs-d').value;
-  const themen=document.getElementById('bs-th').value.trim();
-  if(!datum||!themen){toast('Datum und Themen erforderlich.',false);return;}
+  if(!datum){toast('Datum ist erforderlich.',false);return;}
   if(!CPId){toast('Kein Projekt ausgewählt!',false);return;}
   const nr=document.getElementById('bs-nr').value;
-  // Collect checked teilnehmer names for legacy field
+  const typ=document.getElementById('bs-typ').value;
+  const titles={BB:'Baubesprechung',BE:'Besprechung',AK:'Aktennotiz',AB:'Abnahme',CL:'Checkliste'};
+  // Collect checked teilnehmer names
   const checkedNames=[];
   document.querySelectorAll('#bs-tn-list input[type=checkbox]:checked').forEach(cb=>{
     const row=cb.closest('div[style*="grid"]');
@@ -2263,10 +2261,10 @@ async function saveBesprechung(){
     user_id:CU.id, projekt_id:CPId, titel:nr, datum,
     uhrzeit:document.getElementById('bs-u').value||null,
     uhrzeit_bis:document.getElementById('bs-ub').value||null,
-    ort:document.getElementById('bs-o').value,
-    leitung:document.getElementById('bs-l').value,
+    ort:document.getElementById('bs-o').value||null,
+    leitung:document.getElementById('bs-l').value||null,
     teilnehmer:checkedNames,
-    tagesordnung:themen,
+    tagesordnung:titles[typ]||'Besprechung',
     naechste_besprechung:document.getElementById('bs-nt').value||null
   }).select().single();
   if(error){toast('Fehler: '+error.message,false);return;}
