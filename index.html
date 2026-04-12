@@ -514,6 +514,8 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
       <div style="display:flex;gap:8px;padding:12px 16px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--brd);flex-shrink:0;">
         <button class="btn bp" onclick="openBPModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="width:13px;height:13px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Neu</button>
         <button class="btn bg" id="btn-link" onclick="toggleLinkMode()" title="Balken verbinden: Klick auf ersten, dann zweiten Balken"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>Verbinden</button>
+        <select class="fs" id="gz-filter-gew" style="width:auto;padding:4px 8px;font-size:11px;" onchange="setGFilter('gewerk',this.value)"><option value="">Alle Gewerke</option></select>
+        <select class="fs" id="gz-filter-stat" style="width:auto;padding:4px 8px;font-size:11px;" onchange="setGFilter('status',this.value)"><option value="">Alle Status</option><option value="offen">Offen</option><option value="bearbeitung">In Bearbeitung</option><option value="erledigt">Erledigt</option></select>
         <div class="sp"></div>
         <select class="fs" id="pdf-size" style="width:auto;padding:5px 10px;">
           <option value="a4">A4</option>
@@ -2419,32 +2421,23 @@ function rGantt(){
   const chartTotalW=totalDays*dayW;
   const rowH=32;
 
-  // Collect unique Gewerke for filter
+  // Update filter dropdowns in toolbar
   const gewerke=[...new Set(BP.map(b=>b.gewerk).filter(Boolean))].sort();
-
-  // FILTER BAR
-  let filterBar='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">';
-  filterBar+='<select style="padding:4px 8px;border-radius:6px;border:1px solid var(--brd2);background:var(--bg2);color:var(--tx);font-size:11px;font-family:var(--fn);" onchange="setGFilter(\'gewerk\',this.value)">';
-  filterBar+='<option value="">Alle Gewerke</option>';
-  gewerke.forEach(gw=>{filterBar+=`<option value="${esc(gw)}"${_gFilter.gewerk===gw?' selected':''}>${esc(gw)}</option>`;});
-  filterBar+='</select>';
-  filterBar+='<select style="padding:4px 8px;border-radius:6px;border:1px solid var(--brd2);background:var(--bg2);color:var(--tx);font-size:11px;font-family:var(--fn);" onchange="setGFilter(\'status\',this.value)">';
-  filterBar+='<option value="">Alle Status</option>';
-  filterBar+='<option value="offen"'+(_gFilter.status==='offen'?' selected':'')+'>Offen</option>';
-  filterBar+='<option value="bearbeitung"'+(_gFilter.status==='bearbeitung'?' selected':'')+'>In Bearbeitung</option>';
-  filterBar+='<option value="erledigt"'+(_gFilter.status==='erledigt'?' selected':'')+'>Erledigt</option>';
-  filterBar+='</select>';
-  if(_gFilter.gewerk||_gFilter.status){
-    filterBar+='<button onclick="setGFilter(\'gewerk\',\'\');setGFilter(\'status\',\'\')" style="padding:4px 8px;border-radius:6px;border:1px solid var(--brd2);background:var(--bg3);color:var(--tx2);font-size:11px;font-family:var(--fn);cursor:pointer;">Filter zurücksetzen</button>';
+  const fGew=document.getElementById('gz-filter-gew');
+  if(fGew){
+    let opts='<option value="">Alle Gewerke</option>';
+    gewerke.forEach(gw=>{opts+=`<option value="${esc(gw)}"${_gFilter.gewerk===gw?' selected':''}>${esc(gw)}</option>`;});
+    fGew.innerHTML=opts;
   }
-  filterBar+='</div>';
+  const fStat=document.getElementById('gz-filter-stat');
+  if(fStat)fStat.value=_gFilter.status;
 
   // TABLE (left side)
   let tbl='<table><thead><tr>';
-  tbl+='<th style="min-width:50px;">Nr</th><th style="min-width:140px;">Name</th><th style="min-width:55px;">Status</th>';
-  tbl+='<th style="min-width:80px;">Gewerk</th><th style="min-width:65px;">Verantw.</th><th style="min-width:40px;">%</th>';
-  tbl+='<th style="min-width:78px;">Start</th><th style="min-width:78px;">Ende</th>';
-  tbl+='<th style="min-width:40px;">Tage</th><th style="width:70px;text-align:center;">+</th>';
+  tbl+='<th style="min-width:42px;">Nr</th><th style="min-width:120px;">Name</th><th style="min-width:50px;">Status</th>';
+  tbl+='<th style="min-width:60px;">Gewerk</th><th style="min-width:55px;">Verantw.</th><th style="min-width:28px;">%</th>';
+  tbl+='<th style="min-width:70px;">Start</th><th style="min-width:70px;">Ende</th>';
+  tbl+='<th style="min-width:32px;">Tage</th><th style="width:55px;text-align:center;">+</th>';
   tbl+='</tr></thead><tbody>';
 
   filtered.forEach(b=>{
@@ -2472,7 +2465,7 @@ function rGantt(){
     tbl+=`<td style="white-space:nowrap;"><button class="gz-act" onclick="openBPModal('${addParent}')" title="Neu hinzufügen" style="opacity:.4;font-size:14px;">+</button><span class="gz-acts"><button class="gz-act" onclick="editBP('${b.id}')" title="Bearbeiten">✏️</button><button class="gz-act" onclick="delBP('${b.id}')" title="Löschen">🗑</button></span></td>`;
     tbl+='</tr>';
   });
-  tbl+=`<tr><td colspan="9" style="padding:8px 10px;"><button onclick="openBPModal()" style="background:none;border:1px dashed var(--brd2);border-radius:var(--r);padding:4px 12px;cursor:pointer;color:var(--tx3);font-size:12px;font-family:var(--fn);transition:all .15s;" onmouseover="this.style.borderColor='var(--ac)';this.style.color='var(--ac)'" onmouseout="this.style.borderColor='var(--brd2)';this.style.color='var(--tx3)'">+ Neuer Eintrag</button></td><td></td></tr>`;
+  tbl+=`<tr><td colspan="10" style="padding:8px 10px;"><button onclick="openBPModal()" style="background:none;border:1px dashed var(--brd2);border-radius:var(--r);padding:4px 12px;cursor:pointer;color:var(--tx3);font-size:12px;font-family:var(--fn);transition:all .15s;" onmouseover="this.style.borderColor='var(--ac)';this.style.color='var(--ac)'" onmouseout="this.style.borderColor='var(--brd2)';this.style.color='var(--tx3)'">+ Neuer Eintrag</button></td><td></td></tr>`;
   tbl+='</tbody></table>';
 
   // CHART (right side)
@@ -2585,7 +2578,7 @@ function rGantt(){
 
   chart+='</div>';
 
-  g.innerHTML=filterBar+`<div class="gz-table">${tbl}</div><div class="gz-chart">${chart}</div>`;
+  g.innerHTML=`<div class="gz-table">${tbl}</div><div class="gz-chart">${chart}</div>`;
 
   const tableEl=g.querySelector('.gz-table');
   const chartEl=g.querySelector('.gz-chart');
