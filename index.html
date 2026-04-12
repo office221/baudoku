@@ -553,6 +553,14 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
           <div class="fg"><label class="fl">Übergeordnete Phase</label><select class="fs" id="bp-parent"><option value="">— Keine (Hauptphase) —</option></select></div>
           <div class="fg"><label class="fl">Farbe</label><input type="color" id="bp-farbe" value="#3b82f6" style="width:100%;height:36px;border:1px solid var(--brd);border-radius:var(--r);background:var(--bg3);cursor:pointer;"></div>
         </div>
+        <div class="fr fr2">
+          <div class="fg"><label class="fl">Verantwortlich</label><input type="text" class="fi" id="bp-verantw" placeholder="z.B. Müller GmbH"></div>
+          <div class="fg"><label class="fl">Fortschritt %</label><input type="number" class="fi" id="bp-fortschritt" min="0" max="100" value="0" placeholder="0-100"></div>
+        </div>
+        <div class="fr fr2" id="bp-soll-row">
+          <div class="fg"><label class="fl">Soll-Start</label><input type="date" class="fi" id="bp-soll-sd"></div>
+          <div class="fg"><label class="fl">Soll-Ende</label><input type="date" class="fi" id="bp-soll-ed"></div>
+        </div>
         <div style="margin-top:4px;">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--tx2);">
             <input type="checkbox" id="bp-fix"> Fixiert (abgeschlossen)
@@ -2197,6 +2205,10 @@ function openBPModal(parentId){
   document.getElementById('bp-ed').value=new Date().toISOString().split('T')[0];
   document.getElementById('bp-farbe').value='#3b82f6';
   document.getElementById('bp-fix').checked=false;
+  document.getElementById('bp-verantw').value='';
+  document.getElementById('bp-fortschritt').value=0;
+  document.getElementById('bp-soll-sd').value='';
+  document.getElementById('bp-soll-ed').value='';
   // Fill parent dropdown
   const sel=document.getElementById('bp-parent');
   sel.innerHTML='<option value="">— Keine (Hauptphase) —</option>';
@@ -2218,6 +2230,10 @@ function editBP(id){
   document.getElementById('bp-ed').value=b.ende_datum||'';
   document.getElementById('bp-farbe').value=b.farbe||'#3b82f6';
   document.getElementById('bp-fix').checked=b.abgeschlossen||false;
+  document.getElementById('bp-verantw').value=b.verantwortlich||'';
+  document.getElementById('bp-fortschritt').value=b.fortschritt||0;
+  document.getElementById('bp-soll-sd').value=b.soll_start_datum||'';
+  document.getElementById('bp-soll-ed').value=b.soll_ende_datum||'';
   const sel=document.getElementById('bp-parent');
   sel.innerHTML='<option value="">— Keine (Hauptphase) —</option>';
   BP.filter(p=>p.typ==='phase'&&p.id!==id).forEach(p=>{sel.innerHTML+=`<option value="${p.id}">${p.nummer||''} ${p.bezeichnung}</option>`;});
@@ -2256,7 +2272,11 @@ async function saveBauphase(){
     start_tag:1,dauer_tage:typ==='phase'?0:Math.max(dur,0),
     farbe:document.getElementById('bp-farbe').value,
     abgeschlossen:document.getElementById('bp-fix').checked,
-    parent_id:parentId
+    parent_id:parentId,
+    verantwortlich:document.getElementById('bp-verantw').value.trim()||'',
+    fortschritt:parseInt(document.getElementById('bp-fortschritt').value)||0,
+    soll_start_datum:document.getElementById('bp-soll-sd').value||null,
+    soll_ende_datum:document.getElementById('bp-soll-ed').value||null
   };
   if(!_editBP)obj.nummer=nummer;
   let error;
@@ -2307,6 +2327,27 @@ function calcPhaseDates(){
   });
 }
 
+// Collapsed phases state
+var _collapsed={};
+function toggleCollapse(id){_collapsed[id]=!_collapsed[id];rGantt();}
+// Filter state
+var _gFilter={gewerk:'',status:''};
+function setGFilter(key,val){_gFilter[key]=val;rGantt();}
+// KW helper
+function getKW(d){var t=new Date(d);t.setHours(0,0,0,0);t.setDate(t.getDate()+3-(t.getDay()+6)%7);var w=new Date(t.getFullYear(),0,4);return 1+Math.round(((t-w)/864e5-3+(w.getDay()+6)%7)/7);}
+// German holidays (fixed + Easter-based)
+function getHolidays(year){
+  var h={};
+  function add(m,d){h[year+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0')]=true;}
+  add(1,1);add(5,1);add(10,3);add(12,25);add(12,26);
+  // Easter (Anonymous Gregorian algorithm)
+  var a=year%19,b=Math.floor(year/100),c=year%100,d2=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g2=Math.floor((b-f+1)/3),h2=(19*a+b-d2-g2+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h2-k)%7,m2=Math.floor((a+11*h2+22*l)/451),mo=Math.floor((h2+l-7*m2+114)/31),da=(h2+l-7*m2+114)%31+1;
+  var easter=new Date(year,mo-1,da);
+  function addOff(off){var d3=new Date(easter);d3.setDate(d3.getDate()+off);add(d3.getMonth()+1,d3.getDate());}
+  addOff(-2);addOff(1);addOff(39);addOff(49);addOff(50);addOff(60);
+  return h;
+}
+
 function rGantt(){
   const g=document.getElementById('gnt');
   if(!g)return;
@@ -2314,6 +2355,28 @@ function rGantt(){
 
   calcPhaseDates();
   const tree=buildTree(BP);
+
+  // Apply collapse: hide children of collapsed phases
+  const visTree=[];
+  tree.forEach(b=>{
+    // Check if any ancestor is collapsed
+    let hidden=false;
+    let pid=b.parent_id;
+    while(pid){
+      if(_collapsed[pid]){hidden=true;break;}
+      const par=BP.find(x=>x.id===pid);
+      pid=par?par.parent_id:null;
+    }
+    if(!hidden)visTree.push(b);
+  });
+
+  // Apply filters
+  const filtered=visTree.filter(b=>{
+    if(_gFilter.gewerk&&b.gewerk!==_gFilter.gewerk&&b.typ!=='phase')return false;
+    if(_gFilter.status&&b.status!==_gFilter.status&&b.typ!=='phase')return false;
+    return true;
+  });
+
   // Find date range
   const allDates=BP.filter(b=>b.start_datum&&b.ende_datum);
   if(!allDates.length){g.innerHTML='<div class="empty" style="padding:60px;"><div style="font-size:13px;color:var(--tx3);">Bitte Datum bei Einträgen setzen</div></div>';return;}
@@ -2348,29 +2411,60 @@ function rGantt(){
     }
   });
 
+  // Collect holidays for the year range
+  const holidays={};
+  for(let y=minD.getFullYear();y<=maxD.getFullYear();y++){Object.assign(holidays,getHolidays(y));}
+
   const dayW=5; // pixels per day
   const chartTotalW=totalDays*dayW;
   const rowH=32;
 
+  // Collect unique Gewerke for filter
+  const gewerke=[...new Set(BP.map(b=>b.gewerk).filter(Boolean))].sort();
+
+  // FILTER BAR
+  let filterBar='<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">';
+  filterBar+='<select style="padding:4px 8px;border-radius:6px;border:1px solid var(--brd2);background:var(--bg2);color:var(--tx);font-size:11px;font-family:var(--fn);" onchange="setGFilter(\'gewerk\',this.value)">';
+  filterBar+='<option value="">Alle Gewerke</option>';
+  gewerke.forEach(gw=>{filterBar+=`<option value="${esc(gw)}"${_gFilter.gewerk===gw?' selected':''}>${esc(gw)}</option>`;});
+  filterBar+='</select>';
+  filterBar+='<select style="padding:4px 8px;border-radius:6px;border:1px solid var(--brd2);background:var(--bg2);color:var(--tx);font-size:11px;font-family:var(--fn);" onchange="setGFilter(\'status\',this.value)">';
+  filterBar+='<option value="">Alle Status</option>';
+  filterBar+='<option value="offen"'+(_gFilter.status==='offen'?' selected':'')+'>Offen</option>';
+  filterBar+='<option value="bearbeitung"'+(_gFilter.status==='bearbeitung'?' selected':'')+'>In Bearbeitung</option>';
+  filterBar+='<option value="erledigt"'+(_gFilter.status==='erledigt'?' selected':'')+'>Erledigt</option>';
+  filterBar+='</select>';
+  if(_gFilter.gewerk||_gFilter.status){
+    filterBar+='<button onclick="setGFilter(\'gewerk\',\'\');setGFilter(\'status\',\'\')" style="padding:4px 8px;border-radius:6px;border:1px solid var(--brd2);background:var(--bg3);color:var(--tx2);font-size:11px;font-family:var(--fn);cursor:pointer;">Filter zurücksetzen</button>';
+  }
+  filterBar+='</div>';
+
   // TABLE (left side)
   let tbl='<table><thead><tr>';
   tbl+='<th style="min-width:50px;">Nr</th><th style="min-width:140px;">Name</th><th style="min-width:55px;">Status</th>';
-  tbl+='<th style="min-width:80px;">Gewerk</th><th style="min-width:78px;">Start</th><th style="min-width:78px;">Ende</th>';
+  tbl+='<th style="min-width:80px;">Gewerk</th><th style="min-width:65px;">Verantw.</th><th style="min-width:40px;">%</th>';
+  tbl+='<th style="min-width:78px;">Start</th><th style="min-width:78px;">Ende</th>';
   tbl+='<th style="min-width:40px;">Tage</th><th style="width:70px;text-align:center;">+</th>';
   tbl+='</tr></thead><tbody>';
 
-  tree.forEach(b=>{
+  filtered.forEach(b=>{
     const isPhase=b.typ==='phase';
     const indent=b._depth*16;
     const cls=isPhase?'gz-phase':'';
     const dur=daysBetween(b.start_datum,b.ende_datum);
     const stBadge=b.status==='erledigt'?'gz-badge-e':b.status==='bearbeitung'?'gz-badge-b':'gz-badge-o';
-    const icon=b.typ==='meilenstein'?'◇':b.typ==='phase'?'↔':'▫';
+    const hasChildren=BP.some(x=>x.parent_id===b.id);
+    const collapseIcon=isPhase&&hasChildren?(_collapsed[b.id]?'▸':'▾'):'';
+    const collapseBtn=collapseIcon?`<span style="cursor:pointer;margin-right:2px;font-size:10px;user-select:none;" onclick="event.stopPropagation();toggleCollapse('${b.id}')">${collapseIcon}</span>`:'';
+    const icon=b.typ==='meilenstein'?'◇':b.typ==='phase'?'':'▫';
+    const pct=b.fortschritt||0;
     tbl+=`<tr class="${cls}" draggable="true" data-bpid="${b.id}" ondragstart="bpDragStart(event,'${b.id}')" ondragover="bpDragOver(event)" ondrop="bpDrop(event,'${b.id}')" ondragend="bpDragEnd(event)">`;
     tbl+=`<td class="gz-nr" style="cursor:grab;" title="Ziehen zum Sortieren">⠿ ${esc(b.nummer||'')}</td>`;
-    tbl+=`<td class="gz-nm"><span class="gz-indent" style="width:${indent}px;"></span><span style="margin-right:4px;opacity:.5;">${icon}</span>${esc(b.bezeichnung)}</td>`;
+    tbl+=`<td class="gz-nm"><span class="gz-indent" style="width:${indent}px;"></span>${collapseBtn}<span style="margin-right:4px;opacity:.5;">${icon}</span>${esc(b.bezeichnung)}</td>`;
     tbl+=`<td><span class="gz-badge ${stBadge}">${b.status==='erledigt'?'Erledigt':b.status==='bearbeitung'?'In Bearb.':'Offen'}</span></td>`;
     tbl+=`<td style="font-size:11px;color:var(--tx2);max-width:80px;overflow:hidden;text-overflow:ellipsis;">${esc(b.gewerk||'')}</td>`;
+    tbl+=`<td style="font-size:11px;color:var(--tx2);max-width:65px;overflow:hidden;text-overflow:ellipsis;">${esc(b.verantwortlich||'')}</td>`;
+    tbl+=`<td style="font-size:11px;text-align:center;"><span style="color:${pct>=100?'var(--gn)':pct>0?'var(--ac)':'var(--tx3)'};font-weight:${pct>0?'600':'400'};">${pct>0?pct+'%':'-'}</span></td>`;
     tbl+=`<td class="gz-dt">${fmtDt(b.start_datum)}</td>`;
     tbl+=`<td class="gz-dt">${fmtDt(b.ende_datum)}</td>`;
     tbl+=`<td class="gz-dur">${dur}</td>`;
@@ -2378,12 +2472,12 @@ function rGantt(){
     tbl+=`<td style="white-space:nowrap;"><button class="gz-act" onclick="openBPModal('${addParent}')" title="Neu hinzufügen" style="opacity:.4;font-size:14px;">+</button><span class="gz-acts"><button class="gz-act" onclick="editBP('${b.id}')" title="Bearbeiten">✏️</button><button class="gz-act" onclick="delBP('${b.id}')" title="Löschen">🗑</button></span></td>`;
     tbl+='</tr>';
   });
-  tbl+=`<tr><td colspan="7" style="padding:8px 10px;"><button onclick="openBPModal()" style="background:none;border:1px dashed var(--brd2);border-radius:var(--r);padding:4px 12px;cursor:pointer;color:var(--tx3);font-size:12px;font-family:var(--fn);transition:all .15s;" onmouseover="this.style.borderColor='var(--ac)';this.style.color='var(--ac)'" onmouseout="this.style.borderColor='var(--brd2)';this.style.color='var(--tx3)'">+ Neuer Eintrag</button></td><td></td></tr>`;
+  tbl+=`<tr><td colspan="9" style="padding:8px 10px;"><button onclick="openBPModal()" style="background:none;border:1px dashed var(--brd2);border-radius:var(--r);padding:4px 12px;cursor:pointer;color:var(--tx3);font-size:12px;font-family:var(--fn);transition:all .15s;" onmouseover="this.style.borderColor='var(--ac)';this.style.color='var(--ac)'" onmouseout="this.style.borderColor='var(--brd2)';this.style.color='var(--tx3)'">+ Neuer Eintrag</button></td><td></td></tr>`;
   tbl+='</tbody></table>';
 
   // CHART (right side)
   let chart=`<div class="gz-chart-inner" style="width:${chartTotalW}px;">`;
-  // Quarter + Month header
+  // Quarter + Month + KW header
   chart+='<div class="gz-chart-hdr" style="position:sticky;top:0;z-index:2;background:var(--bg2);">';
   chart+='<div class="gz-mhdr" style="border-bottom:1px solid var(--brd);">';
   quarters.forEach(q=>{
@@ -2392,17 +2486,46 @@ function rGantt(){
     chart+=`<div style="width:${qDays*dayW}px;text-align:center;font-size:10px;font-weight:600;color:var(--tx3);padding:3px 0;border-right:1px solid var(--brd);">${q.label}</div>`;
   });
   chart+='</div>';
-  chart+='<div class="gz-mhdr" style="border-bottom:2px solid var(--brd);">';
+  chart+='<div class="gz-mhdr" style="border-bottom:1px solid var(--brd);">';
   months.forEach(m=>{
     const mDays=daysBetween(m.start.toISOString(),m.end.toISOString())+1;
     chart+=`<div class="gz-mhdr-m" style="width:${mDays*dayW}px;">${m.label}</div>`;
   });
+  chart+='</div>';
+  // KW row
+  chart+='<div class="gz-mhdr" style="border-bottom:2px solid var(--brd);">';
+  let kwD=new Date(minD);
+  while(kwD<maxD){
+    // Find Monday of this week
+    var dow=kwD.getDay();var mon=new Date(kwD);mon.setDate(mon.getDate()-(dow===0?6:dow-1));
+    var sun=new Date(mon);sun.setDate(sun.getDate()+6);
+    var effStart=mon<minD?minD:mon;
+    var effEnd2=sun>maxD?maxD:sun;
+    var wDays=daysBetween(effStart.toISOString(),effEnd2.toISOString())+1;
+    var kwNum=getKW(mon);
+    var wLeft=daysBetween(minD.toISOString(),effStart.toISOString())*dayW;
+    chart+=`<div style="position:absolute;left:${wLeft}px;width:${wDays*dayW}px;text-align:center;font-size:8px;color:var(--tx3);padding:1px 0;box-sizing:border-box;border-right:1px solid var(--brd);">KW${kwNum}</div>`;
+    kwD=new Date(sun);kwD.setDate(kwD.getDate()+1);
+  }
+  chart+='<div style="height:14px;"></div>';
   chart+='</div></div>';
 
   // Rows with bars
   const today=new Date();today.setHours(0,0,0,0);
-  tree.forEach(b=>{
+  filtered.forEach(b=>{
     chart+=`<div class="gz-row" style="height:${rowH}px;">`;
+    // Weekend + holiday columns
+    let dIter=new Date(minD);
+    for(let di=0;di<totalDays;di++){
+      var wd=dIter.getDay();
+      var dStr=dIter.toISOString().split('T')[0];
+      if(wd===0||wd===6){
+        chart+=`<div style="position:absolute;left:${di*dayW}px;width:${dayW}px;height:100%;background:var(--bg3);opacity:.5;pointer-events:none;"></div>`;
+      } else if(holidays[dStr]){
+        chart+=`<div style="position:absolute;left:${di*dayW}px;width:${dayW}px;height:100%;background:rgba(239,68,68,.08);pointer-events:none;"></div>`;
+      }
+      dIter.setDate(dIter.getDate()+1);
+    }
     // Month grid columns
     months.forEach(m=>{
       const mDays=daysBetween(m.start.toISOString(),m.end.toISOString())+1;
@@ -2418,27 +2541,37 @@ function rGantt(){
       const opacity=b.abgeschlossen?0.5:1;
       const dateLbl=fmtDt(b.start_datum);
       const afterBar=left+width+8;
+      const pct=b.fortschritt||0;
+
+      // Baseline (Soll) bar — thin gray bar below actual
+      if(b.soll_start_datum&&b.soll_ende_datum){
+        const sStart=daysBetween(minD.toISOString(),b.soll_start_datum);
+        const sDur=Math.max(daysBetween(b.soll_start_datum,b.soll_ende_datum),0);
+        const sLeft=sStart*dayW;
+        const sWidth=Math.max(sDur*dayW,4);
+        chart+=`<div style="position:absolute;left:${sLeft}px;top:22px;width:${sWidth}px;height:4px;background:var(--tx3);opacity:.3;border-radius:2px;pointer-events:none;" title="Soll: ${fmtDt(b.soll_start_datum)} - ${fmtDt(b.soll_ende_datum)}"></div>`;
+      }
 
       if(b.typ==='phase'){
-        // Thin dark bar with down-arrows at ends — full row height click area
         chart+=`<div class="gz-bar-wrap" data-bpid="${b.id}" onmousedown="initBarDrag(this,event)" style="position:absolute;left:${left}px;width:${width}px;top:0;height:${rowH}px;cursor:grab;">`;
         chart+=`<div style="position:absolute;left:0;top:8px;width:100%;height:10px;background:#555;border-radius:1px;opacity:${opacity};pointer-events:none;"></div>`;
+        if(pct>0){chart+=`<div style="position:absolute;left:0;top:8px;width:${pct}%;height:10px;background:rgba(255,255,255,.2);border-radius:1px;pointer-events:none;"></div>`;}
         chart+=`</div>`;
         chart+=`<div style="position:absolute;left:${left}px;top:15px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #555;pointer-events:none;"></div>`;
         chart+=`<div style="position:absolute;left:${left+width-8}px;top:15px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #555;pointer-events:none;"></div>`;
-        chart+=`<span style="position:absolute;left:${afterBar}px;top:7px;font-size:10px;color:var(--tx);white-space:nowrap;pointer-events:none;">Bauphase: <b>${esc(b.bezeichnung)}</b></span>`;
+        chart+=`<span style="position:absolute;left:${afterBar}px;top:7px;font-size:10px;color:var(--tx);white-space:nowrap;pointer-events:none;">Bauphase: <b>${esc(b.bezeichnung)}</b>${pct>0?' ('+pct+'%)':''}</span>`;
       } else if(b.typ==='meilenstein'){
-        // Diamond shape
         chart+=`<div style="position:absolute;left:${left-6}px;top:9px;width:12px;height:12px;background:${color};border-radius:2px;transform:rotate(45deg);opacity:${opacity};"></div>`;
         chart+=`<span style="position:absolute;left:${left-4}px;top:7px;font-size:9px;color:var(--tx3);transform:translateX(-100%);white-space:nowrap;">${dateLbl}</span>`;
         chart+=`<span style="position:absolute;left:${left+14}px;top:9px;font-size:10px;font-weight:500;color:var(--tx);white-space:nowrap;">${esc(b.bezeichnung)}</span>`;
       } else {
-        // Regular bar with resize handles
+        // Regular bar with progress fill
         chart+=`<div class="gz-bar-wrap" data-bpid="${b.id}" onmousedown="initBarDrag(this,event)" style="position:absolute;left:${left}px;width:${width}px;top:3px;height:24px;">`;
         chart+=`<div style="position:absolute;left:0;top:4px;width:100%;height:14px;background:${color};border-radius:3px;opacity:${opacity};pointer-events:none;"></div>`;
+        if(pct>0){chart+=`<div style="position:absolute;left:0;top:4px;width:${Math.min(pct,100)}%;height:14px;background:rgba(0,0,0,.2);border-radius:3px;pointer-events:none;"></div>`;}
         chart+=`</div>`;
         chart+=`<span style="position:absolute;left:${left-4}px;top:9px;font-size:9px;color:var(--tx3);transform:translateX(-100%);white-space:nowrap;pointer-events:none;">${dateLbl}</span>`;
-        chart+=`<span style="position:absolute;left:${afterBar}px;top:9px;font-size:10px;font-weight:500;color:var(--tx);white-space:nowrap;pointer-events:none;">${esc(b.bezeichnung)}</span>`;
+        chart+=`<span style="position:absolute;left:${afterBar}px;top:9px;font-size:10px;font-weight:500;color:var(--tx);white-space:nowrap;pointer-events:none;">${esc(b.bezeichnung)}${pct>0?' '+pct+'%':''}</span>`;
       }
     }
     chart+='</div>';
@@ -2447,12 +2580,12 @@ function rGantt(){
   // Today line
   const todayOff=daysBetween(minD.toISOString(),today.toISOString());
   if(todayOff>=0&&todayOff<=totalDays){
-    chart+=`<div class="gz-today" style="left:${todayOff*dayW}px;top:0;height:${tree.length*rowH}px;"></div>`;
+    chart+=`<div class="gz-today" style="left:${todayOff*dayW}px;top:0;height:${filtered.length*rowH}px;"></div>`;
   }
 
   chart+='</div>';
 
-  g.innerHTML=`<div class="gz-table">${tbl}</div><div class="gz-chart">${chart}</div>`;
+  g.innerHTML=filterBar+`<div class="gz-table">${tbl}</div><div class="gz-chart">${chart}</div>`;
 
   const tableEl=g.querySelector('.gz-table');
   const chartEl=g.querySelector('.gz-chart');
@@ -2478,7 +2611,7 @@ function rGantt(){
   chartEl.addEventListener('scroll',()=>{tableEl.scrollTop=chartEl.scrollTop;});
 
   // Verbindungslinien zeichnen
-  drawLinks(g.querySelector('.gz-chart-inner'),tree,minD,dayW,rowH);
+  drawLinks(g.querySelector('.gz-chart-inner'),filtered,minD,dayW,rowH);
 }
 
 function drawLinks(container,tree,minD,dayW,rowH){
@@ -2834,15 +2967,15 @@ function _buildPDF(size,orient,fitPage){
   doc.setTextColor(0);
 
   const topY=m+16;
-  const colNr=12,colNm=40,colGw=22,colSt=18,colEn=18,colDur=10;
-  const tblW=colNr+colNm+colGw+colSt+colEn+colDur;
+  const colNr=12,colNm=36,colGw=20,colVer=18,colPct=8,colSt=18,colEn=18,colDur=10;
+  const tblW=colNr+colNm+colGw+colVer+colPct+colSt+colEn+colDur;
   const chartX=m+tblW+2;
   const chartW=usableW-tblW-2;
 
   doc.setFontSize(6);doc.setFont(undefined,'bold');doc.setTextColor(100);
   let hx=m;
-  ['Nr','Name','Gewerk','Start','Ende','Tage'].forEach((h,i)=>{
-    const w=[colNr,colNm,colGw,colSt,colEn,colDur][i];
+  ['Nr','Name','Gewerk','Verantw.','%','Start','Ende','Tage'].forEach((h,i)=>{
+    const w=[colNr,colNm,colGw,colVer,colPct,colSt,colEn,colDur][i];
     doc.text(h,hx+1,topY);hx+=w;
   });
 
@@ -2876,9 +3009,12 @@ function _buildPDF(size,orient,fitPage){
     doc.text((b.nummer||'').substring(0,8),cx+1,y+rowH*0.6);cx+=colNr;
     const icon=b.typ==='meilenstein'?'◇ ':b.typ==='phase'?'↔ ':'';
     const indent=b._depth?'  ':'';
-    doc.text((indent+icon+b.bezeichnung).substring(0,22),cx+1,y+rowH*0.6);cx+=colNm;
+    doc.text((indent+icon+b.bezeichnung).substring(0,20),cx+1,y+rowH*0.6);cx+=colNm;
     doc.setFont(undefined,'normal');doc.setFontSize(5*fScale);doc.setTextColor(120);
-    doc.text((b.gewerk||'').substring(0,12),cx+1,y+rowH*0.6);cx+=colGw;
+    doc.text((b.gewerk||'').substring(0,10),cx+1,y+rowH*0.6);cx+=colGw;
+    doc.text((b.verantwortlich||'').substring(0,10),cx+1,y+rowH*0.6);cx+=colVer;
+    const pctVal=b.fortschritt||0;
+    doc.text(pctVal>0?pctVal+'%':'-',cx+1,y+rowH*0.6);cx+=colPct;
     doc.text(fmtDt(b.start_datum),cx+1,y+rowH*0.6);cx+=colSt;
     doc.text(fmtDt(b.ende_datum),cx+1,y+rowH*0.6);cx+=colEn;
     doc.text(String(daysBetween(b.start_datum,b.ende_datum)),cx+1,y+rowH*0.6);
@@ -2891,9 +3027,19 @@ function _buildPDF(size,orient,fitPage){
       const barW=Math.max((bDur/totalDays)*chartW,0.5);
       const hex=b.farbe||'#3b82f6';
       const r=parseInt(hex.slice(1,3),16),g2=parseInt(hex.slice(3,5),16),bl=parseInt(hex.slice(5,7),16);
+      // Baseline (Soll) bar
+      if(b.soll_start_datum&&b.soll_ende_datum){
+        const sOff=daysBetween(minD.toISOString(),b.soll_start_datum);
+        const sDur=Math.max(daysBetween(b.soll_start_datum,b.soll_ende_datum),0);
+        const sX=chartX+(sOff/totalDays)*chartW;
+        const sW=Math.max((sDur/totalDays)*chartW,0.3);
+        doc.setFillColor(200,200,200);
+        doc.rect(sX,y+rowH*0.7,sW,rowH*0.15,'F');
+      }
       if(b.typ==='phase'){
         doc.setFillColor(80,80,80);
         doc.rect(barX,y+rowH*0.35,barW,rowH*0.2,'F');
+        if(pctVal>0){doc.setFillColor(120,120,120);doc.rect(barX,y+rowH*0.35,barW*(pctVal/100),rowH*0.2,'F');}
       } else if(b.typ==='meilenstein'){
         doc.setFillColor(r,g2,bl);
         const s=rowH*0.35;
@@ -2901,9 +3047,10 @@ function _buildPDF(size,orient,fitPage){
       } else {
         doc.setFillColor(r,g2,bl);
         doc.roundedRect(barX,y+rowH*0.2,barW,rowH*0.5,0.5,0.5,'F');
+        if(pctVal>0){doc.setFillColor(0,0,0);doc.setGState(new doc.GState({opacity:0.2}));doc.roundedRect(barX,y+rowH*0.2,barW*(pctVal/100),rowH*0.5,0.5,0.5,'F');doc.setGState(new doc.GState({opacity:1}));}
       }
       doc.setFontSize(4.5*fScale);doc.setTextColor(100);
-      doc.text(b.bezeichnung.substring(0,20),barX+barW+1,y+rowH*0.6);
+      doc.text(b.bezeichnung.substring(0,20)+(pctVal>0?' '+pctVal+'%':''),barX+barW+1,y+rowH*0.6);
       doc.setTextColor(0);
     }
     doc.setDrawColor(235);doc.setLineWidth(0.08);doc.line(m,y+rowH,m+usableW,y+rowH);
@@ -2961,7 +3108,32 @@ function _buildPDF(size,orient,fitPage){
   }
   }catch(ex){}
 
-  doc.setFontSize(6);doc.setTextColor(150);
+  // Legende
+  const legY=Math.min(y+6,ph-m-6);
+  doc.setFontSize(5);doc.setFont(undefined,'bold');doc.setTextColor(100);
+  doc.text('Legende:',m,legY);
+  let lx=m+14;
+  const gewerke2=[...new Set(tree.map(b=>b.gewerk).filter(Boolean))];
+  gewerke2.forEach(gw=>{
+    const gb=tree.find(b=>b.gewerk===gw&&b.farbe);
+    if(gb){
+      const hx2=gb.farbe||'#3b82f6';
+      doc.setFillColor(parseInt(hx2.slice(1,3),16),parseInt(hx2.slice(3,5),16),parseInt(hx2.slice(5,7),16));
+      doc.rect(lx,legY-2,3,2,'F');
+      doc.setFont(undefined,'normal');doc.setFontSize(4.5);doc.setTextColor(80);
+      doc.text(gw,lx+4,legY);
+      lx+=doc.getTextWidth(gw)+8;
+    }
+  });
+  // Baseline legend
+  doc.setFillColor(200,200,200);doc.rect(lx,legY-2,6,2,'F');
+  doc.setFont(undefined,'normal');doc.setFontSize(4.5);doc.setTextColor(80);
+  doc.text('Soll (Baseline)',lx+7,legY);lx+=28;
+  // Today legend
+  doc.setDrawColor(239,68,68);doc.setLineWidth(0.3);doc.line(lx,legY-2,lx,legY+1);
+  doc.text('Heute',lx+2,legY);
+
+  doc.setFontSize(6);doc.setTextColor(150);doc.setDrawColor(0);
   doc.text(`BauDoku Pro — ${proj.nummer} ${proj.name}`,m,ph-m+4);
   doc.text(`${new Date().toLocaleDateString('de-DE')} ${new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}`,pw-m,ph-m+4,{align:'right'});
 
