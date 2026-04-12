@@ -2968,6 +2968,7 @@ function _buildPDF(size,orient){
 }
 
 function exportGanttPDF(preview){
+  alert('PDF Funktion gestartet: preview='+preview);
   try{
   if(!PR.find(p=>p.id===CPId)||!BP.length){toast('Keine Daten für PDF.',false);return;}
   if(!window.jspdf||!window.jspdf.jsPDF){toast('PDF-Bibliothek lädt... bitte nochmal versuchen.',false);
