@@ -461,84 +461,70 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
     <!-- BESPRECHUNGEN -->
     <div class="pg" id="pg-besprechungen" style="padding:0;overflow:hidden;display:none;flex-direction:row;">
       <!-- COL 1: Protokollarten -->
-      <div style="width:220px;flex-shrink:0;border-right:1px solid var(--brd);overflow-y:auto;padding:12px 10px;">
-        <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);padding:0 8px;margin-bottom:8px;">Protokollarten</div>
+      <div style="width:200px;flex-shrink:0;border-right:1px solid var(--brd);overflow-y:auto;padding:10px 8px;">
+        <div style="font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);padding:0 8px;margin-bottom:6px;">Protokollarten</div>
         <div class="proto-art act" id="pa-all" onclick="setPArt('all',this)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-          Alle Protokolle
+          <span style="font-size:12.5px;">Alle</span>
           <span class="nb" id="pa-all-nb">0</span>
         </div>
-        <div style="height:8px;"></div>
+        <div style="height:6px;"></div>
         <div id="pa-list">
           <div class="proto-art" onclick="setPArt('BB',this)">
-            <div style="font-size:10px;font-weight:700;color:var(--bl);background:var(--bldm);padding:1px 5px;border-radius:4px;flex-shrink:0;">BB</div>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:10px;color:var(--tx3);">Fortlaufend</div>
-              <div style="font-size:12.5px;font-weight:500;">Baubesprechungsprotokoll</div>
-            </div>
+            <div style="font-size:9px;font-weight:700;color:var(--bl);background:var(--bldm);padding:1px 5px;border-radius:3px;flex-shrink:0;">BB</div>
+            <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;">Baubesprechung</div></div>
             <span class="nb" id="pa-bb-nb">0</span>
           </div>
           <div class="proto-art" onclick="setPArt('BE',this)">
-            <div style="font-size:10px;font-weight:700;color:var(--gn);background:var(--gndm);padding:1px 5px;border-radius:4px;flex-shrink:0;">BE</div>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:10px;color:var(--tx3);">Standard</div>
-              <div style="font-size:12.5px;font-weight:500;">Besprechungsprotokoll</div>
-            </div>
+            <div style="font-size:9px;font-weight:700;color:var(--gn);background:var(--gndm);padding:1px 5px;border-radius:3px;flex-shrink:0;">BE</div>
+            <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;">Besprechung</div></div>
             <span class="nb" id="pa-be-nb">0</span>
           </div>
           <div class="proto-art" onclick="setPArt('AK',this)">
-            <div style="font-size:10px;font-weight:700;color:var(--ac);background:var(--adm);padding:1px 5px;border-radius:4px;flex-shrink:0;">AK</div>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:10px;color:var(--tx3);">Standard</div>
-              <div style="font-size:12.5px;font-weight:500;">Aktennotiz</div>
-            </div>
+            <div style="font-size:9px;font-weight:700;color:var(--ac);background:var(--adm);padding:1px 5px;border-radius:3px;flex-shrink:0;">AK</div>
+            <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;">Aktennotiz</div></div>
             <span class="nb" id="pa-ak-nb">0</span>
           </div>
           <div class="proto-art" onclick="setPArt('AB',this)">
-            <div style="font-size:10px;font-weight:700;color:var(--pu);background:var(--pudm);padding:1px 5px;border-radius:4px;flex-shrink:0;">AB</div>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:10px;color:var(--tx3);">Standard</div>
-              <div style="font-size:12.5px;font-weight:500;">Abnahmeprotokoll</div>
-            </div>
+            <div style="font-size:9px;font-weight:700;color:var(--pu);background:var(--pudm);padding:1px 5px;border-radius:3px;flex-shrink:0;">AB</div>
+            <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;">Abnahme</div></div>
             <span class="nb" id="pa-ab-nb">0</span>
           </div>
           <div class="proto-art" onclick="setPArt('CL',this)">
-            <div style="font-size:10px;font-weight:700;color:var(--tl);background:var(--tldm);padding:1px 5px;border-radius:4px;flex-shrink:0;">CL</div>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:10px;color:var(--tx3);">Kurz</div>
-              <div style="font-size:12.5px;font-weight:500;">Checkliste</div>
-            </div>
+            <div style="font-size:9px;font-weight:700;color:var(--tl);background:var(--tldm);padding:1px 5px;border-radius:3px;flex-shrink:0;">CL</div>
+            <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;">Checkliste</div></div>
             <span class="nb" id="pa-cl-nb">0</span>
           </div>
         </div>
+        <!-- Statistik -->
+        <div style="margin-top:14px;padding:8px;border-top:1px solid var(--brd);">
+          <div style="font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);margin-bottom:6px;">Übersicht</div>
+          <div id="proto-stats" style="font-size:11.5px;color:var(--tx2);display:flex;flex-direction:column;gap:3px;"></div>
+        </div>
       </div>
       <!-- COL 2: Protokollliste -->
-      <div style="flex:1;overflow-y:auto;border-right:1px solid var(--brd);">
-        <div style="padding:10px 14px;border-bottom:1px solid var(--brd);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Protokolle</div>
-        <div id="bsl"></div>
+      <div style="width:280px;flex-shrink:0;overflow-y:auto;border-right:1px solid var(--brd);display:flex;flex-direction:column;">
+        <div style="padding:8px 12px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+          <div style="font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);">Protokolle</div>
+          <div style="font-size:10px;color:var(--tx3);font-family:var(--mo);" id="proto-count"></div>
+        </div>
+        <div style="flex:1;overflow-y:auto;" id="bsl"></div>
       </div>
       <!-- COL 3: Detail -->
-      <!-- COL 3: Detail -->
-      <div style="flex:1;display:flex;flex-direction:row;overflow:hidden;" id="proto-det">
-        <!-- Einträge-Liste -->
-        <div style="width:280px;flex-shrink:0;border-left:1px solid var(--brd);display:flex;flex-direction:column;overflow:hidden;">
-          <div id="proto-header" style="padding:12px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;">
-            <div style="font-size:13px;color:var(--tx3);">Protokoll auswählen</div>
-          </div>
-          <div id="proto-meta" style="flex-shrink:0;"></div>
-          <div style="padding:8px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-            <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Einträge / TOPs</div>
-            <button class="btn bp" id="btn-add-eintrag" onclick="openEintragModal()" style="font-size:11px;padding:4px 10px;display:none;">+ Eintrag</button>
-          </div>
-          <div style="flex:1;overflow-y:auto;" id="eintraege-list"></div>
+      <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;" id="proto-det">
+        <div id="proto-header" style="padding:10px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;">
+          <div style="font-size:13px;color:var(--tx3);">Protokoll auswählen</div>
         </div>
-        <!-- Eintrag-Detail -->
-        <div style="flex:1;border-left:1px solid var(--brd);overflow-y:auto;" id="eintrag-det">
-          <div class="empty" style="margin-top:60px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px;height:36px;opacity:.25;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <div style="font-size:13px;color:var(--tx3);">Eintrag auswählen</div>
+        <div id="proto-meta" style="flex-shrink:0;"></div>
+        <!-- Einträge/TOPs Bereich -->
+        <div style="flex-shrink:0;padding:8px 16px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);">Tagesordnungspunkte</div>
+            <div id="top-summary" style="font-size:11px;color:var(--tx3);"></div>
           </div>
+          <button class="btn bp" id="btn-add-eintrag" onclick="openEintragModal()" style="font-size:11px;padding:4px 10px;display:none;">+ TOP</button>
         </div>
+        <div style="flex:1;overflow-y:auto;" id="eintraege-list"></div>
       </div>
     </div>
 
@@ -760,12 +746,16 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
       </div>
     </div>
     <div class="fr fr2">
-      <div class="fg"><label class="fl">Uhrzeit</label><input type="time" class="fi" id="bs-u"></div>
-      <div class="fg"><label class="fl">Ort</label><input type="text" class="fi" id="bs-o" placeholder="z.B. Baustelle / Baubüro"></div>
+      <div class="fg"><label class="fl">Uhrzeit von</label><input type="time" class="fi" id="bs-u"></div>
+      <div class="fg"><label class="fl">Uhrzeit bis</label><input type="time" class="fi" id="bs-ub"></div>
     </div>
     <div class="fr fr2">
-      <div class="fg"><label class="fl">Besprechungsleiter</label><input type="text" class="fi" id="bs-l"></div>
+      <div class="fg"><label class="fl">Ort</label><input type="text" class="fi" id="bs-o" placeholder="z.B. Baucontainer"></div>
+      <div class="fg"><label class="fl">Protokollführer</label><input type="text" class="fi" id="bs-l"></div>
+    </div>
+    <div class="fr fr2">
       <div class="fg"><label class="fl">Nächster Termin</label><input type="date" class="fi" id="bs-nt"></div>
+      <div class="fg"></div>
     </div>
     <hr class="fdiv">
     <div style="font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
@@ -1122,53 +1112,47 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
 <!-- MODAL PROTOKOLL EINTRAG -->
 <div class="mo" id="m-pe"><div class="md wide">
   <div class="mh">
-    <div><div class="mht" id="pe-title">Neuer Eintrag</div><div style="font-size:11.5px;color:var(--tx3);margin-top:2px;" id="pe-proto-nm"></div></div>
+    <div><div class="mht" id="pe-title">Neuer TOP</div><div style="font-size:11px;color:var(--tx3);margin-top:2px;" id="pe-proto-nm"></div></div>
     <button class="mc" onclick="cm('m-pe')">✕</button>
   </div>
   <div class="mb">
-    <div class="fr fr1"><div class="fg"><label class="fl">Titel *</label><input type="text" class="fi" id="pe-ti" placeholder="Beschreibung des Punktes …"></div></div>
-    <div class="fr fr1"><div class="fg"><label class="fl">Langtext</label><textarea class="ft" id="pe-lt" style="min-height:90px;" placeholder="Detaillierte Beschreibung …"></textarea></div></div>
+    <div class="fr fr1"><div class="fg"><label class="fl">Betreff / Thema *</label><input type="text" class="fi" id="pe-ti" placeholder="z.B. Bemusterung Fliesen Bad"></div></div>
+    <div class="fr fr1"><div class="fg"><label class="fl">Beschreibung</label><textarea class="ft" id="pe-lt" style="min-height:80px;" placeholder="Detaillierte Beschreibung, Festlegungen, Beschlüsse …"></textarea></div></div>
     <hr class="fdiv">
-    <div class="fr fr2">
-      <div class="fg"><label class="fl">Firma</label>
-        <select class="fs" id="pe-fi">
-          <option value="">— keine —</option>
-        </select>
-      </div>
-      <div class="fg"><label class="fl">Zuständig</label><input type="text" class="fi" id="pe-zu" placeholder="Name der Person"></div>
-    </div>
-    <div class="fr fr2">
+    <div class="fr fr3">
       <div class="fg"><label class="fl">Typ</label>
         <select class="fs" id="pe-typ">
-          <option value="zu_erledigen">Zu erledigen</option>
-          <option value="offen">Offen</option>
-          <option value="info">Info</option>
+          <option value="festlegung">Festlegung</option>
+          <option value="aufgabe">Aufgabe</option>
+          <option value="info">Information</option>
+          <option value="mangel">Mangel</option>
+          <option value="termin">Termin</option>
+          <option value="nachtrag">Nachtrag</option>
         </select>
       </div>
       <div class="fg"><label class="fl">Priorität</label>
         <select class="fs" id="pe-pri">
-          <option value="keine">Keine Priorität</option>
-          <option value="niedrig">🟢 Niedrig</option>
-          <option value="mittel">🟡 Mittel</option>
-          <option value="hoch">🟠 Hoch</option>
-          <option value="kritisch">🔴 Kritisch</option>
+          <option value="keine">Keine</option>
+          <option value="niedrig">Niedrig</option>
+          <option value="mittel">Mittel</option>
+          <option value="hoch">Hoch</option>
+          <option value="kritisch">Kritisch</option>
         </select>
       </div>
+      <div class="fg"><label class="fl">Frist</label><input type="date" class="fi" id="pe-fb"></div>
     </div>
     <div class="fr fr2">
-      <div class="fg"><label class="fl">Gewerk</label><input type="text" class="fi" id="pe-gw" placeholder="z.B. Maurer"></div>
-      <div class="fg"><label class="fl">Lage / Bereich</label><input type="text" class="fi" id="pe-la" placeholder="z.B. EG Küche"></div>
+      <div class="fg"><label class="fl">Verantwortlich (Firma)</label>
+        <select class="fs" id="pe-fi"><option value="">— keine —</option></select>
+      </div>
+      <div class="fg"><label class="fl">Zuständige Person</label><input type="text" class="fi" id="pe-zu" placeholder="Name / Kürzel"></div>
     </div>
     <div class="fr fr2">
-      <div class="fg"><label class="fl">Zu erledigen von</label><input type="date" class="fi" id="pe-fv"></div>
-      <div class="fg"><label class="fl">Zu erledigen bis</label><input type="date" class="fi" id="pe-fb"></div>
-    </div>
-    <div class="fr fr2">
-      <div class="fg"><label class="fl">Kosten exkl. MwSt. €</label><input type="number" class="fi" id="pe-ko" step="0.01" min="0" placeholder="0.00"></div>
-      <div class="fg"></div>
+      <div class="fg"><label class="fl">Gewerk</label><input type="text" class="fi" id="pe-gw" placeholder="z.B. Elektro"></div>
+      <div class="fg"><label class="fl">Lage / Bereich</label><input type="text" class="fi" id="pe-la" placeholder="z.B. OG1 Bad"></div>
     </div>
   </div>
-  <div class="mf"><button class="btn bg" onclick="cm('m-pe')">Abbrechen</button><button class="btn bp" onclick="saveEintrag()">Eintrag speichern</button></div>
+  <div class="mf"><button class="btn bg" onclick="cm('m-pe')">Abbrechen</button><button class="btn bp" onclick="saveEintrag()">TOP speichern</button></div>
 </div></div>
 
 <!-- MODAL BERICHT DETAIL -->
@@ -1959,72 +1943,84 @@ function rBS(){
     const el=document.getElementById('pa-'+k.toLowerCase()+'-nb');
     if(el)el.textContent=artMap[k];
   });
+  // Stats
+  const statsEl=document.getElementById('proto-stats');
+  if(statsEl){
+    const open=BS.filter(b=>!b.abgeschlossen).length;
+    const closed=BS.filter(b=>b.abgeschlossen).length;
+    statsEl.innerHTML=`<div style="display:flex;justify-content:space-between;"><span>Offen</span><span style="font-weight:600;color:var(--ac);">${open}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>Abgeschlossen</span><span style="font-weight:600;color:var(--gn);">${closed}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>Gesamt</span><span style="font-weight:600;">${BS.length}</span></div>`;
+  }
   let arr=BS;
   if(_pArt!=='all')arr=BS.filter(b=>(b.titel||'').startsWith(_pArt+'-'));
+  const cntEl=document.getElementById('proto-count');
+  if(cntEl)cntEl.textContent=arr.length+' Stk';
   if(!arr.length){l.innerHTML=emp('Keine Protokolle.');return;}
+  const colors={BB:'var(--bl)',BE:'var(--gn)',AK:'var(--ac)',AB:'var(--pu)',CL:'var(--tl)'};
+  const bgs={BB:'var(--bldm)',BE:'var(--gndm)',AK:'var(--adm)',AB:'var(--pudm)',CL:'var(--tldm)'};
   l.innerHTML=arr.map(b=>{
     const art=(b.titel||'BB').split('-')[0];
-    const colors={BB:'var(--bl)',BE:'var(--gn)',AK:'var(--ac)',AB:'var(--pu)',CL:'var(--tl)'};
-    const bgs={BB:'var(--bldm)',BE:'var(--gndm)',AK:'var(--adm)',AB:'var(--pudm)',CL:'var(--tldm)'};
     const c=colors[art]||'var(--bl)',bg=bgs[art]||'var(--bldm)';
     const isSel=_curProtoId===b.id;
-    return `<div style="padding:12px 14px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background var(--tr);background:${isSel?'var(--adm)':''};" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='${isSel?'var(--adm)':''}'" onclick="showProtoDet('${b.id}')">
+    return `<div style="padding:10px 12px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background var(--tr);${isSel?'background:var(--adm);border-left:3px solid var(--ac);':''}" onmouseover="if(!${isSel})this.style.background='var(--bg3)'" onmouseout="if(!${isSel})this.style.background=''" onclick="showProtoDet('${b.id}')">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
-        <span style="font-size:10px;font-weight:700;color:${c};background:${bg};padding:1px 5px;border-radius:3px;">${b.titel||'BB-01'}</span>
-        <span style="font-size:10px;color:var(--tx3);">${b.abgeschlossen?'✓ Abgeschlossen':'Offen'}</span>
-        <div style="margin-left:auto;color:${b.abgeschlossen?'var(--ac)':'var(--tx4)'};">
-          <svg viewBox="0 0 24 24" fill="${b.abgeschlossen?'currentColor':'none'}" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="${b.abgeschlossen?'M7 11V7a5 5 0 0 1 10 0v4':'M7 11V7a5 5 0 0 1 10 0v4'}"/></svg>
-        </div>
+        <span style="font-size:9px;font-weight:700;color:${c};background:${bg};padding:1px 5px;border-radius:3px;">${b.titel||'BB-01'}</span>
+        ${b.abgeschlossen?'<span style="font-size:9px;color:var(--gn);font-weight:600;">ABGESCHLOSSEN</span>':''}
       </div>
-      <div style="font-size:13px;font-weight:500;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.ort||'Baubesprechung'}</div>
-      <div style="font-size:11px;color:var(--tx3);">${fd(b.datum)}</div>
+      <div style="font-size:12.5px;font-weight:500;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.ort||b.tagesordnung||'Baubesprechung'}</div>
+      <div style="font-size:10.5px;color:var(--tx3);display:flex;gap:8px;">
+        <span>${fd(b.datum)}</span>
+        ${b.uhrzeit?'<span>'+b.uhrzeit+'</span>':''}
+        ${b.leitung?'<span>'+b.leitung+'</span>':''}
+      </div>
     </div>`;
   }).join('');
 }
 
 async function showProtoDet(id){
   _curProtoId=id;
-  _curEintragId=null;
-  rBS(); // refresh to show selection
+  rBS();
   const b=BS.find(x=>x.id===id);
   if(!b)return;
   const p=PR.find(x=>x.id===b.projekt_id);
-  // Header
+  const titles={BB:'Baubesprechungsprotokoll',BE:'Besprechungsprotokoll',AK:'Aktennotiz',AB:'Abnahmeprotokoll',CL:'Checkliste'};
+  const art=(b.titel||'BB').split('-')[0];
   const hdr=document.getElementById('proto-header');
   hdr.innerHTML=`
     <div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:15px;font-weight:700;">${b.titel||'Protokoll'}</span>
-        ${b.abgeschlossen?'<span style="background:var(--adm);color:var(--ac);font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;">Abgeschlossen</span>':''}
+        <span style="font-size:14px;font-weight:700;letter-spacing:-.2px;">${titles[art]||'Protokoll'}</span>
+        <span style="font-size:11px;font-family:var(--mo);color:var(--tx3);">${b.titel}</span>
+        ${b.abgeschlossen?'<span style="background:var(--gndm);color:var(--gn);font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:10px;">ABGESCHLOSSEN</span>':'<span style="background:var(--bldm);color:var(--bl);font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:10px;">OFFEN</span>'}
       </div>
-      <div style="font-size:11.5px;color:var(--tx3);">${p?p.name+' · ':''}${fd(b.datum)}${b.ort?' · '+b.ort:''}</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:1px;">${p?p.nummer+' · '+p.name:''}</div>
     </div>
-    <div style="display:flex;gap:7px;">
-      <button class="btn bg" onclick="exportProtoPDF('${b.id}')" style="font-size:12px;gap:5px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:12px;height:12px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button>
-      ${!b.abgeschlossen?`<button class="btn bg" onclick="fortschreiben('${b.id}')" style="font-size:12px;gap:5px;">Fortschreiben</button>`:''}
-      ${!b.abgeschlossen?`<button class="btn bg" onclick="schliesseProtokoll('${b.id}')" style="font-size:12px;gap:5px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:12px;height:12px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Abschließen</button>`:''}
-      ${b.abgeschlossen?`<button class="btn bg" onclick="oeffneProtokoll('${b.id}')" style="font-size:12px;color:var(--ac);">Entsperren</button>`:''}
+    <div style="display:flex;gap:5px;">
+      <button class="btn bg" onclick="exportProtoPDF('${b.id}')" style="font-size:11px;">PDF</button>
+      ${!b.abgeschlossen?`<button class="btn bg" onclick="fortschreiben('${b.id}')" style="font-size:11px;">Fortschreiben</button>`:''}
+      ${!b.abgeschlossen?`<button class="btn bg" onclick="schliesseProtokoll('${b.id}')" style="font-size:11px;">Abschließen</button>`:''}
+      ${b.abgeschlossen?`<button class="btn bg" onclick="oeffneProtokoll('${b.id}')" style="font-size:11px;color:var(--ac);">Entsperren</button>`:''}
     </div>`;
-  // Show add button only if not locked
   document.getElementById('btn-add-eintrag').style.display=b.abgeschlossen?'none':'flex';
-  document.getElementById('eintrag-det').innerHTML='<div class="empty" style="margin-top:60px;"><div style="font-size:13px;color:var(--tx3);">Eintrag auswählen</div></div>';
-  // Show teilnehmer + meta
+  // Meta-Block
   const tnDiv=document.getElementById('proto-meta');
   if(tnDiv){
-    let metaH='<div style="padding:10px 14px;border-bottom:1px solid var(--brd);font-size:12px;color:var(--tx2);">';
-    if(b.ort)metaH+=`<span style="margin-right:12px;">📍 ${b.ort}</span>`;
-    if(b.uhrzeit)metaH+=`<span style="margin-right:12px;">🕐 ${b.uhrzeit}</span>`;
-    if(b.leitung)metaH+=`<span style="margin-right:12px;">Leitung: ${b.leitung}</span>`;
-    if(b.naechste_besprechung)metaH+=`<span>Nächster Termin: ${fd(b.naechste_besprechung)}</span>`;
-    metaH+='</div>';
+    let m='<div style="padding:8px 16px;border-bottom:1px solid var(--brd);display:flex;flex-wrap:wrap;gap:16px;font-size:11.5px;color:var(--tx2);background:var(--bg3);">';
+    m+=`<div><span style="color:var(--tx3);">Datum:</span> <b>${fd(b.datum)}</b></div>`;
+    if(b.uhrzeit)m+=`<div><span style="color:var(--tx3);">Uhrzeit:</span> ${b.uhrzeit}${b.uhrzeit_bis?' – '+b.uhrzeit_bis:''}</div>`;
+    if(b.ort)m+=`<div><span style="color:var(--tx3);">Ort:</span> ${b.ort}</div>`;
+    if(b.leitung)m+=`<div><span style="color:var(--tx3);">Leitung:</span> ${b.leitung}</div>`;
+    if(b.naechste_besprechung)m+=`<div><span style="color:var(--tx3);">Nächster Termin:</span> <b>${fd(b.naechste_besprechung)}</b></div>`;
+    m+='</div>';
     if(b.teilnehmer&&b.teilnehmer.length){
-      metaH+='<div style="padding:8px 14px;border-bottom:1px solid var(--brd);display:flex;flex-wrap:wrap;gap:4px;">';
-      b.teilnehmer.forEach(tn=>{metaH+=`<span style="font-size:11px;padding:2px 8px;background:var(--bg3);border-radius:10px;color:var(--tx2);">${tn}</span>`;});
-      metaH+='</div>';
+      m+='<div style="padding:6px 16px;border-bottom:1px solid var(--brd);display:flex;flex-wrap:wrap;gap:4px;align-items:center;">';
+      m+='<span style="font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-right:6px;">Teilnehmer:</span>';
+      b.teilnehmer.forEach(tn=>{m+=`<span style="font-size:10.5px;padding:1px 7px;background:var(--bg3);border:1px solid var(--brd);border-radius:10px;color:var(--tx2);">${tn}</span>`;});
+      m+='</div>';
     }
-    tnDiv.innerHTML=metaH;
+    tnDiv.innerHTML=m;
   }
-  // Load eintraege
   await loadEintraege(id);
 }
 
@@ -2036,65 +2032,86 @@ async function loadEintraege(bId){
 
 function renderEintraege(){
   const l=document.getElementById('eintraege-list');
-  if(!PE.length){l.innerHTML=emp('Noch keine Einträge. Klicke auf + Eintrag.');return;}
-  const typCol={zu_erledigen:'var(--rd)',offen:'var(--ac)',info:'var(--bl)',erledigt:'var(--gn)'};
-  const typLbl={zu_erledigen:'Zu erledigen',offen:'Offen',info:'Info',erledigt:'Erledigt'};
-  l.innerHTML=PE.map(e=>{
-    const isSel=_curEintragId===e.id;
-    return `<div style="padding:12px 14px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background var(--tr);background:${isSel?'var(--adm)':''};" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='${isSel?'var(--adm)':''}'" onclick="showEintrag('${e.id}')">
-      <div style="display:flex;align-items:flex-start;gap:8px;">
-        <div onclick="event.stopPropagation();toggleEintragErledigt('${e.id}',${!e.erledigt})" style="margin-top:2px;flex-shrink:0;">
-          <div style="width:16px;height:16px;border-radius:4px;border:2px solid ${e.erledigt?'var(--gn)':'var(--brd2)'};background:${e.erledigt?'var(--gn)':'transparent'};display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;">
-            ${e.erledigt?'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" style="width:10px;height:10px;"><polyline points="20 6 9 17 4 12"/></svg>':''}
-          </div>
-        </div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:500;${e.erledigt?'text-decoration:line-through;color:var(--tx3);':''}white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.titel}</div>
-          <div style="font-size:11px;color:var(--tx3);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;">
-            ${e.firma?`<span>${e.firma}</span>`:''}
-            ${e.gewerk?`<span>⚙ ${e.gewerk}</span>`:''}
-            ${e.faellig_bis?`<span>bis ${fd(e.faellig_bis)}</span>`:''}
-          </div>
-        </div>
-        <div style="flex-shrink:0;">
-          <span style="font-size:10px;font-weight:600;color:${typCol[e.typ]||'var(--tx3)'};background:${typCol[e.typ]||'var(--tx3)'}22;padding:2px 6px;border-radius:20px;">${typLbl[e.typ]||e.typ}</span>
+  if(!PE.length){l.innerHTML=emp('Noch keine TOPs. Klicke auf "+ TOP".');return;}
+  const typCol={festlegung:'var(--bl)',aufgabe:'var(--ac)',info:'var(--tx3)',mangel:'var(--rd)',termin:'var(--pu)',nachtrag:'var(--or)',zu_erledigen:'var(--ac)',offen:'var(--ac)',allgemein:'var(--tx3)'};
+  const typLbl={festlegung:'Festlegung',aufgabe:'Aufgabe',info:'Info',mangel:'Mangel',termin:'Termin',nachtrag:'Nachtrag',zu_erledigen:'Aufgabe',offen:'Offen',allgemein:'Allgemein'};
+  // Summary
+  const open=PE.filter(e=>!e.erledigt).length,done=PE.filter(e=>e.erledigt).length;
+  const overdue=PE.filter(e=>!e.erledigt&&e.faellig_bis&&new Date(e.faellig_bis)<new Date()).length;
+  const sumEl=document.getElementById('top-summary');
+  if(sumEl)sumEl.innerHTML=`<span style="color:var(--ac);">${open} offen</span>${overdue?` · <span style="color:var(--rd);font-weight:600;">${overdue} überfällig</span>`:''} · <span style="color:var(--gn);">${done} erledigt</span>`;
+
+  // Table header
+  let h=`<div style="display:grid;grid-template-columns:40px 32px 1fr 110px 90px 70px 50px;padding:5px 12px;background:var(--bg3);border-bottom:1px solid var(--brd);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);position:sticky;top:0;z-index:1;">
+    <div>Nr.</div><div></div><div>Betreff</div><div>Verantwortlich</div><div>Frist</div><div>Typ</div><div>Status</div>
+  </div>`;
+  h+=PE.map((e,i)=>{
+    const isOverdue=!e.erledigt&&e.faellig_bis&&new Date(e.faellig_bis)<new Date();
+    const tc=typCol[e.typ]||'var(--tx3)';
+    const fromOther=e.uebertrag_aus||e.erstellt_in;
+    return `<div style="display:grid;grid-template-columns:40px 32px 1fr 110px 90px 70px 50px;padding:6px 12px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background .1s;align-items:center;font-size:12px;${e.erledigt?'opacity:.5;':''}" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''" onclick="showEintrag('${e.id}')">
+      <div style="font-family:var(--mo);font-size:10px;color:var(--tx3);">${e.top_nr||String(i+1)}</div>
+      <div onclick="event.stopPropagation();toggleEintragErledigt('${e.id}',${!e.erledigt})" style="cursor:pointer;">
+        <div style="width:15px;height:15px;border-radius:3px;border:1.5px solid ${e.erledigt?'var(--gn)':'var(--brd2)'};background:${e.erledigt?'var(--gn)':'transparent'};display:flex;align-items:center;justify-content:center;">
+          ${e.erledigt?'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" style="width:9px;height:9px;"><polyline points="20 6 9 17 4 12"/></svg>':''}
         </div>
       </div>
+      <div style="min-width:0;">
+        <div style="font-size:12px;font-weight:500;${e.erledigt?'text-decoration:line-through;color:var(--tx3);':''}white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.titel}</div>
+        ${fromOther?`<div style="font-size:9px;color:var(--tx4);margin-top:1px;">Übertrag: ${fromOther}</div>`:''}
+      </div>
+      <div style="font-size:11px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.firma||e.zustaendig||'—'}</div>
+      <div style="font-size:10.5px;font-family:var(--mo);color:${isOverdue?'var(--rd)':'var(--tx3)'};font-weight:${isOverdue?'700':'400'};">${e.faellig_bis?fd(e.faellig_bis):'—'}</div>
+      <div><span style="font-size:9px;font-weight:600;color:${tc};background:${tc}15;padding:1px 5px;border-radius:8px;">${typLbl[e.typ]||e.typ||'—'}</span></div>
+      <div>${e.erledigt?'<span style="font-size:9px;color:var(--gn);font-weight:600;">✓</span>':isOverdue?'<span style="font-size:9px;color:var(--rd);font-weight:700;">!</span>':'<span style="font-size:9px;color:var(--tx4);">○</span>'}</div>
     </div>`;
   }).join('');
+  l.innerHTML=h;
 }
 
 function showEintrag(id){
-  _curEintragId=id;
-  renderEintraege();
+  // Detail inline in a modal overlay
   const e=PE.find(x=>x.id===id);
   if(!e)return;
+  const typCol={festlegung:'var(--bl)',aufgabe:'var(--ac)',info:'var(--tx3)',mangel:'var(--rd)',termin:'var(--pu)',nachtrag:'var(--or)',zu_erledigen:'var(--ac)',offen:'var(--ac)',allgemein:'var(--tx3)'};
+  const typLbl={festlegung:'Festlegung',aufgabe:'Aufgabe',info:'Information',mangel:'Mangel',termin:'Termin',nachtrag:'Nachtrag',zu_erledigen:'Aufgabe',offen:'Offen',allgemein:'Allgemein'};
   const priCol={keine:'var(--tx3)',niedrig:'var(--gn)',mittel:'var(--ac)',hoch:'var(--or)',kritisch:'var(--rd)'};
-  const priLbl={keine:'Keine Priorität',niedrig:'Niedrig',mittel:'Mittel',hoch:'Hoch',kritisch:'Kritisch'};
-  const typLbl={zu_erledigen:'Zu erledigen',offen:'Offen',info:'Info',erledigt:'Erledigt'};
-  document.getElementById('eintrag-det').innerHTML=`
-    <div style="padding:16px 20px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;">
-      <div style="font-size:11px;color:var(--tx3);">Eintrag ${e.nummer||''}</div>
-      <div style="display:flex;gap:7px;">
-        <button class="btn bg" onclick="deleteEintrag('${e.id}')" style="font-size:11.5px;color:var(--rd);">Löschen</button>
-        <button class="btn bp" onclick="toggleEintragErledigt('${e.id}',${!e.erledigt})" style="font-size:11.5px;">${e.erledigt?'🔓 Wieder öffnen':'✓ Erledigt'}</button>
+  const priLbl={keine:'—',niedrig:'Niedrig',mittel:'Mittel',hoch:'Hoch',kritisch:'Kritisch'};
+  const isOverdue=!e.erledigt&&e.faellig_bis&&new Date(e.faellig_bis)<new Date();
+  const tc=typCol[e.typ]||'var(--tx3)';
+  // Build detail modal
+  const html=`<div class="mo open" id="top-detail-modal" onclick="if(event.target===this)this.remove()">
+    <div class="md" style="width:560px;">
+      <div class="mh">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="mht">${e.titel}</span>
+            <span style="font-size:9px;font-weight:600;color:${tc};background:${tc}15;padding:2px 6px;border-radius:8px;">${typLbl[e.typ]||e.typ}</span>
+          </div>
+          <div style="font-size:10.5px;color:var(--tx3);margin-top:2px;">TOP ${e.top_nr||e.nummer||''} ${e.uebertrag_aus?'· Übertrag: '+e.uebertrag_aus:''}</div>
+        </div>
+        <button class="mc" onclick="document.getElementById('top-detail-modal').remove()">✕</button>
+      </div>
+      <div class="mb">
+        ${e.langtext?`<div style="font-size:13px;line-height:1.7;color:var(--tx2);margin-bottom:14px;white-space:pre-wrap;padding:10px 12px;background:var(--bg3);border-radius:var(--r);">${e.langtext}</div>`:''}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          ${e.firma?`<div class="di"><div class="dl">Firma</div><div class="dv">${e.firma}</div></div>`:''}
+          ${e.zustaendig?`<div class="di"><div class="dl">Zuständig</div><div class="dv">${e.zustaendig}</div></div>`:''}
+          <div class="di"><div class="dl">Status</div><div class="dv" style="color:${e.erledigt?'var(--gn)':isOverdue?'var(--rd)':'var(--ac)'};">${e.erledigt?'Erledigt':isOverdue?'Überfällig':'Offen'}</div></div>
+          <div class="di"><div class="dl">Priorität</div><div class="dv" style="color:${priCol[e.prioritaet]||'var(--tx)'};">${priLbl[e.prioritaet]||'—'}</div></div>
+          ${e.gewerk?`<div class="di"><div class="dl">Gewerk</div><div class="dv">${e.gewerk}</div></div>`:''}
+          ${e.lage?`<div class="di"><div class="dl">Lage / Bereich</div><div class="dv">${e.lage}</div></div>`:''}
+          ${e.faellig_bis?`<div class="di"><div class="dl">Frist</div><div class="dv" style="color:${isOverdue?'var(--rd)':'var(--tx)'};">${fd(e.faellig_bis)}${isOverdue?' — ÜBERFÄLLIG':''}</div></div>`:''}
+          ${e.erledigt_am?`<div class="di"><div class="dl">Erledigt am</div><div class="dv">${fd(e.erledigt_am)}</div></div>`:''}
+        </div>
+      </div>
+      <div class="mf">
+        <button class="btn bg" onclick="deleteEintrag('${e.id}');document.getElementById('top-detail-modal').remove();" style="font-size:11px;color:var(--rd);">Löschen</button>
+        <button class="btn bp" onclick="toggleEintragErledigt('${e.id}',${!e.erledigt});document.getElementById('top-detail-modal').remove();" style="font-size:11px;">${e.erledigt?'Wieder öffnen':'Als erledigt markieren'}</button>
       </div>
     </div>
-    <div style="padding:18px 20px;">
-      <div style="font-size:17px;font-weight:700;margin-bottom:10px;letter-spacing:-.3px;${e.erledigt?'text-decoration:line-through;color:var(--tx3);':''}">${e.titel}</div>
-      ${e.langtext?`<div style="font-size:13.5px;line-height:1.7;color:var(--tx2);margin-bottom:16px;white-space:pre-wrap;">${e.langtext}</div>`:''}
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-        ${e.firma?`<div class="di"><div class="dl">Firma</div><div class="dv">${e.firma}</div></div>`:''}
-        ${e.zustaendig?`<div class="di"><div class="dl">Zuständig</div><div class="dv">${e.zustaendig}</div></div>`:''}
-        <div class="di"><div class="dl">Typ</div><div class="dv">${typLbl[e.typ]||e.typ}</div></div>
-        <div class="di"><div class="dl">Priorität</div><div class="dv" style="color:${priCol[e.prioritaet]||'var(--tx)'};">${priLbl[e.prioritaet]||e.prioritaet}</div></div>
-        ${e.gewerk?`<div class="di"><div class="dl">Gewerk</div><div class="dv">${e.gewerk}</div></div>`:''}
-        ${e.lage?`<div class="di"><div class="dl">Lage</div><div class="dv">${e.lage}</div></div>`:''}
-        ${e.faellig_von?`<div class="di"><div class="dl">Von</div><div class="dv">${fd(e.faellig_von)}</div></div>`:''}
-        ${e.faellig_bis?`<div class="di"><div class="dl">Bis</div><div class="dv" style="color:var(--rd);">${fd(e.faellig_bis)}</div></div>`:''}
-        ${e.kosten?`<div class="di"><div class="dl">Kosten exkl. MwSt.</div><div class="dv">€ ${parseFloat(e.kosten).toFixed(2)}</div></div>`:''}
-      </div>
-    </div>`;
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
 }
 
 async function toggleEintragErledigt(id,val){
@@ -2120,26 +2137,28 @@ function openEintragModal(){
   if(!_curProtoId){toast('Bitte zuerst ein Protokoll auswählen!',false);return;}
   const b=BS.find(x=>x.id===_curProtoId);
   document.getElementById('pe-proto-nm').textContent=b?b.titel+' · '+fd(b.datum):'';
-  const cnt=PE.length+1;
-  document.getElementById('pe-title').textContent='Neuer Eintrag '+( b?b.titel.split('-')[0]:'')+'-'+String(cnt).padStart(3,'0');
-  // Fill firma dropdown from KT
+  const topNr=String(PE.length+1);
+  document.getElementById('pe-title').textContent='Neuer TOP '+topNr;
   const sel=document.getElementById('pe-fi');
   sel.innerHTML='<option value="">— keine —</option>'+KT.filter(k=>k.typ==='firma').map(k=>`<option value="${k.nachname}">${k.nachname}</option>`).join('');
-  ['pe-ti','pe-lt','pe-zu','pe-gw','pe-la','pe-fv','pe-fb','pe-ko'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('pe-typ').value='zu_erledigen';
+  ['pe-ti','pe-lt','pe-zu','pe-gw','pe-la','pe-fb'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('pe-typ').value='festlegung';
   document.getElementById('pe-pri').value='keine';
   om('m-pe');
 }
 
 async function saveEintrag(){
   const ti=document.getElementById('pe-ti').value.trim();
-  if(!ti){toast('Titel erforderlich.',false);return;}
-  const cnt=PE.length+1;
+  if(!ti){toast('Betreff erforderlich.',false);return;}
+  const topNr=String(PE.length+1);
   const b=BS.find(x=>x.id===_curProtoId);
-  const nr=(b?b.titel.split('-')[0]:'BB')+'-'+String(cnt).padStart(3,'0');
+  // Laufende Nummer projektübergreifend
+  const{data:maxLfd}=await sb.from('protokoll_eintraege').select('lfd_nr').eq('projekt_id',CPId).order('lfd_nr',{ascending:false}).limit(1);
+  const lfdNr=(maxLfd&&maxLfd.length?maxLfd[0].lfd_nr||0:0)+1;
   const{error}=await sb.from('protokoll_eintraege').insert({
     user_id:CU.id, besprechung_id:_curProtoId, projekt_id:CPId,
-    nummer:nr, titel:ti,
+    top_nr:topNr, lfd_nr:lfdNr,
+    nummer:topNr, titel:ti,
     langtext:document.getElementById('pe-lt').value,
     firma:document.getElementById('pe-fi').value,
     zustaendig:document.getElementById('pe-zu').value,
@@ -2147,14 +2166,14 @@ async function saveEintrag(){
     prioritaet:document.getElementById('pe-pri').value,
     gewerk:document.getElementById('pe-gw').value,
     lage:document.getElementById('pe-la').value,
-    faellig_von:document.getElementById('pe-fv').value||null,
     faellig_bis:document.getElementById('pe-fb').value||null,
-    kosten:parseFloat(document.getElementById('pe-ko').value)||null
+    erstellt_in_protokoll_id:_curProtoId,
+    status:'offen'
   });
   if(error){toast('Fehler: '+error.message,false);return;}
   cm('m-pe');
   await loadEintraege(_curProtoId);
-  toast('Eintrag gespeichert!');
+  toast('TOP '+topNr+' gespeichert!');
 }
 
 async function openBS(){
@@ -2165,7 +2184,7 @@ async function openBS(){
   const typ=_pArt==='all'?'BB':_pArt;
   document.getElementById('bs-typ').value=typ;
   updateBsNr();
-  ['bs-u','bs-o','bs-l','bs-th','bs-be','bs-ns','bs-nt'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['bs-u','bs-ub','bs-o','bs-l','bs-th','bs-nt'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   om('m-bs');
   await loadTeilnehmerListe();
 }
@@ -2243,12 +2262,11 @@ async function saveBesprechung(){
   const{data,error}=await sb.from('baubesprechungen').insert({
     user_id:CU.id, projekt_id:CPId, titel:nr, datum,
     uhrzeit:document.getElementById('bs-u').value||null,
+    uhrzeit_bis:document.getElementById('bs-ub').value||null,
     ort:document.getElementById('bs-o').value,
     leitung:document.getElementById('bs-l').value,
     teilnehmer:checkedNames,
     tagesordnung:themen,
-    protokoll:document.getElementById('bs-be').value,
-    massnahmen:document.getElementById('bs-ns').value,
     naechste_besprechung:document.getElementById('bs-nt').value||null
   }).select().single();
   if(error){toast('Fehler: '+error.message,false);return;}
@@ -2295,125 +2313,203 @@ async function oeffneProtokoll(id){
   toast('Protokoll entsperrt.');
 }
 
-// Fortschreibung: offene Einträge ins nächste Protokoll übernehmen
+// Fortschreibung: offene Einträge ins nächste Protokoll übernehmen (ÖNORM B 2110)
 async function fortschreiben(fromId){
   const fromB=BS.find(x=>x.id===fromId);
   if(!fromB){toast('Protokoll nicht gefunden',false);return;}
-  // Load einträge des aktuellen Protokolls
   const{data:eintraege}=await sb.from('protokoll_eintraege').select('*').eq('besprechung_id',fromId).order('created_at');
   const offene=(eintraege||[]).filter(e=>!e.erledigt);
-  if(!offene.length){toast('Keine offenen Einträge zum Fortschreiben.',false);return;}
-  if(!confirm(offene.length+' offene Einträge ins nächste Protokoll übernehmen?'))return;
-  // Create new Protokoll
+  if(!offene.length){toast('Keine offenen Punkte zum Fortschreiben.',false);return;}
+  if(!confirm(`${offene.length} offene Punkte in neues Protokoll übernehmen?\n\nDas aktuelle Protokoll wird abgeschlossen.`))return;
   const typ=(fromB.titel||'BB').split('-')[0];
   const cnt=BS.filter(b=>(b.titel||'').startsWith(typ+'-')).length+1;
   const nr=typ+'-'+String(cnt).padStart(2,'0');
   const{data:newP,error}=await sb.from('baubesprechungen').insert({
     user_id:CU.id,projekt_id:CPId,titel:nr,datum:new Date().toISOString().split('T')[0],
     ort:fromB.ort,leitung:fromB.leitung,teilnehmer:fromB.teilnehmer,
-    tagesordnung:'Fortschreibung von '+fromB.titel
+    tagesordnung:'Fortschreibung aus '+fromB.titel+' — '+offene.length+' offene Punkte übernommen'
   }).select().single();
   if(error||!newP){toast('Fehler: '+(error?.message||''),false);return;}
-  // Copy offene Einträge
+  // Offene Punkte übernehmen mit Übertrag-Referenz und original lfd_nr
   const inserts=offene.map((e,i)=>({
     user_id:CU.id,besprechung_id:newP.id,projekt_id:CPId,
-    nummer:typ+'-'+String(i+1).padStart(3,'0'),
+    top_nr:String(i+1),nummer:String(i+1),
+    lfd_nr:e.lfd_nr, // Original laufende Nummer beibehalten!
     titel:e.titel,langtext:e.langtext,firma:e.firma,zustaendig:e.zustaendig,
     typ:e.typ,prioritaet:e.prioritaet,gewerk:e.gewerk,lage:e.lage,
-    faellig_von:e.faellig_von,faellig_bis:e.faellig_bis,kosten:e.kosten,
-    erstellt_in:'Aus '+fromB.titel
+    faellig_bis:e.faellig_bis,
+    erstellt_in_protokoll_id:e.erstellt_in_protokoll_id||fromId,
+    uebertrag_aus:fromB.titel,
+    status:'offen'
   }));
   await sb.from('protokoll_eintraege').insert(inserts);
-  // Close old
   await sb.from('baubesprechungen').update({abgeschlossen:true}).eq('id',fromId);
   await loadBS();rBS();showProtoDet(newP.id);
-  toast(nr+' erstellt mit '+offene.length+' offenen Punkten!');
+  toast(nr+' erstellt — '+offene.length+' Punkte übernommen!');
 }
 
-// PDF Export Protokoll
+// PDF Export Protokoll — ÖNORM B 2110 konform
 async function exportProtoPDF(id){
   if(!window.jspdf||!window.jspdf.jsPDF){toast('PDF-Bibliothek lädt...',false);return;}
   const{jsPDF}=window.jspdf;
-  const b=BS.find(x=>x.id===id);
-  if(!b)return;
+  const b=BS.find(x=>x.id===id);if(!b)return;
   const p=PR.find(x=>x.id===b.projekt_id);
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const m=15;const pw=210;const usW=pw-2*m;
-  // Header
-  doc.setFontSize(16);doc.setFont(undefined,'bold');
-  const titles={BB:'Baubesprechungsprotokoll',BE:'Besprechungsprotokoll',AK:'Aktennotiz',AB:'Abnahmeprotokoll',CL:'Checkliste'};
+  const m=15,pw=210,usW=pw-2*m;
+  const titles={BB:'BAUBESPRECHUNGSPROTOKOLL',BE:'BESPRECHUNGSPROTOKOLL',AK:'AKTENNOTIZ',AB:'ABNAHMEPROTOKOLL',CL:'CHECKLISTE'};
   const typ=(b.titel||'BB').split('-')[0];
-  doc.text(titles[typ]||'Protokoll',m,m+7);
-  doc.setFontSize(10);doc.setFont(undefined,'normal');doc.setTextColor(100);
-  doc.text(b.titel||'',m+usW,m+7,{align:'right'});
-  doc.setTextColor(0);
-  // Meta
-  let y=m+16;
-  doc.setFontSize(9);
-  doc.setDrawColor(200);doc.setLineWidth(0.2);
-  const meta=[
-    ['Projekt',p?p.nummer+' — '+p.name:''],
-    ['Datum',fd(b.datum)+(b.uhrzeit?' · '+b.uhrzeit:'')],
-    ['Ort',b.ort||''],
-    ['Leitung',b.leitung||''],
+  let y=m;
+  const pageNum=()=>doc.internal.getNumberOfPages();
+  function addFooter(){
+    doc.setFontSize(6);doc.setTextColor(150);
+    doc.text('BauDoku Pro — '+b.titel+' — Seite '+doc.internal.getCurrentPageInfo().pageNumber,m,290);
+    doc.text(new Date().toLocaleDateString('de-DE'),pw-m,290,{align:'right'});
+    doc.setTextColor(0);
+  }
+  function checkPage(need){if(y+need>272){addFooter();doc.addPage();y=m+5;}}
+
+  // ── HEADER ──
+  doc.setFillColor(35,40,47);doc.rect(m,y,usW,14,'F');
+  doc.setFontSize(12);doc.setFont(undefined,'bold');doc.setTextColor(255);
+  doc.text(titles[typ]||'PROTOKOLL',m+4,y+9);
+  doc.setFontSize(10);doc.setFont(undefined,'normal');
+  doc.text(b.titel||'',m+usW-4,y+9,{align:'right'});
+  doc.setTextColor(0);y+=18;
+
+  // ── META-TABELLE ──
+  doc.setFontSize(8.5);doc.setDrawColor(200);doc.setLineWidth(0.15);
+  const metaRows=[
+    ['Projekt',p?p.nummer+' — '+p.name:'—'],
+    ['Datum / Uhrzeit',fd(b.datum)+(b.uhrzeit?' · '+b.uhrzeit+(b.uhrzeit_bis?' – '+b.uhrzeit_bis:''):'')],
+    ['Ort',b.ort||'—'],
+    ['Protokollführer',b.leitung||'—'],
     ['Nächster Termin',b.naechste_besprechung?fd(b.naechste_besprechung):'—']
   ];
-  meta.forEach(([lbl,val])=>{
-    doc.setFont(undefined,'bold');doc.text(lbl+':',m,y);
-    doc.setFont(undefined,'normal');doc.text(val,m+35,y);
-    y+=5;
+  metaRows.forEach(([lbl,val])=>{
+    doc.setFillColor(248,248,248);doc.rect(m,y-3,38,6,'F');
+    doc.setFont(undefined,'bold');doc.setTextColor(80);doc.text(lbl,m+2,y);
+    doc.setFont(undefined,'normal');doc.setTextColor(0);doc.text(val,m+40,y);
+    doc.line(m,y+2,m+usW,y+2);y+=6;
   });
-  // Teilnehmer
+
+  // ── TEILNEHMER ──
   if(b.teilnehmer&&b.teilnehmer.length){
     y+=2;
-    doc.setFont(undefined,'bold');doc.text('Teilnehmer:',m,y);y+=5;
-    doc.setFont(undefined,'normal');doc.setFontSize(8);
-    b.teilnehmer.forEach(tn=>{doc.text('• '+tn,m+5,y);y+=4;});
-    y+=2;
+    doc.setFontSize(9);doc.setFont(undefined,'bold');doc.text('TEILNEHMER',m,y);y+=5;
+    doc.setFontSize(7.5);
+    // Teilnehmer-Tabelle Header
+    doc.setFillColor(240,240,240);doc.rect(m,y-3,usW,5,'F');
+    doc.setFont(undefined,'bold');doc.setTextColor(80);
+    doc.text('Name / Firma',m+2,y);doc.text('Anwesend',m+usW-20,y);
+    doc.setTextColor(0);y+=5;
+    doc.setFont(undefined,'normal');
+    b.teilnehmer.forEach(tn=>{
+      checkPage(5);
+      doc.text(tn,m+2,y);doc.text('✓',m+usW-15,y);
+      doc.setDrawColor(235);doc.line(m,y+1.5,m+usW,y+1.5);y+=4.5;
+    });
+    y+=3;
   }
-  // Trennlinie
-  doc.setDrawColor(0);doc.setLineWidth(0.5);doc.line(m,y,m+usW,y);y+=6;
-  // Tagesordnung
-  if(b.tagesordnung){
-    doc.setFontSize(10);doc.setFont(undefined,'bold');doc.text('Tagesordnung',m,y);y+=5;
-    doc.setFontSize(8);doc.setFont(undefined,'normal');
-    const lines=doc.splitTextToSize(b.tagesordnung,usW);
-    doc.text(lines,m,y);y+=lines.length*4+4;
-  }
-  // Einträge laden und drucken
+
+  // ── EINTRÄGE / TOPS ──
   const{data:eintraege}=await sb.from('protokoll_eintraege').select('*').eq('besprechung_id',id).order('created_at');
   if(eintraege&&eintraege.length){
-    doc.setFontSize(10);doc.setFont(undefined,'bold');doc.text('Einträge / TOPs',m,y);y+=6;
+    const offene=eintraege.filter(e=>!e.erledigt);
+    const erledigte=eintraege.filter(e=>e.erledigt);
+    const uebertragen=eintraege.filter(e=>e.uebertrag_aus);
+    const neue=eintraege.filter(e=>!e.uebertrag_aus);
+
+    // Zusammenfassung
+    checkPage(12);
+    doc.setDrawColor(0);doc.setLineWidth(0.4);doc.line(m,y,m+usW,y);y+=5;
+    doc.setFontSize(8);doc.setFont(undefined,'bold');
+    doc.text('ZUSAMMENFASSUNG:',m,y);
+    doc.setFont(undefined,'normal');
+    doc.text(`${eintraege.length} TOPs gesamt · ${offene.length} offen · ${erledigte.length} erledigt`,m+40,y);
+    const overdue=offene.filter(e=>e.faellig_bis&&new Date(e.faellig_bis)<new Date());
+    if(overdue.length){doc.setTextColor(200,0,0);doc.text(` · ${overdue.length} überfällig`,m+115,y);doc.setTextColor(0);}
+    y+=6;
+    doc.setLineWidth(0.4);doc.line(m,y-2,m+usW,y-2);y+=3;
+
+    // Übertragene Punkte
+    if(uebertragen.length){
+      checkPage(10);
+      doc.setFontSize(9);doc.setFont(undefined,'bold');doc.setTextColor(100,50,0);
+      doc.text('OFFENE PUNKTE AUS VORHERIGEN SITZUNGEN',m,y);
+      doc.setTextColor(0);y+=5;
+      renderPDFTops(doc,uebertragen,m,usW,true);
+    }
+    // Neue Punkte
+    if(neue.length){
+      checkPage(10);
+      doc.setFontSize(9);doc.setFont(undefined,'bold');
+      doc.text('TAGESORDNUNGSPUNKTE',m,y);y+=5;
+      renderPDFTops(doc,neue,m,usW,false);
+    }
+  }
+
+  function renderPDFTops(doc,items,m,usW,isUebertrag){
     // Table header
-    doc.setFillColor(240,240,240);doc.rect(m,y-3,usW,6,'F');
-    doc.setFontSize(7);doc.setFont(undefined,'bold');doc.setTextColor(80);
-    doc.text('Nr.',m+1,y);doc.text('Thema',m+15,y);doc.text('Zuständig',m+100,y);
-    doc.text('Frist',m+130,y);doc.text('Status',m+155,y);y+=5;
-    doc.setTextColor(0);doc.setFont(undefined,'normal');doc.setFontSize(7.5);
-    eintraege.forEach(e=>{
-      if(y>270){doc.addPage();y=m+5;}
-      const stLbl=e.erledigt?'Erledigt':e.typ==='zu_erledigen'?'Zu erledigen':e.typ==='info'?'Info':'Offen';
-      doc.setFont(undefined,'bold');doc.text(e.nummer||'',m+1,y);
+    doc.setFillColor(240,240,240);doc.rect(m,y-3,usW,5.5,'F');
+    doc.setFontSize(6.5);doc.setFont(undefined,'bold');doc.setTextColor(80);
+    doc.text('TOP',m+1,y);doc.text('Lfd.',m+10,y);
+    doc.text('Betreff',m+20,y);doc.text('Verantwortlich',m+105,y);
+    doc.text('Frist',m+140,y);doc.text('Status',m+160,y);
+    doc.setTextColor(0);y+=5;
+    doc.setFont(undefined,'normal');doc.setFontSize(7.5);
+    items.forEach((e,i)=>{
+      checkPage(14);
+      const isOverdue=!e.erledigt&&e.faellig_bis&&new Date(e.faellig_bis)<new Date();
+      // TOP row
+      doc.setFont(undefined,'bold');doc.text(e.top_nr||String(i+1),m+1,y);
       doc.setFont(undefined,'normal');
-      doc.text((e.titel||'').substring(0,45),m+15,y);
-      doc.text((e.zustaendig||e.firma||'').substring(0,20),m+100,y);
-      doc.text(e.faellig_bis?fd(e.faellig_bis):'—',m+130,y);
-      if(e.erledigt){doc.setTextColor(0,150,0);}else{doc.setTextColor(200,0,0);}
-      doc.text(stLbl,m+155,y);doc.setTextColor(0);
-      y+=4;
+      doc.setFontSize(6.5);doc.setTextColor(100);doc.text(e.lfd_nr?'#'+e.lfd_nr:'',m+10,y);doc.setTextColor(0);doc.setFontSize(7.5);
+      doc.setFont(undefined,'bold');doc.text((e.titel||'').substring(0,48),m+20,y);
+      doc.setFont(undefined,'normal');
+      doc.text((e.firma||e.zustaendig||'').substring(0,22),m+105,y);
+      doc.text(e.faellig_bis?fd(e.faellig_bis):'—',m+140,y);
+      // Status mit Farbe
+      if(e.erledigt){doc.setTextColor(0,150,0);doc.text('ERLEDIGT',m+160,y);}
+      else if(isOverdue){doc.setTextColor(200,0,0);doc.setFont(undefined,'bold');doc.text('ÜBERFÄLLIG',m+160,y);}
+      else{doc.setTextColor(200,120,0);doc.text('OFFEN',m+160,y);}
+      doc.setTextColor(0);doc.setFont(undefined,'normal');y+=4;
+      // Langtext
       if(e.langtext){
-        doc.setFontSize(6.5);doc.setTextColor(100);
-        const lt=doc.splitTextToSize(e.langtext,usW-18);
-        lt.slice(0,4).forEach(l=>{doc.text(l,m+15,y);y+=3;});
-        doc.setTextColor(0);doc.setFontSize(7.5);
+        doc.setFontSize(6.5);doc.setTextColor(80);
+        const lt=doc.splitTextToSize(e.langtext,usW-22);
+        lt.slice(0,5).forEach(l=>{checkPage(3.5);doc.text(l,m+20,y);y+=3;});
+        doc.setTextColor(0);doc.setFontSize(7.5);y+=1;
+      }
+      // Übertrag-Info
+      if(isUebertrag&&e.uebertrag_aus){
+        doc.setFontSize(6);doc.setTextColor(150);doc.text('Übertrag aus: '+e.uebertrag_aus,m+20,y);doc.setTextColor(0);doc.setFontSize(7.5);y+=3;
       }
       doc.setDrawColor(230);doc.line(m,y,m+usW,y);y+=3;
     });
+    y+=2;
   }
-  // Footer
-  doc.setFontSize(6);doc.setTextColor(150);
-  doc.text('BauDoku Pro — '+b.titel,m,290);
-  doc.text(new Date().toLocaleDateString('de-DE'),pw-m,290,{align:'right'});
+
+  // ── UNTERSCHRIFTEN ──
+  checkPage(30);
+  y+=5;
+  doc.setDrawColor(0);doc.setLineWidth(0.3);doc.line(m,y,m+usW,y);y+=6;
+  doc.setFontSize(8);doc.setFont(undefined,'bold');doc.text('UNTERSCHRIFTEN',m,y);y+=8;
+  doc.setFont(undefined,'normal');doc.setFontSize(7.5);
+  const sigW=(usW-10)/2;
+  doc.line(m,y+8,m+sigW,y+8);doc.line(m+sigW+10,y+8,m+usW,y+8);
+  doc.text('Bauherr / Auftraggeber',m,y+12);doc.text('Protokollführer / ÖBA',m+sigW+10,y+12);
+  y+=18;
+  doc.line(m,y+8,m+sigW,y+8);doc.line(m+sigW+10,y+8,m+usW,y+8);
+  doc.text('Datum, Ort',m,y+12);doc.text('Datum, Ort',m+sigW+10,y+12);
+
+  // ── VERTEILER + EINSPRUCHSFRIST ──
+  y+=20;checkPage(12);
+  doc.setFontSize(7);doc.setTextColor(100);
+  doc.text('Verteiler: Alle Teilnehmer, Projektablage',m,y);y+=4;
+  doc.text('Einspruchsfrist: 14 Kalendertage nach Versand (gemäß ÖNORM B 2110)',m,y);
+  doc.setTextColor(0);
+
+  addFooter();
   doc.save(b.titel+'_Protokoll.pdf');
   toast('PDF exportiert!');
 }
