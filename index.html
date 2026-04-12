@@ -6,7 +6,7 @@
 <title>BauDoku Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <style>
 :root{--bg:#0f1117;--bg2:#161b25;--bg3:#1e2535;--bg4:#252e42;
 --brd:rgba(255,255,255,0.07);--brd2:rgba(255,255,255,0.13);
@@ -2971,7 +2971,8 @@ function _buildPDF(size,orient){
 function exportGanttPDF(preview){
   try{
   if(!PR.find(p=>p.id===CPId)||!BP.length){toast('Keine Daten für PDF.',false);return;}
-  if(!window.jspdf||!window.jspdf.jsPDF){toast('PDF-Bibliothek nicht geladen. Seite neu laden.',false);return;}
+  if(!window.jspdf||!window.jspdf.jsPDF){toast('PDF-Bibliothek lädt... bitte nochmal versuchen.',false);
+    var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js';document.head.appendChild(s);return;}
 
   if(preview){
     // Vorschau-Modal mit Einstellungen
