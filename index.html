@@ -749,7 +749,7 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
 <!-- MODAL KONTAKT -->
 <div class="mo" id="m-kt"><div class="md wide">
   <div class="mh">
-    <div><div class="mht">Neue Firma anlegen</div><div style="font-size:11.5px;color:var(--tx3);margin-top:2px);">Projekt: <span id="kt-proj-nm" style="color:var(--ac);"></span></div></div>
+    <div><div class="mht">Neue Firma anlegen</div><div style="font-size:11.5px;color:var(--tx3);margin-top:2px;">Projekt: <span id="kt-proj-nm" style="color:var(--ac);"></span></div></div>
     <button class="mc" onclick="cm('m-kt')">✕</button>
   </div>
   <div class="mb">
@@ -2968,57 +2968,45 @@ function _buildPDF(size,orient){
 }
 
 function exportGanttPDF(preview){
-  alert('PDF Funktion gestartet: preview='+preview);
   try{
   if(!PR.find(p=>p.id===CPId)||!BP.length){toast('Keine Daten für PDF.',false);return;}
   if(!window.jspdf||!window.jspdf.jsPDF){toast('PDF-Bibliothek lädt... bitte nochmal versuchen.',false);
     var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js';document.head.appendChild(s);return;}
 
   if(preview){
-    // Vorschau-Modal mit Einstellungen
     var initSize=document.getElementById('pdf-size').value||'a4';
-    var initOrient='landscape';
     var old=document.getElementById('pdf-preview-modal');
     if(old)old.remove();
 
     var md=document.createElement('div');
     md.id='pdf-preview-modal';
-    md.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;transition:background .3s,opacity .3s;';
-    // CSS als StyleSheet einfuegen (verhindert Script-Parsing-Probleme)
-    if(!document.getElementById('pv-styles')){
-      var st=document.createElement('style');st.id='pv-styles';
-      st.textContent='#pdf-preview-modal .pv-panel{background:var(--bg2);border-radius:var(--rl);width:95%;max-width:1200px;height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06);transform:scale(.97) translateY(12px);transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .3s;opacity:0;}#pdf-preview-modal.pv-open{background:rgba(0,0,0,.65);opacity:1;}#pdf-preview-modal.pv-open .pv-panel{transform:scale(1) translateY(0);opacity:1;}#pdf-preview-modal .pv-toolbar{display:flex;align-items:center;gap:6px;padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--brd);}#pdf-preview-modal .pv-title{font-weight:600;font-size:13px;color:var(--tx);margin-right:8px;letter-spacing:-.01em;}#pdf-preview-modal .pv-sep{width:1px;height:20px;background:var(--brd2);margin:0 4px;}#pdf-preview-modal .pv-label{font-size:10px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;margin-right:4px;}#pdf-preview-modal .pv-sel{padding:5px 8px;border-radius:6px;border:1px solid var(--brd2);background:var(--bg2);color:var(--tx);font-size:12px;font-family:var(--fn);cursor:pointer;transition:border-color var(--tr),box-shadow var(--tr);outline:none;-webkit-appearance:none;appearance:none;}#pdf-preview-modal .pv-sel:hover{border-color:var(--ac);}#pdf-preview-modal .pv-sel:focus{border-color:var(--ac);box-shadow:0 0 0 2px var(--adm);}#pdf-preview-modal .pv-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border:none;border-radius:6px;cursor:pointer;font-weight:500;font-size:12px;font-family:var(--fn);transition:all var(--tr);outline:none;}#pdf-preview-modal .pv-btn:active{transform:scale(.97);}#pdf-preview-modal .pv-btn svg{width:14px;height:14px;flex-shrink:0;}#pdf-preview-modal .pv-btn-primary{background:var(--ac);color:#000;}#pdf-preview-modal .pv-btn-primary:hover{background:var(--ac2);box-shadow:0 2px 12px rgba(245,166,35,.25);}#pdf-preview-modal .pv-btn-secondary{background:var(--bl);color:#fff;}#pdf-preview-modal .pv-btn-secondary:hover{background:#2563eb;box-shadow:0 2px 12px rgba(59,130,246,.25);}#pdf-preview-modal .pv-btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--brd2);}#pdf-preview-modal .pv-btn-ghost:hover{background:var(--bg4);color:var(--tx);}#pdf-preview-modal .pv-preview-area{flex:1;background:var(--bg);display:flex;align-items:stretch;padding:16px;overflow:hidden;}#pdf-preview-modal .pv-preview-area iframe{flex:1;border:none;border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.04);}';
-      document.head.appendChild(st);
-    }
-    md.innerHTML=`<div class="pv-panel">
-      <div class="pv-toolbar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2" style="width:18px;height:18px;flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/></svg>
-        <span class="pv-title">PDF Vorschau</span>
-        <div class="pv-sep"></div>
-        <span class="pv-label">Format</span>
-        <select id="pv-size" class="pv-sel">
-          <option value="a4"${initSize==='a4'?' selected':''}>A4</option>
-          <option value="a3"${initSize==='a3'?' selected':''}>A3</option>
-          <option value="a2"${initSize==='a2'?' selected':''}>A2</option>
-          <option value="a1"${initSize==='a1'?' selected':''}>A1</option>
-          <option value="a0"${initSize==='a0'?' selected':''}>A0</option>
-        </select>
-        <span class="pv-label" style="margin-left:4px;">Ausrichtung</span>
-        <select id="pv-orient" class="pv-sel">
-          <option value="landscape" selected>Querformat</option>
-          <option value="portrait">Hochformat</option>
-        </select>
-        <div style="flex:1;"></div>
-        <button id="pv-download" class="pv-btn pv-btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Speichern</button>
-        <button id="pv-print" class="pv-btn pv-btn-secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Drucken</button>
-        <button id="pv-close" class="pv-btn pv-btn-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-      </div>
-      <div class="pv-preview-area">
-        <iframe id="pv-frame"></iframe>
-      </div>
-    </div>`;
+    md.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:24px;';
+    md.innerHTML='<div style="background:var(--bg2);border-radius:12px;width:95%;max-width:1200px;height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.5);">'
+      +'<div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg3);border-bottom:1px solid var(--brd);">'
+      +'<span style="font-weight:600;font-size:13px;color:var(--tx);margin-right:8px;">PDF Vorschau</span>'
+      +'<span style="font-size:10px;color:var(--tx3);text-transform:uppercase;">Format</span>'
+      +'<select id="pv-size" style="padding:4px 8px;border-radius:6px;border:1px solid var(--brd2);background:var(--bg2);color:var(--tx);font-size:12px;font-family:var(--fn);">'
+      +'<option value="a4"'+(initSize==='a4'?' selected':'')+'>A4</option>'
+      +'<option value="a3"'+(initSize==='a3'?' selected':'')+'>A3</option>'
+      +'<option value="a2"'+(initSize==='a2'?' selected':'')+'>A2</option>'
+      +'<option value="a1"'+(initSize==='a1'?' selected':'')+'>A1</option>'
+      +'<option value="a0"'+(initSize==='a0'?' selected':'')+'>A0</option>'
+      +'</select>'
+      +'<span style="font-size:10px;color:var(--tx3);text-transform:uppercase;margin-left:4px;">Ausrichtung</span>'
+      +'<select id="pv-orient" style="padding:4px 8px;border-radius:6px;border:1px solid var(--brd2);background:var(--bg2);color:var(--tx);font-size:12px;font-family:var(--fn);">'
+      +'<option value="landscape" selected>Querformat</option>'
+      +'<option value="portrait">Hochformat</option>'
+      +'</select>'
+      +'<div style="flex:1;"></div>'
+      +'<button id="pv-download" style="padding:6px 14px;background:var(--ac);color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:500;font-size:12px;font-family:var(--fn);">Speichern</button>'
+      +'<button id="pv-print" style="padding:6px 14px;background:var(--bl);color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;font-size:12px;font-family:var(--fn);">Drucken</button>'
+      +'<button id="pv-close" style="padding:6px 14px;background:var(--bg4);color:var(--tx2);border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:var(--fn);">Schliessen</button>'
+      +'</div>'
+      +'<div style="flex:1;padding:12px;background:var(--bg);overflow:hidden;display:flex;">'
+      +'<iframe id="pv-frame" style="flex:1;border:none;border-radius:6px;"></iframe>'
+      +'</div>'
+      +'</div>';
     document.body.appendChild(md);
-    requestAnimationFrame(function(){requestAnimationFrame(function(){md.classList.add('pv-open');});});
 
     function refreshPreview(){
       try{
@@ -3047,8 +3035,7 @@ function exportGanttPDF(preview){
       if(w)setTimeout(function(){w.print();},600);
     };
     document.getElementById('pv-close').onclick=function(){
-      md.classList.remove('pv-open');
-      setTimeout(function(){if(md._blobUrl)URL.revokeObjectURL(md._blobUrl);md.remove();},350);
+      if(md._blobUrl)URL.revokeObjectURL(md._blobUrl);md.remove();
     };
     md.addEventListener('click',function(e){if(e.target===md){document.getElementById('pv-close').click();}});
     refreshPreview();
