@@ -506,10 +506,26 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
         <div id="bsl"></div>
       </div>
       <!-- COL 3: Detail -->
-      <div style="width:420px;flex-shrink:0;overflow-y:auto;" id="proto-det">
-        <div class="empty" style="margin-top:60px;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px;height:36px;opacity:.25;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          <div style="font-size:13px;color:var(--tx3);">Protokoll auswählen</div>
+      <!-- COL 3: Detail -->
+      <div style="flex:1;display:flex;flex-direction:row;overflow:hidden;" id="proto-det">
+        <!-- Einträge-Liste -->
+        <div style="width:280px;flex-shrink:0;border-left:1px solid var(--brd);display:flex;flex-direction:column;overflow:hidden;">
+          <div id="proto-header" style="padding:12px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;">
+            <div style="font-size:13px;color:var(--tx3);">Protokoll auswählen</div>
+          </div>
+          <div id="proto-meta" style="flex-shrink:0;"></div>
+          <div style="padding:8px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+            <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);">Einträge / TOPs</div>
+            <button class="btn bp" id="btn-add-eintrag" onclick="openEintragModal()" style="font-size:11px;padding:4px 10px;display:none;">+ Eintrag</button>
+          </div>
+          <div style="flex:1;overflow-y:auto;" id="eintraege-list"></div>
+        </div>
+        <!-- Eintrag-Detail -->
+        <div style="flex:1;border-left:1px solid var(--brd);overflow-y:auto;" id="eintrag-det">
+          <div class="empty" style="margin-top:60px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:36px;height:36px;opacity:.25;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <div style="font-size:13px;color:var(--tx3);">Eintrag auswählen</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1973,12 +1989,30 @@ async function showProtoDet(id){
       <div style="font-size:11.5px;color:var(--tx3);">${p?p.name+' · ':''}${fd(b.datum)}${b.ort?' · '+b.ort:''}</div>
     </div>
     <div style="display:flex;gap:7px;">
+      <button class="btn bg" onclick="exportProtoPDF('${b.id}')" style="font-size:12px;gap:5px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:12px;height:12px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button>
+      ${!b.abgeschlossen?`<button class="btn bg" onclick="fortschreiben('${b.id}')" style="font-size:12px;gap:5px;">Fortschreiben</button>`:''}
       ${!b.abgeschlossen?`<button class="btn bg" onclick="schliesseProtokoll('${b.id}')" style="font-size:12px;gap:5px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:12px;height:12px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Abschließen</button>`:''}
-      ${b.abgeschlossen?`<button class="btn bg" onclick="oeffneProtokoll('${b.id}')" style="font-size:12px;color:var(--ac);">🔓 Entsperren</button>`:''}
+      ${b.abgeschlossen?`<button class="btn bg" onclick="oeffneProtokoll('${b.id}')" style="font-size:12px;color:var(--ac);">Entsperren</button>`:''}
     </div>`;
   // Show add button only if not locked
   document.getElementById('btn-add-eintrag').style.display=b.abgeschlossen?'none':'flex';
   document.getElementById('eintrag-det').innerHTML='<div class="empty" style="margin-top:60px;"><div style="font-size:13px;color:var(--tx3);">Eintrag auswählen</div></div>';
+  // Show teilnehmer + meta
+  const tnDiv=document.getElementById('proto-meta');
+  if(tnDiv){
+    let metaH='<div style="padding:10px 14px;border-bottom:1px solid var(--brd);font-size:12px;color:var(--tx2);">';
+    if(b.ort)metaH+=`<span style="margin-right:12px;">📍 ${b.ort}</span>`;
+    if(b.uhrzeit)metaH+=`<span style="margin-right:12px;">🕐 ${b.uhrzeit}</span>`;
+    if(b.leitung)metaH+=`<span style="margin-right:12px;">Leitung: ${b.leitung}</span>`;
+    if(b.naechste_besprechung)metaH+=`<span>Nächster Termin: ${fd(b.naechste_besprechung)}</span>`;
+    metaH+='</div>';
+    if(b.teilnehmer&&b.teilnehmer.length){
+      metaH+='<div style="padding:8px 14px;border-bottom:1px solid var(--brd);display:flex;flex-wrap:wrap;gap:4px;">';
+      b.teilnehmer.forEach(tn=>{metaH+=`<span style="font-size:11px;padding:2px 8px;background:var(--bg3);border-radius:10px;color:var(--tx2);">${tn}</span>`;});
+      metaH+='</div>';
+    }
+    tnDiv.innerHTML=metaH;
+  }
   // Load eintraege
   await loadEintraege(id);
 }
@@ -2248,6 +2282,129 @@ async function oeffneProtokoll(id){
   await sb.from('baubesprechungen').update({abgeschlossen:false}).eq('id',id);
   await loadBS();rBS();showProtoDet(id);
   toast('Protokoll entsperrt.');
+}
+
+// Fortschreibung: offene Einträge ins nächste Protokoll übernehmen
+async function fortschreiben(fromId){
+  const fromB=BS.find(x=>x.id===fromId);
+  if(!fromB){toast('Protokoll nicht gefunden',false);return;}
+  // Load einträge des aktuellen Protokolls
+  const{data:eintraege}=await sb.from('protokoll_eintraege').select('*').eq('besprechung_id',fromId).order('created_at');
+  const offene=(eintraege||[]).filter(e=>!e.erledigt);
+  if(!offene.length){toast('Keine offenen Einträge zum Fortschreiben.',false);return;}
+  if(!confirm(offene.length+' offene Einträge ins nächste Protokoll übernehmen?'))return;
+  // Create new Protokoll
+  const typ=(fromB.titel||'BB').split('-')[0];
+  const cnt=BS.filter(b=>(b.titel||'').startsWith(typ+'-')).length+1;
+  const nr=typ+'-'+String(cnt).padStart(2,'0');
+  const{data:newP,error}=await sb.from('baubesprechungen').insert({
+    user_id:CU.id,projekt_id:CPId,titel:nr,datum:new Date().toISOString().split('T')[0],
+    ort:fromB.ort,leitung:fromB.leitung,teilnehmer:fromB.teilnehmer,
+    tagesordnung:'Fortschreibung von '+fromB.titel
+  }).select().single();
+  if(error||!newP){toast('Fehler: '+(error?.message||''),false);return;}
+  // Copy offene Einträge
+  const inserts=offene.map((e,i)=>({
+    user_id:CU.id,besprechung_id:newP.id,projekt_id:CPId,
+    nummer:typ+'-'+String(i+1).padStart(3,'0'),
+    titel:e.titel,langtext:e.langtext,firma:e.firma,zustaendig:e.zustaendig,
+    typ:e.typ,prioritaet:e.prioritaet,gewerk:e.gewerk,lage:e.lage,
+    faellig_von:e.faellig_von,faellig_bis:e.faellig_bis,kosten:e.kosten,
+    erstellt_in:'Aus '+fromB.titel
+  }));
+  await sb.from('protokoll_eintraege').insert(inserts);
+  // Close old
+  await sb.from('baubesprechungen').update({abgeschlossen:true}).eq('id',fromId);
+  await loadBS();rBS();showProtoDet(newP.id);
+  toast(nr+' erstellt mit '+offene.length+' offenen Punkten!');
+}
+
+// PDF Export Protokoll
+async function exportProtoPDF(id){
+  if(!window.jspdf||!window.jspdf.jsPDF){toast('PDF-Bibliothek lädt...',false);return;}
+  const{jsPDF}=window.jspdf;
+  const b=BS.find(x=>x.id===id);
+  if(!b)return;
+  const p=PR.find(x=>x.id===b.projekt_id);
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const m=15;const pw=210;const usW=pw-2*m;
+  // Header
+  doc.setFontSize(16);doc.setFont(undefined,'bold');
+  const titles={BB:'Baubesprechungsprotokoll',BE:'Besprechungsprotokoll',AK:'Aktennotiz',AB:'Abnahmeprotokoll',CL:'Checkliste'};
+  const typ=(b.titel||'BB').split('-')[0];
+  doc.text(titles[typ]||'Protokoll',m,m+7);
+  doc.setFontSize(10);doc.setFont(undefined,'normal');doc.setTextColor(100);
+  doc.text(b.titel||'',m+usW,m+7,{align:'right'});
+  doc.setTextColor(0);
+  // Meta
+  let y=m+16;
+  doc.setFontSize(9);
+  doc.setDrawColor(200);doc.setLineWidth(0.2);
+  const meta=[
+    ['Projekt',p?p.nummer+' — '+p.name:''],
+    ['Datum',fd(b.datum)+(b.uhrzeit?' · '+b.uhrzeit:'')],
+    ['Ort',b.ort||''],
+    ['Leitung',b.leitung||''],
+    ['Nächster Termin',b.naechste_besprechung?fd(b.naechste_besprechung):'—']
+  ];
+  meta.forEach(([lbl,val])=>{
+    doc.setFont(undefined,'bold');doc.text(lbl+':',m,y);
+    doc.setFont(undefined,'normal');doc.text(val,m+35,y);
+    y+=5;
+  });
+  // Teilnehmer
+  if(b.teilnehmer&&b.teilnehmer.length){
+    y+=2;
+    doc.setFont(undefined,'bold');doc.text('Teilnehmer:',m,y);y+=5;
+    doc.setFont(undefined,'normal');doc.setFontSize(8);
+    b.teilnehmer.forEach(tn=>{doc.text('• '+tn,m+5,y);y+=4;});
+    y+=2;
+  }
+  // Trennlinie
+  doc.setDrawColor(0);doc.setLineWidth(0.5);doc.line(m,y,m+usW,y);y+=6;
+  // Tagesordnung
+  if(b.tagesordnung){
+    doc.setFontSize(10);doc.setFont(undefined,'bold');doc.text('Tagesordnung',m,y);y+=5;
+    doc.setFontSize(8);doc.setFont(undefined,'normal');
+    const lines=doc.splitTextToSize(b.tagesordnung,usW);
+    doc.text(lines,m,y);y+=lines.length*4+4;
+  }
+  // Einträge laden und drucken
+  const{data:eintraege}=await sb.from('protokoll_eintraege').select('*').eq('besprechung_id',id).order('created_at');
+  if(eintraege&&eintraege.length){
+    doc.setFontSize(10);doc.setFont(undefined,'bold');doc.text('Einträge / TOPs',m,y);y+=6;
+    // Table header
+    doc.setFillColor(240,240,240);doc.rect(m,y-3,usW,6,'F');
+    doc.setFontSize(7);doc.setFont(undefined,'bold');doc.setTextColor(80);
+    doc.text('Nr.',m+1,y);doc.text('Thema',m+15,y);doc.text('Zuständig',m+100,y);
+    doc.text('Frist',m+130,y);doc.text('Status',m+155,y);y+=5;
+    doc.setTextColor(0);doc.setFont(undefined,'normal');doc.setFontSize(7.5);
+    eintraege.forEach(e=>{
+      if(y>270){doc.addPage();y=m+5;}
+      const stLbl=e.erledigt?'Erledigt':e.typ==='zu_erledigen'?'Zu erledigen':e.typ==='info'?'Info':'Offen';
+      doc.setFont(undefined,'bold');doc.text(e.nummer||'',m+1,y);
+      doc.setFont(undefined,'normal');
+      doc.text((e.titel||'').substring(0,45),m+15,y);
+      doc.text((e.zustaendig||e.firma||'').substring(0,20),m+100,y);
+      doc.text(e.faellig_bis?fd(e.faellig_bis):'—',m+130,y);
+      if(e.erledigt){doc.setTextColor(0,150,0);}else{doc.setTextColor(200,0,0);}
+      doc.text(stLbl,m+155,y);doc.setTextColor(0);
+      y+=4;
+      if(e.langtext){
+        doc.setFontSize(6.5);doc.setTextColor(100);
+        const lt=doc.splitTextToSize(e.langtext,usW-18);
+        lt.slice(0,4).forEach(l=>{doc.text(l,m+15,y);y+=3;});
+        doc.setTextColor(0);doc.setFontSize(7.5);
+      }
+      doc.setDrawColor(230);doc.line(m,y,m+usW,y);y+=3;
+    });
+  }
+  // Footer
+  doc.setFontSize(6);doc.setTextColor(150);
+  doc.text('BauDoku Pro — '+b.titel,m,290);
+  doc.text(new Date().toLocaleDateString('de-DE'),pw-m,290,{align:'right'});
+  doc.save(b.titel+'_Protokoll.pdf');
+  toast('PDF exportiert!');
 }
 
 // ── BAUZEITPLAN / GANTT ──────────────────────────────────────────────────
