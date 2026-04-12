@@ -582,14 +582,6 @@ body{font-family:var(--fn);background:var(--bg);color:var(--tx);display:flex;fon
           <div class="fg"><label class="fl">Übergeordnete Phase</label><select class="fs" id="bp-parent"><option value="">— Keine (Hauptphase) —</option></select></div>
           <div class="fg"><label class="fl">Farbe</label><input type="color" id="bp-farbe" value="#3b82f6" style="width:100%;height:36px;border:1px solid var(--brd);border-radius:var(--r);background:var(--bg3);cursor:pointer;"></div>
         </div>
-        <div class="fr fr2">
-          <div class="fg"><label class="fl">Verantwortlich</label><input type="text" class="fi" id="bp-verantw" placeholder="z.B. Müller GmbH"></div>
-          <div class="fg"><label class="fl">Fortschritt %</label><input type="number" class="fi" id="bp-fortschritt" min="0" max="100" value="0" placeholder="0-100"></div>
-        </div>
-        <div class="fr fr2" id="bp-soll-row">
-          <div class="fg"><label class="fl">Soll-Start</label><input type="date" class="fi" id="bp-soll-sd"></div>
-          <div class="fg"><label class="fl">Soll-Ende</label><input type="date" class="fi" id="bp-soll-ed"></div>
-        </div>
         <div style="margin-top:4px;">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--tx2);">
             <input type="checkbox" id="bp-fix"> Fixiert (abgeschlossen)
@@ -2453,10 +2445,6 @@ function openBPModal(parentId){
   document.getElementById('bp-ed').value=new Date().toISOString().split('T')[0];
   document.getElementById('bp-farbe').value='#3b82f6';
   document.getElementById('bp-fix').checked=false;
-  document.getElementById('bp-verantw').value='';
-  document.getElementById('bp-fortschritt').value=0;
-  document.getElementById('bp-soll-sd').value='';
-  document.getElementById('bp-soll-ed').value='';
   // Fill parent dropdown
   const sel=document.getElementById('bp-parent');
   sel.innerHTML='<option value="">— Keine (Hauptphase) —</option>';
@@ -2478,10 +2466,6 @@ function editBP(id){
   document.getElementById('bp-ed').value=b.ende_datum||'';
   document.getElementById('bp-farbe').value=b.farbe||'#3b82f6';
   document.getElementById('bp-fix').checked=b.abgeschlossen||false;
-  document.getElementById('bp-verantw').value=b.verantwortlich||'';
-  document.getElementById('bp-fortschritt').value=b.fortschritt||0;
-  document.getElementById('bp-soll-sd').value=b.soll_start_datum||'';
-  document.getElementById('bp-soll-ed').value=b.soll_ende_datum||'';
   const sel=document.getElementById('bp-parent');
   sel.innerHTML='<option value="">— Keine (Hauptphase) —</option>';
   BP.filter(p=>p.typ==='phase'&&p.id!==id).forEach(p=>{sel.innerHTML+=`<option value="${p.id}">${p.nummer||''} ${p.bezeichnung}</option>`;});
@@ -2520,11 +2504,7 @@ async function saveBauphase(){
     start_tag:1,dauer_tage:typ==='phase'?0:Math.max(dur,0),
     farbe:document.getElementById('bp-farbe').value,
     abgeschlossen:document.getElementById('bp-fix').checked,
-    parent_id:parentId,
-    verantwortlich:document.getElementById('bp-verantw').value.trim()||'',
-    fortschritt:parseInt(document.getElementById('bp-fortschritt').value)||0,
-    soll_start_datum:document.getElementById('bp-soll-sd').value||null,
-    soll_ende_datum:document.getElementById('bp-soll-ed').value||null
+    parent_id:parentId
   };
   if(!_editBP)obj.nummer=nummer;
   let error;
@@ -2696,7 +2676,6 @@ function rGantt(){
     const collapseIcon=isPhase&&hasChildren?(_collapsed[b.id]?'▸':'▾'):'';
     const collapseBtn=collapseIcon?`<span style="cursor:pointer;margin-right:2px;font-size:10px;user-select:none;" onclick="event.stopPropagation();toggleCollapse('${b.id}')">${collapseIcon}</span>`:'';
     const icon=b.typ==='meilenstein'?'◇':b.typ==='phase'?'':'▫';
-    const pct=b.fortschritt||0;
     tbl+=`<tr class="${cls}" draggable="true" data-bpid="${b.id}" ondragstart="bpDragStart(event,'${b.id}')" ondragover="bpDragOver(event)" ondrop="bpDrop(event,'${b.id}')" ondragend="bpDragEnd(event)">`;
     tbl+=`<td class="gz-nr" style="cursor:grab;" title="Ziehen zum Sortieren">⠿ ${esc(b.nummer||'')}</td>`;
     tbl+=`<td class="gz-nm"><span class="gz-indent" style="width:${indent}px;"></span>${collapseBtn}<span style="margin-right:4px;opacity:.5;">${icon}</span>${esc(b.bezeichnung)}</td>`;
@@ -2778,37 +2757,23 @@ function rGantt(){
       const opacity=b.abgeschlossen?0.5:1;
       const dateLbl=fmtDt(b.start_datum);
       const afterBar=left+width+8;
-      const pct=b.fortschritt||0;
-
-      // Baseline (Soll) bar — thin gray bar below actual
-      if(b.soll_start_datum&&b.soll_ende_datum){
-        const sStart=daysBetween(minD.toISOString(),b.soll_start_datum);
-        const sDur=Math.max(daysBetween(b.soll_start_datum,b.soll_ende_datum),0);
-        const sLeft=sStart*dayW;
-        const sWidth=Math.max(sDur*dayW,4);
-        chart+=`<div style="position:absolute;left:${sLeft}px;top:22px;width:${sWidth}px;height:4px;background:var(--tx3);opacity:.3;border-radius:2px;pointer-events:none;" title="Soll: ${fmtDt(b.soll_start_datum)} - ${fmtDt(b.soll_ende_datum)}"></div>`;
-      }
-
       if(b.typ==='phase'){
         chart+=`<div class="gz-bar-wrap" data-bpid="${b.id}" onmousedown="initBarDrag(this,event)" style="position:absolute;left:${left}px;width:${width}px;top:0;height:${rowH}px;cursor:grab;">`;
         chart+=`<div style="position:absolute;left:0;top:8px;width:100%;height:10px;background:#555;border-radius:1px;opacity:${opacity};pointer-events:none;"></div>`;
-        if(pct>0){chart+=`<div style="position:absolute;left:0;top:8px;width:${pct}%;height:10px;background:rgba(255,255,255,.2);border-radius:1px;pointer-events:none;"></div>`;}
         chart+=`</div>`;
         chart+=`<div style="position:absolute;left:${left}px;top:15px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #555;pointer-events:none;"></div>`;
         chart+=`<div style="position:absolute;left:${left+width-8}px;top:15px;width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:4px solid #555;pointer-events:none;"></div>`;
-        chart+=`<span style="position:absolute;left:${afterBar}px;top:7px;font-size:10px;color:var(--tx);white-space:nowrap;pointer-events:none;">Bauphase: <b>${esc(b.bezeichnung)}</b>${pct>0?' ('+pct+'%)':''}</span>`;
+        chart+=`<span style="position:absolute;left:${afterBar}px;top:7px;font-size:10px;color:var(--tx);white-space:nowrap;pointer-events:none;">Bauphase: <b>${esc(b.bezeichnung)}</b></span>`;
       } else if(b.typ==='meilenstein'){
         chart+=`<div style="position:absolute;left:${left-6}px;top:9px;width:12px;height:12px;background:${color};border-radius:2px;transform:rotate(45deg);opacity:${opacity};"></div>`;
         chart+=`<span style="position:absolute;left:${left-4}px;top:7px;font-size:9px;color:var(--tx3);transform:translateX(-100%);white-space:nowrap;">${dateLbl}</span>`;
         chart+=`<span style="position:absolute;left:${left+14}px;top:9px;font-size:10px;font-weight:500;color:var(--tx);white-space:nowrap;">${esc(b.bezeichnung)}</span>`;
       } else {
-        // Regular bar with progress fill
         chart+=`<div class="gz-bar-wrap" data-bpid="${b.id}" onmousedown="initBarDrag(this,event)" style="position:absolute;left:${left}px;width:${width}px;top:3px;height:24px;">`;
         chart+=`<div style="position:absolute;left:0;top:4px;width:100%;height:14px;background:${color};border-radius:3px;opacity:${opacity};pointer-events:none;"></div>`;
-        if(pct>0){chart+=`<div style="position:absolute;left:0;top:4px;width:${Math.min(pct,100)}%;height:14px;background:rgba(0,0,0,.2);border-radius:3px;pointer-events:none;"></div>`;}
         chart+=`</div>`;
         chart+=`<span style="position:absolute;left:${left-4}px;top:9px;font-size:9px;color:var(--tx3);transform:translateX(-100%);white-space:nowrap;pointer-events:none;">${dateLbl}</span>`;
-        chart+=`<span style="position:absolute;left:${afterBar}px;top:9px;font-size:10px;font-weight:500;color:var(--tx);white-space:nowrap;pointer-events:none;">${esc(b.bezeichnung)}${pct>0?' '+pct+'%':''}</span>`;
+        chart+=`<span style="position:absolute;left:${afterBar}px;top:9px;font-size:10px;font-weight:500;color:var(--tx);white-space:nowrap;pointer-events:none;">${esc(b.bezeichnung)}</span>`;
       }
     }
     chart+='</div>';
@@ -3639,19 +3604,9 @@ function _buildPDF(size,orient,fitPage){
       const barW=Math.max((bDur/totalDays)*chartW,0.5);
       const hex=b.farbe||'#3b82f6';
       const r=parseInt(hex.slice(1,3),16),g2=parseInt(hex.slice(3,5),16),bl=parseInt(hex.slice(5,7),16);
-      // Baseline (Soll) bar
-      if(b.soll_start_datum&&b.soll_ende_datum){
-        const sOff=daysBetween(minD.toISOString(),b.soll_start_datum);
-        const sDur=Math.max(daysBetween(b.soll_start_datum,b.soll_ende_datum),0);
-        const sX=chartX+(sOff/totalDays)*chartW;
-        const sW=Math.max((sDur/totalDays)*chartW,0.3);
-        doc.setFillColor(200,200,200);
-        doc.rect(sX,y+rowH*0.7,sW,rowH*0.15,'F');
-      }
       if(b.typ==='phase'){
         doc.setFillColor(80,80,80);
         doc.rect(barX,y+rowH*0.35,barW,rowH*0.2,'F');
-        if(pctVal>0){doc.setFillColor(120,120,120);doc.rect(barX,y+rowH*0.35,barW*(pctVal/100),rowH*0.2,'F');}
       } else if(b.typ==='meilenstein'){
         doc.setFillColor(r,g2,bl);
         const s=rowH*0.35;
@@ -3659,10 +3614,9 @@ function _buildPDF(size,orient,fitPage){
       } else {
         doc.setFillColor(r,g2,bl);
         doc.roundedRect(barX,y+rowH*0.2,barW,rowH*0.5,0.5,0.5,'F');
-        if(pctVal>0){doc.setFillColor(0,0,0);doc.setGState(new doc.GState({opacity:0.2}));doc.roundedRect(barX,y+rowH*0.2,barW*(pctVal/100),rowH*0.5,0.5,0.5,'F');doc.setGState(new doc.GState({opacity:1}));}
       }
       doc.setFontSize(4.5*fScale);doc.setTextColor(100);
-      doc.text(b.bezeichnung.substring(0,20)+(pctVal>0?' '+pctVal+'%':''),barX+barW+1,y+rowH*0.6);
+      doc.text(b.bezeichnung.substring(0,20),barX+barW+1,y+rowH*0.6);
       doc.setTextColor(0);
     }
     doc.setDrawColor(235);doc.setLineWidth(0.08);doc.line(m,y+rowH,m+usableW,y+rowH);
@@ -3737,10 +3691,6 @@ function _buildPDF(size,orient,fitPage){
       lx+=doc.getTextWidth(gw)+8;
     }
   });
-  // Baseline legend
-  doc.setFillColor(200,200,200);doc.rect(lx,legY-2,6,2,'F');
-  doc.setFont(undefined,'normal');doc.setFontSize(4.5);doc.setTextColor(80);
-  doc.text('Soll (Baseline)',lx+7,legY);lx+=28;
   // Today legend
   doc.setDrawColor(239,68,68);doc.setLineWidth(0.3);doc.line(lx,legY-2,lx,legY+1);
   doc.text('Heute',lx+2,legY);
