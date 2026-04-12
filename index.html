@@ -2681,7 +2681,7 @@ function rGantt(){
   // TABLE (left side)
   let tbl='<table><thead><tr>';
   tbl+='<th style="min-width:42px;">Nr</th><th style="min-width:120px;">Name</th><th style="min-width:50px;">Status</th>';
-  tbl+='<th style="min-width:60px;">Gewerk</th><th style="min-width:55px;">Verantw.</th><th style="min-width:28px;">%</th>';
+  tbl+='<th style="min-width:60px;">Gewerk</th>';
   tbl+='<th style="min-width:70px;">Start</th><th style="min-width:70px;">Ende</th>';
   tbl+='<th style="min-width:32px;">Tage</th><th style="width:55px;text-align:center;">+</th>';
   tbl+='</tr></thead><tbody>';
@@ -2702,8 +2702,6 @@ function rGantt(){
     tbl+=`<td class="gz-nm"><span class="gz-indent" style="width:${indent}px;"></span>${collapseBtn}<span style="margin-right:4px;opacity:.5;">${icon}</span>${esc(b.bezeichnung)}</td>`;
     tbl+=`<td><span class="gz-badge ${stBadge}">${b.status==='erledigt'?'Erledigt':b.status==='bearbeitung'?'In Bearb.':'Offen'}</span></td>`;
     tbl+=`<td style="font-size:11px;color:var(--tx2);max-width:80px;overflow:hidden;text-overflow:ellipsis;">${esc(b.gewerk||'')}</td>`;
-    tbl+=`<td style="font-size:11px;color:var(--tx2);max-width:65px;overflow:hidden;text-overflow:ellipsis;">${esc(b.verantwortlich||'')}</td>`;
-    tbl+=`<td style="font-size:11px;text-align:center;"><span style="color:${pct>=100?'var(--gn)':pct>0?'var(--ac)':'var(--tx3)'};font-weight:${pct>0?'600':'400'};">${pct>0?pct+'%':'-'}</span></td>`;
     tbl+=`<td class="gz-dt">${fmtDt(b.start_datum)}</td>`;
     tbl+=`<td class="gz-dt">${fmtDt(b.ende_datum)}</td>`;
     tbl+=`<td class="gz-dur">${dur}</td>`;
@@ -2711,7 +2709,7 @@ function rGantt(){
     tbl+=`<td style="white-space:nowrap;"><button class="gz-act" onclick="openBPModal('${addParent}')" title="Neu hinzufügen" style="opacity:.4;font-size:14px;">+</button><span class="gz-acts"><button class="gz-act" onclick="editBP('${b.id}')" title="Bearbeiten">✏️</button><button class="gz-act" onclick="delBP('${b.id}')" title="Löschen">🗑</button></span></td>`;
     tbl+='</tr>';
   });
-  tbl+=`<tr><td colspan="10" style="padding:8px 10px;"><button onclick="openBPModal()" style="background:none;border:1px dashed var(--brd2);border-radius:var(--r);padding:4px 12px;cursor:pointer;color:var(--tx3);font-size:12px;font-family:var(--fn);transition:all .15s;" onmouseover="this.style.borderColor='var(--ac)';this.style.color='var(--ac)'" onmouseout="this.style.borderColor='var(--brd2)';this.style.color='var(--tx3)'">+ Neuer Eintrag</button></td><td></td></tr>`;
+  tbl+=`<tr><td colspan="8" style="padding:8px 10px;"><button onclick="openBPModal()" style="background:none;border:1px dashed var(--brd2);border-radius:var(--r);padding:4px 12px;cursor:pointer;color:var(--tx3);font-size:12px;font-family:var(--fn);transition:all .15s;" onmouseover="this.style.borderColor='var(--ac)';this.style.color='var(--ac)'" onmouseout="this.style.borderColor='var(--brd2)';this.style.color='var(--tx3)'">+ Neuer Eintrag</button></td><td></td></tr>`;
   tbl+='</tbody></table>';
 
   // CHART (right side)
@@ -3584,15 +3582,15 @@ function _buildPDF(size,orient,fitPage){
   doc.setTextColor(0);
 
   const topY=m+16;
-  const colNr=12,colNm=36,colGw=20,colVer=18,colPct=8,colSt=18,colEn=18,colDur=10;
-  const tblW=colNr+colNm+colGw+colVer+colPct+colSt+colEn+colDur;
+  const colNr=12,colNm=40,colGw=22,colSt=18,colEn=18,colDur=10;
+  const tblW=colNr+colNm+colGw+colSt+colEn+colDur;
   const chartX=m+tblW+2;
   const chartW=usableW-tblW-2;
 
   doc.setFontSize(6);doc.setFont(undefined,'bold');doc.setTextColor(100);
   let hx=m;
-  ['Nr','Name','Gewerk','Verantw.','%','Start','Ende','Tage'].forEach((h,i)=>{
-    const w=[colNr,colNm,colGw,colVer,colPct,colSt,colEn,colDur][i];
+  ['Nr','Name','Gewerk','Start','Ende','Tage'].forEach((h,i)=>{
+    const w=[colNr,colNm,colGw,colSt,colEn,colDur][i];
     doc.text(h,hx+1,topY);hx+=w;
   });
 
@@ -3628,10 +3626,7 @@ function _buildPDF(size,orient,fitPage){
     const indent=b._depth?'  ':'';
     doc.text((indent+icon+b.bezeichnung).substring(0,20),cx+1,y+rowH*0.6);cx+=colNm;
     doc.setFont(undefined,'normal');doc.setFontSize(5*fScale);doc.setTextColor(120);
-    doc.text((b.gewerk||'').substring(0,10),cx+1,y+rowH*0.6);cx+=colGw;
-    doc.text((b.verantwortlich||'').substring(0,10),cx+1,y+rowH*0.6);cx+=colVer;
-    const pctVal=b.fortschritt||0;
-    doc.text(pctVal>0?pctVal+'%':'-',cx+1,y+rowH*0.6);cx+=colPct;
+    doc.text((b.gewerk||'').substring(0,12),cx+1,y+rowH*0.6);cx+=colGw;
     doc.text(fmtDt(b.start_datum),cx+1,y+rowH*0.6);cx+=colSt;
     doc.text(fmtDt(b.ende_datum),cx+1,y+rowH*0.6);cx+=colEn;
     doc.text(String(daysBetween(b.start_datum,b.ende_datum)),cx+1,y+rowH*0.6);
