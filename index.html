@@ -1526,7 +1526,7 @@ function sp(id){
   document.querySelectorAll('.pg').forEach(p=>p.classList.remove('act'));
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));
   document.getElementById('pg-'+id)?.classList.add('act');
-  document.querySelectorAll('.ni').forEach(n=>{if(n.getAttribute('onclick')?.includes("'"+id+"'"))n.classList.add('act');});
+  document.querySelectorAll('.ni').forEach(n=>{const oc=n.getAttribute('onclick')||'';if(oc.includes("'"+id+"'")&&!oc.includes('setPArt'))n.classList.add('act');});
   const c=PG[id]||{t:id,b:null};
   document.getElementById('tb-t').textContent=c.t;
   const btn=document.getElementById('tb-btn');
@@ -1935,7 +1935,7 @@ let PE=[]; // Eintraege des aktuellen Protokolls
 
 function setPArt(art,el){
   _pArt=art;
-  document.querySelectorAll('.proto-art').forEach(x=>x.classList.remove('act'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));
   el.classList.add('act');
   rBS();
 }
